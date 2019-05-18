@@ -7,10 +7,9 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.HashMap;
 
-
-public class DGKPrivateKey implements Serializable
+public class DGKPrivateKey implements Serializable, PrivateKey
 {
-    private static final long serialVersionUID = 4595405526168420239L;
+    private static final long serialVersionUID = PrivateKey.serialVersionUID;
 
     private BigInteger p;
     private BigInteger q;
@@ -90,4 +89,19 @@ public class DGKPrivateKey implements Serializable
             LUT.put(decipher, (long) i);
         }
     }
+
+	public String getAlgorithm() 
+	{
+		return "DGK";
+	}
+
+	public String getFormat() 
+	{
+		return "NONE";
+	}
+
+	public byte[] getEncoded() 
+	{
+		return null;
+	}
 }

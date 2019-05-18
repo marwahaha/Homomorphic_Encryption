@@ -1,13 +1,7 @@
 package java.security;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Random;
 
 import java.security.PaillierPK;
 import java.security.PaillierSK;
@@ -29,53 +23,60 @@ import java.security.DGKPublicKey;
  * Improving the DGK Comparison Protocol (2012)
  */
 
-public class DGKOperations
+public class DGKOperations extends KeyPairGeneratorSpi
 {
 	private static int l = 16, t = 160, k = 1024;
 	private static DGKPublicKey pubKey;
 	private static DGKPrivateKey privkey;
-	private static Random rnd = new Random();
+	private static SecureRandom rnd = null;
 	private static int certainty = 40;
 	// Probability of getting prime is 1-(1/2)^40
 
-	public DGKOperations(int newl, int newt, int newk)
+	public DGKOperations(int _l, int _t, int _k)
 	{
-		l = newl;
-		t = newt;
-		k = newk;
-		GenerateKeys(l, t, k);
-	}
-
-	public static void GenerateKeys(int l, int t, int k)
-	{
-		System.out.println("Generating Keys...");
 
 		// First check that all the parameters of the KeyPair are coherent throw an exception otherwise
-		if (l < 0 || l > 32 )
+		if (_l < 0 || _l > 32 )
 		{
 			throw new IllegalArgumentException("DGK Keygen Invalid parameters : plaintext space must be less than 32 bits");
 		}
 
-		if (l > t ||  t > k )
+		if (_l > _t || _t > _k )
 		{
 			throw new IllegalArgumentException("DGK Keygen Invalid parameters: we must have l < k < t");
 		}
 
-		if ( k/2 < t + l + 1 )
+		if (_k/2 < _t + _l + 1 )
 		{
 			throw new IllegalArgumentException("DGK Keygen Invalid parameters: we must have k > k/2 < t + l ");
 		}
 
-		if ( t%2 != 0 )
+		if (_t%2 != 0 )
 		{
 			throw new IllegalArgumentException("DGK Keygen Invalid parameters: t must be divisible by 2 ");
 		}
+		
+		l = _l;
+		t = _t;
+		k = _k;
+		rnd = new SecureRandom();
+		this.initialize(k, rnd);
+	}
+	
+	public void initialize(int keysize, SecureRandom random) 
+	{
+		
+	}
+
+	public KeyPair generateKeyPair() 
+	{
+		System.out.println("Generating Keys...");
 
 		BigInteger p, rp;
 		BigInteger q, rq;
 		BigInteger g, h ;
 		BigInteger n, r ;
-		long u = exponent(2,l);
+		long u = exponent(2, l);
 		BigInteger vp, vq, vpvq, tmp;
 
 		while(true)
@@ -289,7 +290,8 @@ public class DGKOperations
 		pubKey.generategLUT();
 		pubKey.generatehLUT();
 		System.out.println("FINISHED WITH DGK KEY GENERATION!");
-	}//End of Generate Key Method
+		return new KeyPair(pubKey, privkey);
+	}
 
 	/*
 	 * Purpose: 
@@ -688,7 +690,7 @@ public class DGKOperations
 			DGKPublicKey pubKey, DGKPrivateKey privKey)
 	{
 		BigInteger EncONE = DGKOperations.encrypt(pubKey, 1);//Consider this static...
-
+		
 		int max = Math.max(x.bitLength(), y.bitLength());
 
 		if (x.bitLength() > y.bitLength())
@@ -865,7 +867,7 @@ public class DGKOperations
 	}
 	
 	public static BigInteger Protocol4
-	(BigInteger x, BigInteger y,
+	(BigInteger x, BigInteger y, 
 			DGKPublicKey pubKey, DGKPrivateKey privKey,
 			PaillierPK pk, PaillierSK sk)
 	{

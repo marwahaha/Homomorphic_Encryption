@@ -7,9 +7,9 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.HashMap;
 
-public class DGKPublicKey implements Serializable
+public class DGKPublicKey implements Serializable, PublicKey
 {
-	private static final long serialVersionUID = -7821790942995496479L;
+	private static final long serialVersionUID = PublicKey.serialVersionUID;
 
 	public BigInteger n;
 	public BigInteger g;
@@ -124,5 +124,20 @@ public class DGKPublicKey implements Serializable
 	public BigInteger ZERO()
 	{
 		return DGKOperations.encrypt(this, 0);
+	}
+
+	public String getAlgorithm() 
+	{
+		return null;
+	}
+
+	public String getFormat() 
+	{
+		return null;
+	}
+
+	public byte[] getEncoded() 
+	{
+		return null;
 	}
 }

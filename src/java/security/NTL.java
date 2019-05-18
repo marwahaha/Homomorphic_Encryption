@@ -67,7 +67,7 @@ public class NTL
 
     public static BigInteger nCr (BigInteger n, BigInteger r)
     {
-        BigInteger nCr=factorial(n);
+    	BigInteger nCr=factorial(n);
         nCr=nCr.divide(factorial(r));
         nCr=nCr.divide(factorial(n.subtract(r)));
         //nCr = n!/r!(n-r)!
@@ -82,7 +82,7 @@ public class NTL
         while (!n.equals(BigInteger.ZERO))
         {
             result = result.multiply(n);
-            n= n.subtract(BigInteger.ONE);
+            n = n.subtract(BigInteger.ONE);
         }
         return result;
     }
@@ -140,12 +140,12 @@ public class NTL
 
     public static BigInteger NextPrime (BigInteger x)
     {
-        //Find next Prime number after x
-        //Example if x =18, return 19 (closest prime)
-
-        if(x.mod(new BigInteger("2")).equals(BigInteger.ZERO))
+        // Find next Prime number after x
+        // Example if x = 18, return 19 (closest prime.
+    	BigInteger two = new BigInteger("2");
+        if(x.mod(two).equals(BigInteger.ZERO))
         {
-            x=x.add(BigInteger.ONE);
+            x = x.add(BigInteger.ONE);
         }
 
         while (true)
@@ -155,7 +155,7 @@ public class NTL
                 return x;
             }
             //System.out.print(x.toString());
-            x = x.add(new BigInteger("2"));
+            x = x.add(two);
         }
     }
     
@@ -167,15 +167,24 @@ public class NTL
 
     public static boolean isPrime(BigInteger x)
     {
+    	BigInteger two = new BigInteger("2");
+    	
+    	// Make sure it is not even...
+    	if (x.mod(two).equals(BigInteger.ZERO) && !x.equals(two))
+    	{
+    		return false;
+    	}
+    	
         BigInteger factor = new BigInteger("3");
-
-        while (!factor.equals(x))
+        BigInteger stop = bigIntSqRootCeil(x);
+        // Stop at square root (x) using Sieve of Eristophanes
+        while (!factor.equals(stop))
         {
             if (x.mod(factor).equals(BigInteger.ZERO))
             {
                 return false;
             }
-            factor=factor.add(new BigInteger("2"));
+            factor = factor.add(two);
         }
         return true;
     }
@@ -209,13 +218,13 @@ public class NTL
         return r;
     }
 
-/*
-void RandomBnd(ZZ& x, const ZZ& n);
-ZZ RandomBnd(const ZZ& n);
-void RandomBnd(long& x, long n);
-long RandomBnd(long n);
-x = pseudo-random number in the range 0..n-1, or 0 if n <= 0
-*/
+    /*
+	void RandomBnd(ZZ& x, const ZZ& n);
+	ZZ RandomBnd(const ZZ& n);
+	void RandomBnd(long& x, long n);
+	long RandomBnd(long n);
+	x = pseudo-random number in the range 0..n-1, or 0 if n <= 0
+     */
 
     public static BigInteger RandomBnd(long n)
     {
@@ -239,14 +248,14 @@ x = pseudo-random number in the range 0..n-1, or 0 if n <= 0
         return r;
     }
     
-/*
-void RandomBits(ZZ& x, long l);
-ZZ RandomBits_ZZ(long l);
-void RandomBits(long& x, long l);
-long RandomBits_long(long l);
-x = pseudo-random number in the range 0..2^L-1.
-EXCEPTIONS: strong ES
-*/
+    /*
+	void RandomBits(ZZ& x, long l);
+	ZZ RandomBits_ZZ(long l);
+	void RandomBits(long& x, long l);
+	long RandomBits_long(long l);
+	x = pseudo-random number in the range 0..2^L-1.
+	EXCEPTIONS: strong ES
+    */
 
     public static BigInteger RandomBits_ZZ(int x)
     {

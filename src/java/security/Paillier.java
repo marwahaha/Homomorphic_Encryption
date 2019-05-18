@@ -1,52 +1,21 @@
 package java.security;
 
 import java.math.BigInteger;
-import java.util.Random;
 import java.security.PaillierPK;
 import java.security.PaillierSK;
 
-public class Paillier
+public class Paillier extends KeyPairGeneratorSpi
 {
 	// k2 controls the error probability of the primality testing algorithm
 	// (specifically, with probability at most 2^(-k2) a NON prime is chosen).
 	private static int k2 = 40;
-	private static Random rnd = new Random();
-
-	public static void keyGen(PaillierSK sk, PaillierPK pk)
-	{
-		// bit_length is set as half of k1 so that when pq is computed, the
-		// result has k1 bits
-
-		// Passing in PrivateKey(1,024)
-		int bit_length = sk.k1/2;
-		System.out.println("Bit length: " + bit_length);
-		System.out.println("Random: " + rnd);
-		System.out.println("End of Random");
-
-		// Chooses a random prime of length k2. The probability that
-		// p is not prime is at most 2^(-k2)
-		BigInteger p = new BigInteger(bit_length, k2, rnd);//(512,40,random)
-		BigInteger q = new BigInteger(bit_length, k2, rnd);//(512,40,random)
-		
-		// System.out.println("Key P: " + p);
-		// System.out.println("Key Q: " + q);
-
-		// Modifications to the public key
-		pk.k1 = sk.k1;
-		pk.n = p.multiply(q); // n = pq
-		pk.modulus = pk.n.multiply(pk.n); // modulous = n^2
-
-		// Modifications to the Private key
-		sk.lambda = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
-		sk.mu = sk.lambda.modInverse(pk.n);
-		sk.n = pk.n;
-		sk.modulus = pk.modulus;
-	}
+	private int keysize = 1024;
+	private SecureRandom rnd = new SecureRandom();
 
 	// Compute ciphertext = (mn+1)r^n (mod n^2) in two stages: (mn+1) and (r^n).
 	public static BigInteger encrypt(BigInteger plaintext, PaillierPK pk)
 	{
-		BigInteger randomness = new BigInteger(pk.k1, rnd);
+		BigInteger randomness = new BigInteger(pk.k1, new SecureRandom());
 		BigInteger tmp1 = plaintext.multiply(pk.n).add(BigInteger.ONE).mod(pk.modulus);
 		BigInteger tmp2 = randomness.modPow(pk.n, pk.modulus);
 		BigInteger ciphertext = tmp1.multiply(tmp2).mod(pk.modulus);
@@ -142,5 +111,32 @@ public class Paillier
 	public static BigInteger reRandomize(BigInteger ciphertext, PaillierPK pk)
 	{
 		return Paillier.add(ciphertext, Paillier.encrypt(BigInteger.ZERO, pk), pk);
+	}
+
+	public void initialize(int keysize, SecureRandom random) 
+	{
+		this.rnd = random;
+		this.keysize = keysize/2;
+	}
+
+	public KeyPair generateKeyPair() 
+	{
+		PaillierPK pk = new PaillierPK();
+		PaillierSK sk = new PaillierSK(keysize);
+		
+		// Chooses a random prime of length k2. The probability that
+		// p is not prime is at most 2^(-k2)
+		BigInteger p = new BigInteger(keysize, k2, rnd);
+		BigInteger q = new BigInteger(keysize, k2, rnd);
+		
+		pk.n = p.multiply(q); // n = pq
+		pk.modulus = pk.n.multiply(pk.n); // modulous = n^2
+
+		// Modifications to the Private key
+		sk.lambda = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
+		sk.mu = sk.lambda.modInverse(pk.n);
+		sk.n = pk.n;
+		sk.modulus = pk.modulus;
+		return new KeyPair(pk, sk);
 	}
 }
