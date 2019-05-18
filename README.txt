@@ -1,5 +1,7 @@
 This is a module created from the SST REU 2017 project.
 
+-----------STILL A WORK IN PROGRESS----------------
+
 This module contains a function Android and Java support for
 - Paillier
 - DGK
