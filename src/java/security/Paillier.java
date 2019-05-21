@@ -3,15 +3,89 @@ package java.security;
 import java.math.BigInteger;
 import java.security.PaillierPK;
 import java.security.PaillierSK;
+import java.security.spec.AlgorithmParameterSpec;
 
-public class Paillier extends KeyPairGeneratorSpi
+import javax.crypto.BadPaddingException;
+import javax.crypto.CipherSpi;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.ShortBufferException;
+
+public class Paillier extends CipherSpi
 {
-	// k2 controls the error probability of the primality testing algorithm
-	// (specifically, with probability at most 2^(-k2) a NON prime is chosen).
-	private static int k2 = 40;
-	private int keysize = 1024;
-	private SecureRandom rnd = new SecureRandom();
+	protected byte[] engineDoFinal(byte[] arg0, int arg1, int arg2)
+			throws IllegalBlockSizeException, BadPaddingException
+	{
+		return null;
+	}
 
+	protected int engineDoFinal(byte[] arg0, int arg1, int arg2, byte[] arg3, int arg4)
+			throws ShortBufferException, IllegalBlockSizeException, BadPaddingException 
+	{
+		return 0;
+	}
+
+	protected int engineGetBlockSize() 
+	{
+		return 0;
+	}
+
+	protected byte[] engineGetIV() 
+	{
+		return null;
+	}
+
+	protected int engineGetOutputSize(int arg0) 
+	{
+		return 0;
+	}
+
+	protected AlgorithmParameters engineGetParameters() 
+	{
+		return null;
+	}
+
+	protected void engineInit(int arg0, Key arg1, SecureRandom arg2) 
+			throws InvalidKeyException 
+	{
+		
+	}
+
+	protected void engineInit(int arg0, Key arg1, AlgorithmParameterSpec arg2, SecureRandom arg3)
+			throws InvalidKeyException, InvalidAlgorithmParameterException 
+	{
+	
+	}
+
+	protected void engineInit(int arg0, Key arg1, AlgorithmParameters arg2, SecureRandom arg3)
+			throws InvalidKeyException, InvalidAlgorithmParameterException 
+	{
+		
+	}
+
+	protected void engineSetMode(String arg0) 
+			throws NoSuchAlgorithmException 
+	{
+
+	}
+
+	protected void engineSetPadding(String arg0) 
+			throws NoSuchPaddingException
+	{
+
+	}
+
+	protected byte[] engineUpdate(byte[] arg0, int arg1, int arg2) 
+	{
+		return null;
+	}
+
+	protected int engineUpdate(byte[] arg0, int arg1, int arg2, byte[] arg3, int arg4) 
+			throws ShortBufferException 
+	{
+		return 0;
+	}
+	
 	// Compute ciphertext = (mn+1)r^n (mod n^2) in two stages: (mn+1) and (r^n).
 	public static BigInteger encrypt(BigInteger plaintext, PaillierPK pk)
 	{
@@ -113,30 +187,4 @@ public class Paillier extends KeyPairGeneratorSpi
 		return Paillier.add(ciphertext, Paillier.encrypt(BigInteger.ZERO, pk), pk);
 	}
 
-	public void initialize(int keysize, SecureRandom random) 
-	{
-		this.rnd = random;
-		this.keysize = keysize/2;
-	}
-
-	public KeyPair generateKeyPair() 
-	{
-		PaillierPK pk = new PaillierPK();
-		PaillierSK sk = new PaillierSK(keysize);
-		
-		// Chooses a random prime of length k2. The probability that
-		// p is not prime is at most 2^(-k2)
-		BigInteger p = new BigInteger(keysize, k2, rnd);
-		BigInteger q = new BigInteger(keysize, k2, rnd);
-		
-		pk.n = p.multiply(q); // n = pq
-		pk.modulus = pk.n.multiply(pk.n); // modulous = n^2
-
-		// Modifications to the Private key
-		sk.lambda = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
-		sk.mu = sk.lambda.modInverse(pk.n);
-		sk.n = pk.n;
-		sk.modulus = pk.modulus;
-		return new KeyPair(pk, sk);
-	}
 }
