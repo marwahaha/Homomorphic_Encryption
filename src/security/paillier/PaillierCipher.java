@@ -10,13 +10,14 @@ import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
 
 import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
 import javax.crypto.CipherSpi;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 
-import security.paillier.PaillierPK;
-import security.paillier.PaillierSK;
+import security.paillier.PaillierPublicKey;
+import security.paillier.PaillierPrivateKey;
 
 public class PaillierCipher extends CipherSpi
 {
@@ -52,34 +53,47 @@ public class PaillierCipher extends CipherSpi
 		return null;
 	}
 
-	protected void engineInit(int arg0, Key arg1, SecureRandom arg2) 
+	protected void engineInit(int mode, Key key, SecureRandom rnd) 
 			throws InvalidKeyException 
 	{
-		
+		if (mode == Cipher.ENCRYPT_MODE)
+		{
+			if (!(key instanceof PaillierPublicKey))
+			{
+				throw new InvalidKeyException("I didn't get a PaillierPublicKey.");
+			}
+		}
+		else if (mode == Cipher.DECRYPT_MODE)
+		{
+			if (!(key instanceof PaillierPrivateKey))
+			{
+				throw new InvalidKeyException("I didn't get a PaillierPrivateKey.");
+			}
+		}
 	}
 
 	protected void engineInit(int arg0, Key arg1, AlgorithmParameterSpec arg2, SecureRandom arg3)
 			throws InvalidKeyException, InvalidAlgorithmParameterException 
 	{
-	
+		this.engineInit(arg0, arg1, arg3);
 	}
 
-	protected void engineInit(int arg0, Key arg1, AlgorithmParameters arg2, SecureRandom arg3)
+	protected void engineInit(int mode, Key key, AlgorithmParameters arg2, SecureRandom arg3)
 			throws InvalidKeyException, InvalidAlgorithmParameterException 
 	{
-		
+		this.engineInit(mode, key, arg3);
 	}
 
 	protected void engineSetMode(String arg0) 
 			throws NoSuchAlgorithmException 
 	{
-
+		throw new NoSuchAlgorithmException("Paillier supports no modes.");
 	}
 
 	protected void engineSetPadding(String arg0) 
 			throws NoSuchPaddingException
 	{
-
+		throw new NoSuchPaddingException("Paillier supports no padding.");
 	}
 
 	protected byte[] engineUpdate(byte[] arg0, int arg1, int arg2) 
@@ -94,7 +108,7 @@ public class PaillierCipher extends CipherSpi
 	}
 	
 	// Compute ciphertext = (mn+1)r^n (mod n^2) in two stages: (mn+1) and (r^n).
-	public static BigInteger encrypt(BigInteger plaintext, PaillierPK pk)
+	public static BigInteger encrypt(BigInteger plaintext, PaillierPublicKey pk)
 	{
 		BigInteger randomness = new BigInteger(pk.k1, new SecureRandom());
 		BigInteger tmp1 = plaintext.multiply(pk.n).add(BigInteger.ONE).mod(pk.modulus);
@@ -103,26 +117,26 @@ public class PaillierCipher extends CipherSpi
 		return ciphertext;
 	}
 	
-	public static BigInteger encrypt(long plaintext, PaillierPK pk)
+	public static BigInteger encrypt(long plaintext, PaillierPublicKey pk)
 	{
 		return encrypt(BigInteger.valueOf(plaintext), pk);
 	}
 
 	// Compute plaintext = L(cipherText^(lambda) mod n^2) * mu mod n
-	public static BigInteger decrypt(BigInteger ciphertext, PaillierSK sk)
+	public static BigInteger decrypt(BigInteger ciphertext, PaillierPrivateKey sk)
 	{
 		// L(u) = (u-1)/n
 		return L(ciphertext.modPow(sk.lambda, sk.modulus), sk.n).multiply(sk.mu).mod(sk.n);
 	}
 
 	// On input two encrypted values, returns an encryption of the sum of the values
-	public static BigInteger add(BigInteger ciphertext1, BigInteger ciphertext2, PaillierPK pk)
+	public static BigInteger add(BigInteger ciphertext1, BigInteger ciphertext2, PaillierPublicKey pk)
 	{
 		//(Cipher1 * Cipher 2 (mod N)
 		return ciphertext1.multiply(ciphertext2).mod(pk.modulus);
 	}
 	
-	public static BigInteger summation(BigInteger [] values, PaillierPK pk)
+	public static BigInteger summation(BigInteger [] values, PaillierPublicKey pk)
 	{
 		BigInteger ciphertext = values[0];
 		for (int i = 1; i < values.length; i++)
@@ -132,7 +146,7 @@ public class PaillierCipher extends CipherSpi
 		return ciphertext;
 	}
 	
-	public static BigInteger summation(BigInteger [] values, PaillierPK pk, int limit)
+	public static BigInteger summation(BigInteger [] values, PaillierPublicKey pk, int limit)
 	{
 		if (limit > values.length)
 		{
@@ -146,7 +160,7 @@ public class PaillierCipher extends CipherSpi
 		return ciphertext;
 	}
 
-	public static BigInteger subtract(BigInteger ciphertext1, BigInteger ciphertext2, PaillierPK pk)
+	public static BigInteger subtract(BigInteger ciphertext1, BigInteger ciphertext2, PaillierPublicKey pk)
 	{
 		ciphertext2 = PaillierCipher.multiply(ciphertext2, -1, pk);
 		BigInteger ciphertext = ciphertext1.multiply(ciphertext2).mod(pk.modulus);
@@ -154,13 +168,13 @@ public class PaillierCipher extends CipherSpi
 	}
 
 	// On input an encrypted value x and a scalar c, returns an encryption of cx.
-	public static BigInteger multiply(BigInteger ciphertext1, BigInteger scalar, PaillierPK pk)
+	public static BigInteger multiply(BigInteger ciphertext1, BigInteger scalar, PaillierPublicKey pk)
 	{
 		BigInteger ciphertext = ciphertext1.modPow(scalar, pk.modulus);
 		return ciphertext;
 	}
 
-	public static BigInteger multiply(BigInteger ciphertext1, long scalar, PaillierPK pk)
+	public static BigInteger multiply(BigInteger ciphertext1, long scalar, PaillierPublicKey pk)
 	{
 		return multiply(ciphertext1, BigInteger.valueOf(scalar), pk);
 	}
@@ -172,12 +186,12 @@ public class PaillierCipher extends CipherSpi
 	 * 
 	 * If you want to do 3|20, you MUST use a division protocol from Veugen paper
 	 */
-	public static BigInteger divide(BigInteger ciphertext, long divisor, PaillierPK pk)
+	public static BigInteger divide(BigInteger ciphertext, long divisor, PaillierPublicKey pk)
 	{
 		return divide(ciphertext, BigInteger.valueOf(divisor), pk);
 	}
 	
-	public static BigInteger divide(BigInteger ciphertext, BigInteger divisor, PaillierPK pk)
+	public static BigInteger divide(BigInteger ciphertext, BigInteger divisor, PaillierPublicKey pk)
 	{
 		divisor = divisor.modInverse(pk.modulus);
 		return multiply(ciphertext, divisor, pk);
@@ -189,7 +203,7 @@ public class PaillierCipher extends CipherSpi
 		return u.subtract(BigInteger.ONE).divide(n);
 	}
 
-	public static BigInteger reRandomize(BigInteger ciphertext, PaillierPK pk)
+	public static BigInteger reRandomize(BigInteger ciphertext, PaillierPublicKey pk)
 	{
 		return PaillierCipher.add(ciphertext, PaillierCipher.encrypt(BigInteger.ZERO, pk), pk);
 	}

@@ -1,4 +1,4 @@
-package java.security;
+package security.socialistmillionaire;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -11,8 +11,8 @@ import security.DGK.DGKPrivateKey;
 import security.DGK.DGKPublicKey;
 import security.DGK.NTL;
 import security.paillier.PaillierCipher;
-import security.paillier.PaillierPK;
-import security.paillier.PaillierSK;
+import security.paillier.PaillierPublicKey;
+import security.paillier.PaillierPrivateKey;
 
 /**
 Credits to Andrew Quijano and Dr. Samet Tonyali
@@ -38,8 +38,8 @@ public class bob implements Runnable
 {
 	// Key Master
 	protected Socket clientSocket = null;
-	private PaillierPK pk = new PaillierPK();
-	private PaillierSK sk = new PaillierSK(1024);
+	private PaillierPublicKey pk = new PaillierPublicKey();
+	private PaillierPrivateKey sk = new PaillierPrivateKey(1024);
 	
 	private DGKPublicKey pubKey = null;
 	private DGKPrivateKey privKey = null;
@@ -50,7 +50,7 @@ public class bob implements Runnable
 	private boolean isDGK = false;
 
 	public bob (Socket _clientSocket,
-			PaillierPK _pk, PaillierSK _sk, DGKPublicKey _pubKey, DGKPrivateKey _privKey,
+			PaillierPublicKey _pk, PaillierPrivateKey _sk, DGKPublicKey _pubKey, DGKPrivateKey _privKey,
 			boolean _isDGK)
 	{
 		this.clientSocket = _clientSocket;

@@ -1,4 +1,4 @@
-package java.security;
+package security.socialistmillionaire;
 
 import java.io.IOException;
 import java.math.BigInteger;

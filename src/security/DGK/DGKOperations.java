@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 
 import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
 import javax.crypto.CipherSpi;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -12,8 +13,8 @@ import javax.crypto.ShortBufferException;
 import security.DGK.DGKPrivateKey;
 import security.DGK.DGKPublicKey;
 import security.paillier.PaillierCipher;
-import security.paillier.PaillierPK;
-import security.paillier.PaillierSK;
+import security.paillier.PaillierPublicKey;
+import security.paillier.PaillierPrivateKey;
 
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -74,34 +75,47 @@ public class DGKOperations extends CipherSpi
 		return null;
 	}
 
-	protected void engineInit(int arg0, Key arg1, SecureRandom arg2) 
+	protected void engineInit(int mode, Key key, SecureRandom rnd) 
 			throws InvalidKeyException 
 	{
-		
+		if (mode == Cipher.ENCRYPT_MODE)
+		{
+			if (!(key instanceof DGKPublicKey))
+			{
+				throw new InvalidKeyException("I didn't get a DGKPublicKey.");
+			}
+		}
+		else if (mode == Cipher.DECRYPT_MODE)
+		{
+			if (!(key instanceof DGKPrivateKey))
+			{
+				throw new InvalidKeyException("I didn't get a DGKPrivateKey.");
+			}
+		}
 	}
 
 	protected void engineInit(int arg0, Key arg1, AlgorithmParameterSpec arg2, SecureRandom arg3)
 			throws InvalidKeyException, InvalidAlgorithmParameterException 
 	{
-	
+		engineInit(arg0, arg1, arg3);
 	}
 
 	protected void engineInit(int arg0, Key arg1, AlgorithmParameters arg2, SecureRandom arg3)
 			throws InvalidKeyException, InvalidAlgorithmParameterException 
 	{
-		
+		engineInit(arg0, arg1, arg3);
 	}
 
 	protected void engineSetMode(String arg0) 
 			throws NoSuchAlgorithmException 
 	{
-
+		throw new NoSuchAlgorithmException("DGK supports no modes.");
 	}
 
 	protected void engineSetPadding(String arg0) 
 			throws NoSuchPaddingException
 	{
-
+		throw new NoSuchPaddingException("DGK supports no padding.");
 	}
 
 	protected byte[] engineUpdate(byte[] arg0, int arg1, int arg2) 
@@ -426,7 +440,7 @@ public class DGKOperations extends CipherSpi
 	public static BigInteger Protocol2
 	(BigInteger x, BigInteger y,
 			DGKPublicKey pubKey, DGKPrivateKey privKey,
-			PaillierPK pk, PaillierSK sk)
+			PaillierPublicKey pk, PaillierPrivateKey sk)
 	{
 		// Note [[x]] and [[y]] is PAILLIER ENCRYPTED!
 		// and [x] and [y] is DGK encrypted!
@@ -670,7 +684,7 @@ public class DGKOperations extends CipherSpi
 	public static BigInteger Protocol4
 	(BigInteger x, BigInteger y, 
 			DGKPublicKey pubKey, DGKPrivateKey privKey,
-			PaillierPK pk, PaillierSK sk)
+			PaillierPublicKey pk, PaillierPrivateKey sk)
 	{
 		// Note [[x]] and [[y]] is PAILLIER ENCRYPTED!
 		// and [x] and [y] is DGK encrypted!

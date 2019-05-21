@@ -7,12 +7,12 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.PrivateKey;
 
-public class PaillierSK implements Serializable, PrivateKey
+public class PaillierPrivateKey implements Serializable, PrivateKey
 {
     // k1 is the security parameter. It is the number of bits in n.
     public int k1 = 1024;
     
-    public PaillierSK(int n)
+    public PaillierPrivateKey(int n)
     {
         k1 = n;
     }

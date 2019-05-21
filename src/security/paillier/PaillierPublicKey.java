@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.PublicKey;
 
-public class PaillierPK implements PublicKey, Serializable
+public class PaillierPublicKey implements PublicKey, Serializable
 {
 	// k1 is the security parameter. It is the number of bits in n.
 	public int k1 = 1024;

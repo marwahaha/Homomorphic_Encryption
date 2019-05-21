@@ -1,4 +1,4 @@
-package java.security;
+package security.socialistmillionaire;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -12,7 +12,7 @@ import security.DGK.DGKOperations;
 import security.DGK.DGKPublicKey;
 import security.DGK.NTL;
 import security.paillier.PaillierCipher;
-import security.paillier.PaillierPK;
+import security.paillier.PaillierPublicKey;
 
 import java.util.Deque;
 import java.util.Iterator;
@@ -47,8 +47,8 @@ public class alice implements Runnable
 	private final static int BILLION = 1000000000;
 	private Random rnd = new Random();
 	
-	// Alice will be given the Public Keys
-	private PaillierPK pk = null;
+	// Alice  will be given the Public Keys
+	private PaillierPublicKey pk = null;
 	private DGKPublicKey pubKey = null;
 	
 	// Needed for comparison
@@ -65,7 +65,7 @@ public class alice implements Runnable
 	private Algorithm algo;
 	
 	public alice (Socket _clientSocket,
-			PaillierPK _pk, DGKPublicKey _pubKey,
+			PaillierPublicKey _pk, DGKPublicKey _pubKey,
             boolean _isDGK, ArrayList<BigInteger> _toSort)
 	{
 		 this.clientSocket = _clientSocket;
@@ -77,7 +77,7 @@ public class alice implements Runnable
 	}
 
 	public alice (ObjectInputStream _fromBob, ObjectOutputStream _toBob,
-			PaillierPK _pk, DGKPublicKey _pubKey,
+			PaillierPublicKey _pk, DGKPublicKey _pubKey,
 			boolean _isDGK, ArrayList<BigInteger> _toSort)
 	{
 		this.fromBob = _fromBob;

@@ -26,8 +26,8 @@ public class PaillierKeyPairGenerator extends KeyPairGeneratorSpi
 			rnd = new SecureRandom();
 		}
 		
-		PaillierPK pk = new PaillierPK();
-		PaillierSK sk = new PaillierSK(keysize);
+		PaillierPublicKey pk = new PaillierPublicKey();
+		PaillierPrivateKey sk = new PaillierPrivateKey(keysize);
 		
 		// Chooses a random prime of length k2. The probability that
 		// p is not prime is at most 2^(-k2)

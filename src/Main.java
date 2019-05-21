@@ -1,17 +1,24 @@
 import java.io.IOException;
+import java.math.BigInteger;
+import java.net.Socket;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 
 import security.DGK.DGKGenerator;
 import security.DGK.DGKPrivateKey;
 import security.DGK.DGKPublicKey;
+import security.paillier.PaillierCipher;
 import security.paillier.PaillierKeyPairGenerator;
-import security.paillier.PaillierPK;
-import security.paillier.PaillierSK;
+import security.paillier.PaillierPublicKey;
+import security.paillier.PaillierPrivateKey;
+import security.socialistmillionaire.alice;
+import security.socialistmillionaire.bob;
 
 
 public class Main 
 {
+	private static boolean isAlice = false;
+	
 	public static void main(String [] args) throws NoSuchAlgorithmException, IOException
 	{
 		//RSAKeyPairGenerator();
@@ -26,8 +33,8 @@ public class Main
 		PaillierKeyPairGenerator p = new PaillierKeyPairGenerator();
 		p.initialize(1024, null);
 		KeyPair pe = p.generateKeyPair();
-		PaillierPK a = (PaillierPK) pe.getPublic();
-		PaillierSK b = (PaillierSK) pe.getPrivate();
+		PaillierPublicKey a = (PaillierPublicKey) pe.getPublic();
+		PaillierPrivateKey b = (PaillierPrivateKey) pe.getPrivate();
 		
 		// Paillier Test Addition
 		
@@ -37,10 +44,47 @@ public class Main
 		
 		// DGK Test Multiplication
 		
-		// Division Protocol Test
+		// Division Protocol Test, Paillier
+		BigInteger D = new BigInteger("100");
+		D = PaillierCipher.encrypt(D, a);
+		if (isAlice)
+		{
+			Socket s = new Socket("192.168.147.100", 9254);
+			alice al = new alice(s, a, y, false, null);
+			try 
+			{
+				al.division(D, 2);
+			} 
+			catch (ClassNotFoundException e) 
+			{
+				e.printStackTrace();
+			}
+		}
+		else
+		{
+			bob bo = new bob(null, a, b, y, x, false);
+			try
+			{
+				bo.division(2);
+			}
+			catch (ClassNotFoundException e) 
+			{
+				e.printStackTrace();
+			}
+		}
+		// Division Test, DGK
 		
-		// Comparison Protocol Test
-	
+		// Comparison Protocol Test, Paillier
+		if (isAlice)
+		{
+			
+		}
+		else
+		{
+			
+		}
+		// Comparison Test, DGK
+		
 	}
 	
 	/*
