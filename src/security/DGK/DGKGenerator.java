@@ -1,12 +1,15 @@
-package java.security;
+package security.DGK;
 
 import java.math.BigInteger;
+import java.security.KeyPair;
+import java.security.KeyPairGeneratorSpi;
+import java.security.SecureRandom;
 
 public class DGKGenerator extends KeyPairGeneratorSpi
 {
-	private static int l = 16, t = 160, k = 1024;
-	private static SecureRandom rnd = null;
-	private static int certainty = 40;
+	private int l = 16, t = 160, k = 1024;
+	private SecureRandom rnd = null;
+	private final static int certainty = 40;
 	
 	public DGKGenerator(int _l, int _t, int _k)
 	{
@@ -89,7 +92,6 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 				p = rp.multiply(tmp).add(BigInteger.ONE);
 			}
 			while(!p.isProbablePrime(certainty));
-			System.out.println("p is generated");
 
 			//Thus we ensure that p is a prime, with p-1 divisible by prime numbers vp and u
 			//I can implement AKS for 100% certainty if need be
@@ -110,8 +112,6 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 				 * c^{vp} = g^{vp*m} (mod n) because
 				 * rq | (q - 1)
 				 */
-
-				System.out.println("q is not prime");
 			}
 			while(!q.isProbablePrime(certainty));
 			//Thus we ensure that q is a prime, with p-1 divides the prime numbers vq and u
@@ -256,6 +256,7 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 			}
 			break;
 		}
+		System.out.println("While loop 3: g is generated");
 
 		// Preemptively build key with just the variables and 
 		// not the Lookup Tables

@@ -8,6 +8,12 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Random;
 
+import security.DGK.DGKOperations;
+import security.DGK.DGKPublicKey;
+import security.DGK.NTL;
+import security.paillier.PaillierCipher;
+import security.paillier.PaillierPK;
+
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -201,8 +207,8 @@ public class alice implements Runnable
 		}
 		else
 		{
-			z = Paillier.add(x, Paillier.encrypt(r.add(powL), pk), pk);// = [[x + 2^l + r]]
-            z = Paillier.subtract(z, y, pk);
+			z = PaillierCipher.add(x, PaillierCipher.encrypt(r.add(powL), pk), pk);// = [[x + 2^l + r]]
+            z = PaillierCipher.subtract(z, y, pk);
             //[[z]] = [[x + 2^l + r - y]]
 			//Systesm.out.println("value of Z: " + Paillier.decrypt(z, sk));
 		}
@@ -273,18 +279,18 @@ public class alice implements Runnable
 		    // = [[z/2^l]] * [[r/2^l]]^{-1} = [[z/2^l - r/2^l]]
             if(zdiv2L != null)
             {
-                result = Paillier.subtract(zdiv2L, Paillier.encrypt(r.divide(powL), pk), pk);
+                result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
             }
             if(result != null)
             {
                 // = [[z/2^l - r/2^l - (alpha <= beta)]]
                 if(deltaA == 1)
                 {
-                    result = Paillier.subtract(result, Paillier.encrypt(deltaB, pk), pk);
+                    result = PaillierCipher.subtract(result, PaillierCipher.encrypt(deltaB, pk), pk);
                 }
                 else
                 {
-                    result = Paillier.subtract(result, Paillier.encrypt((1 - deltaB), pk), pk);
+                    result = PaillierCipher.subtract(result, PaillierCipher.encrypt((1 - deltaB), pk), pk);
                 }
             }
 		}
@@ -575,13 +581,13 @@ public class alice implements Runnable
 		}
 		else
 		{			
-			BigInteger xminusy = Paillier.subtract(x, y, pk);//[[x - y]]
+			BigInteger xminusy = PaillierCipher.subtract(x, y, pk);//[[x - y]]
 			//System.out.println("x - y: " + Paillier.decrypt(xminusy, sk));
 
-			BigInteger newData = Paillier.encrypt(bigR.add(powL), pk);//[[2^l + r]]
+			BigInteger newData = PaillierCipher.encrypt(bigR.add(powL), pk);//[[2^l + r]]
 			//System.out.println("z + 2^l: " + Paillier.decrypt(newData, sk));
 
-			z = Paillier.add(xminusy, newData, pk);//[[z]] = [[x - y + 2^l + r]]
+			z = PaillierCipher.add(xminusy, newData, pk);//[[z]] = [[x - y + 2^l + r]]
 			//Systesm.out.println("value of Z: " + Paillier.decrypt(z, sk));
 		}
 		toBob.writeObject(z);
@@ -634,18 +640,18 @@ public class alice implements Runnable
 		{			
 			// = [[r/2^l]]
 			//System.out.println("(z - r)/2^l= (x - y)/2^l: " + (Paillier.decrypt(z, sk).subtract(bigR)).divide(powL));
-			BigInteger rdiv2L = Paillier.encrypt(bigR.divide(powL), pk);
+			BigInteger rdiv2L = PaillierCipher.encrypt(bigR.divide(powL), pk);
 
 			// = [[z/2^l]] * [[r/2^l]]^{-1} = [[z/2^l - r/2^l]]
 			//System.out.println("z/2^l: " + Paillier.decrypt(zdiv2L, sk));
 			//System.out.println("r/2^l: "+ Paillier.decrypt(rdiv2L, sk));
-			result = Paillier.subtract(zdiv2L, rdiv2L, pk);
+			result = PaillierCipher.subtract(zdiv2L, rdiv2L, pk);
 
 			//Should expect a 0 or 1.
 			//System.out.println("[[z/2^l - r/2^l]]: " + Paillier.decrypt(result, sk));			
 
 			// = [[z/2^l - r/2^l - (alpha <= beta)]]
-			result = Paillier.subtract(result, Paillier.encrypt(protocolThree, pk), pk);
+			result = PaillierCipher.subtract(result, PaillierCipher.encrypt(protocolThree, pk), pk);
 			//System.out.println("[[z/2^l - r/2^l - (a <= b)]]: " + Paillier.decrypt(result, sk));	
 		}
 
@@ -836,7 +842,7 @@ public class alice implements Runnable
 		else
 		{
 			r = NTL.RandomBnd(pk.n.subtract(BigInteger.ONE).divide(new BigInteger("2")));
-			z = Paillier.add(x, Paillier.encrypt(r, pk), pk);
+			z = PaillierCipher.add(x, PaillierCipher.encrypt(r, pk), pk);
 		}
 		toBob.writeObject(z);
 		toBob.flush();
@@ -870,15 +876,15 @@ public class alice implements Runnable
 		else
 		{
 			// [[z/d - r/d]]
-			answer = Paillier.subtract(c, Paillier.encrypt(r.divide(BigInteger.valueOf(d)), pk), pk);
+			answer = PaillierCipher.subtract(c, PaillierCipher.encrypt(r.divide(BigInteger.valueOf(d)), pk), pk);
 			
 			// [[z/d - r/d - t]]
-			answer = Paillier.subtract(answer, Paillier.encrypt(BigInteger.valueOf(t), pk), pk);
+			answer = PaillierCipher.subtract(answer, PaillierCipher.encrypt(BigInteger.valueOf(t), pk), pk);
 			
 			// DO NOT USE BELOW
 			//answer = Paillier.add(answer, Paillier.encrypt(BigInteger.valueOf(t), pk), pk);
 			
-			answer = Paillier.add(answer, Paillier.encrypt(BigInteger.ONE, pk), pk);
+			answer = PaillierCipher.add(answer, PaillierCipher.encrypt(BigInteger.ONE, pk), pk);
 		}
 		toBob.writeObject(answer);
 		return answer;

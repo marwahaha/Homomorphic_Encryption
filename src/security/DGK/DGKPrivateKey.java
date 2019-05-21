@@ -1,10 +1,11 @@
-package java.security;
+package security.DGK;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.security.PrivateKey;
 import java.util.HashMap;
 
 public class DGKPrivateKey implements Serializable, PrivateKey
@@ -79,6 +80,10 @@ public class DGKPrivateKey implements Serializable, PrivateKey
     	if(LUT != null)
     	{
     		return;
+    	}
+    	else
+    	{
+    		LUT = new HashMap<BigInteger, Long>();
     	}
         BigInteger g = pubKey.g;
         BigInteger gvp = NTL.POSMOD(g,p).modPow(vp,p);

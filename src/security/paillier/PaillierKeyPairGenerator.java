@@ -1,6 +1,9 @@
-package java.security;
+package security.paillier;
 
 import java.math.BigInteger;
+import java.security.KeyPair;
+import java.security.KeyPairGeneratorSpi;
+import java.security.SecureRandom;
 
 public class PaillierKeyPairGenerator extends KeyPairGeneratorSpi 
 {

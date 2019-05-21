@@ -6,6 +6,14 @@ import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
 
+import security.DGK.DGKOperations;
+import security.DGK.DGKPrivateKey;
+import security.DGK.DGKPublicKey;
+import security.DGK.NTL;
+import security.paillier.PaillierCipher;
+import security.paillier.PaillierPK;
+import security.paillier.PaillierSK;
+
 /**
 Credits to Andrew Quijano and Dr. Samet Tonyali
 
@@ -160,7 +168,7 @@ public class bob implements Runnable
 			}
 			else
 			{
-				z = Paillier.decrypt(z, sk);
+				z = PaillierCipher.decrypt(z, sk);
 			}
 
 			//Step 2: compute Beta = z (mod 2^l),
@@ -181,7 +189,7 @@ public class bob implements Runnable
 			}
 			else
 			{
-				zDiv = Paillier.encrypt(z.divide(powL), pk);
+				zDiv = PaillierCipher.encrypt(z.divide(powL), pk);
 				//System.out.println("Z/2^l: " + Paillier.decrypt(zDiv, sk));
 			}
 		}
@@ -199,7 +207,7 @@ public class bob implements Runnable
 		}
 		else
 		{
-			result = Paillier.decrypt(result, sk);
+			result = PaillierCipher.decrypt(result, sk);
 		}
 		toAlice.writeInt(result.intValue());
 		toAlice.flush();
@@ -362,7 +370,7 @@ public class bob implements Runnable
 		}
 		else
 		{
-			z = Paillier.decrypt(EncZ, sk);
+			z = PaillierCipher.decrypt(EncZ, sk);
 		}
 
 		//Step 2: compute Beta = z (mod 2^l), 
@@ -382,8 +390,8 @@ public class bob implements Runnable
 		}
 		else
 		{
-			zDiv = Paillier.encrypt(z.divide(BigInteger.valueOf(powL)), pk);
-			System.out.println("Z/2^l: " + Paillier.decrypt(zDiv, sk));	
+			zDiv = PaillierCipher.encrypt(z.divide(BigInteger.valueOf(powL)), pk);
+			System.out.println("Z/2^l: " + PaillierCipher.decrypt(zDiv, sk));	
 		}
 
 		toAlice.writeObject(zDiv);
@@ -399,7 +407,7 @@ public class bob implements Runnable
 		}
 		else
 		{
-			result = Paillier.decrypt(result, sk);
+			result = PaillierCipher.decrypt(result, sk);
 		}
 		toAlice.writeInt(result.intValue());
 		toAlice.flush();
@@ -517,7 +525,7 @@ public class bob implements Runnable
 		}
 		else
 		{
-			z = Paillier.decrypt(z, sk);
+			z = PaillierCipher.decrypt(z, sk);
 		}
 		
 		Protocol3(z.mod(BigInteger.valueOf(divisor)));
@@ -529,7 +537,7 @@ public class bob implements Runnable
 		}
 		else
 		{
-			toAlice.writeObject(Paillier.encrypt(c, pk));
+			toAlice.writeObject(PaillierCipher.encrypt(c, pk));
 		}
 		
 		// Get answer from Alice [[x/d]]

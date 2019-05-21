@@ -1,10 +1,11 @@
-package java.security;
+package security.paillier;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.security.PrivateKey;
 
 public class PaillierSK implements Serializable, PrivateKey
 {

@@ -1,4 +1,6 @@
-package java.security;
+package security.DGK;
+
+import java.security.Provider;
 
 public class DGKProvider extends Provider
 {
@@ -6,7 +8,7 @@ public class DGKProvider extends Provider
 
 	public DGKProvider() 
 	 {
-		 super("DGK", 1.0, "DGK v1.0");
+		 super("DGK", "1.0", "DGK v1.0");
 		 put("KeyGenerator.DGK", DGKGenerator.class.getName());
 		 put("Cipher.DGK", DGKOperations.class.getName());
 	 }

@@ -1,8 +1,12 @@
-package java.security;
+package security.paillier;
 
 import java.math.BigInteger;
-import java.security.PaillierPK;
-import java.security.PaillierSK;
+import java.security.AlgorithmParameters;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
 
 import javax.crypto.BadPaddingException;
@@ -11,7 +15,10 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 
-public class Paillier extends CipherSpi
+import security.paillier.PaillierPK;
+import security.paillier.PaillierSK;
+
+public class PaillierCipher extends CipherSpi
 {
 	protected byte[] engineDoFinal(byte[] arg0, int arg1, int arg2)
 			throws IllegalBlockSizeException, BadPaddingException
@@ -141,7 +148,7 @@ public class Paillier extends CipherSpi
 
 	public static BigInteger subtract(BigInteger ciphertext1, BigInteger ciphertext2, PaillierPK pk)
 	{
-		ciphertext2 = Paillier.multiply(ciphertext2, -1, pk);
+		ciphertext2 = PaillierCipher.multiply(ciphertext2, -1, pk);
 		BigInteger ciphertext = ciphertext1.multiply(ciphertext2).mod(pk.modulus);
 		return ciphertext;
 	}
@@ -184,7 +191,6 @@ public class Paillier extends CipherSpi
 
 	public static BigInteger reRandomize(BigInteger ciphertext, PaillierPK pk)
 	{
-		return Paillier.add(ciphertext, Paillier.encrypt(BigInteger.ZERO, pk), pk);
+		return PaillierCipher.add(ciphertext, PaillierCipher.encrypt(BigInteger.ZERO, pk), pk);
 	}
-
 }

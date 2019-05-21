@@ -1,31 +1,33 @@
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.security.*;
-import java.security.interfaces.RSAPrivateKey;
-import java.util.Base64;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+
+import security.DGK.DGKGenerator;
+import security.DGK.DGKPrivateKey;
+import security.DGK.DGKPublicKey;
+import security.paillier.PaillierKeyPairGenerator;
+import security.paillier.PaillierPK;
+import security.paillier.PaillierSK;
 
 
 public class Main 
 {
 	public static void main(String [] args) throws NoSuchAlgorithmException, IOException
 	{
-		/*
-		if (args.length != 2)
-		{
-			System.out.println("Please input server/client mode");
-		}
-		*/
-		RSAKeyPairGenerator();
+		//RSAKeyPairGenerator();
 		
-		// How to build your keys
-		DGKPrivateKey x;
-		DGKPublicKey y;
-		PaillierPK a;
-		PaillierSK b;
+		// Build DGK Keys
+		DGKGenerator gen = new DGKGenerator(16, 160, 1024);
+		KeyPair DGK = gen.generateKeyPair();
+		DGKPrivateKey x = (DGKPrivateKey) DGK.getPrivate();
+		DGKPublicKey y = (DGKPublicKey) DGK.getPublic();
+		
+		// Build Paillier Keys
+		PaillierKeyPairGenerator p = new PaillierKeyPairGenerator();
+		p.initialize(1024, null);
+		KeyPair pe = p.generateKeyPair();
+		PaillierPK a = (PaillierPK) pe.getPublic();
+		PaillierSK b = (PaillierSK) pe.getPrivate();
 		
 		// Paillier Test Addition
 		
@@ -41,41 +43,43 @@ public class Main
 	
 	}
 	
+	/*
     public static void RSAKeyPairGenerator() throws NoSuchAlgorithmException, IOException 
     {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(1024);
-        KeyPair pair = keyGen.generateKeyPair();
-        PrivateKey privateKey = pair.getPrivate();
-        PublicKey publicKey = pair.getPublic();
-        System.out.println(privateKey.getAlgorithm());
-        System.out.println(privateKey.getFormat());
-        System.out.println(privateKey.getEncoded()[0]);
-        
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutput out = null;
-        byte[] b;
-        try 
-        {
-          out = new ObjectOutputStream(bos);   
-          out.writeObject(privateKey);
-          out.flush();
-          b = bos.toByteArray(); 
-        }
-        finally 
-        {
-          try 
-          {
-            bos.close();
-          } 
-          catch (IOException ex) {
-            // ignore close exception
-          }
-        }
-        System.out.println(b[0]);
-        if (privateKey instanceof RSAPrivateKey)
-        {
-        	System.out.println("IS RSA!");
-        }
+    	KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+    	keyGen.initialize(1024);
+    	KeyPair pair = keyGen.generateKeyPair();
+    	PrivateKey privateKey = pair.getPrivate();
+    	PublicKey publicKey = pair.getPublic();
+    	System.out.println(privateKey.getAlgorithm());
+    	System.out.println(privateKey.getFormat());
+    	System.out.println(privateKey.getEncoded()[0]);
+
+    	ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    	ObjectOutput out = null;
+    	byte[] b;
+    	try 
+    	{
+    		out = new ObjectOutputStream(bos);   
+    		out.writeObject(privateKey);
+    		out.flush();
+    		b = bos.toByteArray(); 
+    	}
+    	finally 
+    	{
+    		try 
+    		{
+    			bos.close();
+    		} 
+    		catch (IOException ex) {
+    			// ignore close exception
+    		}
+    	}
+    	System.out.println(b[0]);
+    	if (privateKey instanceof RSAPrivateKey)
+    	{
+    		System.out.println("IS RSA!");
+    	}
     }
+    */
 }

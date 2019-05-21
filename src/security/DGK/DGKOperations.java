@@ -1,4 +1,4 @@
-package java.security;
+package security.DGK;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -9,11 +9,19 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 
-import java.security.PaillierPK;
-import java.security.PaillierSK;
+import security.DGK.DGKPrivateKey;
+import security.DGK.DGKPublicKey;
+import security.paillier.PaillierCipher;
+import security.paillier.PaillierPK;
+import security.paillier.PaillierSK;
+
+import java.security.AlgorithmParameters;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
-import java.security.DGKPrivateKey;
-import java.security.DGKPublicKey;
 
 /*
  * DGK Code was translated from C++ thanks to:
@@ -433,18 +441,18 @@ public class DGKOperations extends CipherSpi
 		System.out.println("r: " + bigR);
 
 		//Step 2, Alice computes [[x - y + 2^l + r]]
-		BigInteger xminusy = Paillier.subtract(x, y, pk);//[[x - y]]
-		System.out.println("x - y: " + Paillier.decrypt(xminusy, sk));
+		BigInteger xminusy = PaillierCipher.subtract(x, y, pk);//[[x - y]]
+		System.out.println("x - y: " + PaillierCipher.decrypt(xminusy, sk));
 
-		BigInteger newData = Paillier.encrypt(bigR.add(powL), pk);//[[2^l + r]]
-		System.out.println("z + 2^l: " + Paillier.decrypt(newData, sk));
+		BigInteger newData = PaillierCipher.encrypt(bigR.add(powL), pk);//[[2^l + r]]
+		System.out.println("z + 2^l: " + PaillierCipher.decrypt(newData, sk));
 
-		BigInteger z = Paillier.add(xminusy, newData, pk);//[[z]] = [[x - y + 2^l + r]]
+		BigInteger z = PaillierCipher.add(xminusy, newData, pk);//[[z]] = [[x - y + 2^l + r]]
 
-		System.out.println("value of Z: " + Paillier.decrypt(z, sk));
+		System.out.println("value of Z: " + PaillierCipher.decrypt(z, sk));
 
 		// Step 2, Bob
-		BigInteger plainZ = Paillier.decrypt(z, sk);
+		BigInteger plainZ = PaillierCipher.decrypt(z, sk);
 
 		//beta = z (mod 2^l)
 		BigInteger betaZZ = NTL.POSMOD(plainZ, powL);
@@ -457,10 +465,10 @@ public class DGKOperations extends CipherSpi
 
 		//Step 4: Call Protocol 1 or Protocol 3
 		BigInteger alphaLEQbeta = DGKOperations.Protocol3(alphaZZ, betaZZ, pubKey,privKey);
-		alphaLEQbeta = Paillier.encrypt(decrypt(pubKey, privKey, alphaLEQbeta), pk);
+		alphaLEQbeta = PaillierCipher.encrypt(decrypt(pubKey, privKey, alphaLEQbeta), pk);
 
 		//Step 5: B sends GammaB and z/2^l
-		BigInteger zdiv2L = Paillier.encrypt(plainZ.divide(powL), pk);
+		BigInteger zdiv2L = PaillierCipher.encrypt(plainZ.divide(powL), pk);
 
 		//Step 6: Already done from Protocol 3 as I return the XOR
 
@@ -468,12 +476,12 @@ public class DGKOperations extends CipherSpi
 
 		//[[r/2^l]]
 		System.out.println(bigR.divide(powL));
-		BigInteger rdiv2L = Paillier.encrypt(bigR.divide(powL), pk);
+		BigInteger rdiv2L = PaillierCipher.encrypt(bigR.divide(powL), pk);
 		//[[z/2^l]] * [[r/2^l]]^{-1} = [[z/2^l - r/2^l]]
-		BigInteger result = Paillier.subtract(zdiv2L, rdiv2L, pk);
-		System.out.println("[[z/2^l - r/2^l]]: " + Paillier.decrypt(result, sk));
+		BigInteger result = PaillierCipher.subtract(zdiv2L, rdiv2L, pk);
+		System.out.println("[[z/2^l - r/2^l]]: " + PaillierCipher.decrypt(result, sk));
 
-		result = Paillier.subtract(result, alphaLEQbeta, pk);
+		result = PaillierCipher.subtract(result, alphaLEQbeta, pk);
 		// = [[z/2^l]] * ([[r/2^l]] [[alpha < Beta]])^-1 
 		// = [[z/2^l - r/2^l - (alpha <= beta)]]
 		return result;
@@ -680,12 +688,12 @@ public class DGKOperations extends CipherSpi
 		System.out.println("Bit size of r: " + bigR.bitLength());
 
 		//Step 2, Alice computes [[x - y + 2^l + r]]
-		BigInteger xminusy = Paillier.subtract(x, y, pk);//[[x - y]]
-		BigInteger newData = Paillier.encrypt(bigR.add(powL), pk);//[[2^l + r]]
-		BigInteger z = Paillier.add(xminusy, newData, pk);//[[z]] = [[x - y + 2^l + r]]
+		BigInteger xminusy = PaillierCipher.subtract(x, y, pk);//[[x - y]]
+		BigInteger newData = PaillierCipher.encrypt(bigR.add(powL), pk);//[[2^l + r]]
+		BigInteger z = PaillierCipher.add(xminusy, newData, pk);//[[z]] = [[x - y + 2^l + r]]
 
 		// Step 2, Bob
-		BigInteger plainZ = Paillier.decrypt(z, sk);
+		BigInteger plainZ = PaillierCipher.decrypt(z, sk);
 
 		//beta = z (mod 2^l)
 		BigInteger betaZZ = NTL.POSMOD(plainZ, powL);
@@ -888,7 +896,7 @@ public class DGKOperations extends CipherSpi
 		}
 				
 		//Step 5: B sends GammaB and z/2^l
-		BigInteger zdiv2L = Paillier.encrypt(plainZ.divide(powL), pk);
+		BigInteger zdiv2L = PaillierCipher.encrypt(plainZ.divide(powL), pk);
 
 		// Step 6: Compute GammaA XOR GammaB
 		BigInteger betaInfAlpha;
@@ -898,7 +906,7 @@ public class DGKOperations extends CipherSpi
 		}
 		else
 		{
-			betaInfAlpha = Paillier.encrypt(Paillier.subtract(Paillier.encrypt(BigInteger.ONE, pk), GammaB, pk), pk);
+			betaInfAlpha = PaillierCipher.encrypt(PaillierCipher.subtract(PaillierCipher.encrypt(BigInteger.ONE, pk), GammaB, pk), pk);
 		}
 
 		if (decrypt(pubKey,privKey,GammaB)==GammaA)
@@ -930,10 +938,10 @@ public class DGKOperations extends CipherSpi
 		//Step 7
 
 		//[[r/2^l]]
-		BigInteger rdiv2L = Paillier.encrypt(bigR.divide(powL), pk);
+		BigInteger rdiv2L = PaillierCipher.encrypt(bigR.divide(powL), pk);
 		//[[z/2^l]] * [[r/2^l]]^{-1} = [[z/2^l - r/2^l]]
-		BigInteger result = Paillier.subtract(zdiv2L, rdiv2L, pk); 
-		result = Paillier.subtract(result, betaInfAlpha, pk);
+		BigInteger result = PaillierCipher.subtract(zdiv2L, rdiv2L, pk); 
+		result = PaillierCipher.subtract(result, betaInfAlpha, pk);
 		//[[z/2^l]] * ([[r/2^l]] [[alpha < Beta]])^-1 - [[z/2^l - r/2^l - (alpha < beta)]]
 		return result;
 	}
