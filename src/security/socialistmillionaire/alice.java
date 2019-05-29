@@ -778,7 +778,7 @@ public class alice implements Runnable
 		// Step F: 
 		for (int i = 0; i < beta_bits.length;i++)
 		{
-			BigInteger product = DGKOperations.encrypt(pubKey, BigInteger.ZERO);
+			//BigInteger product = DGKOperations.encrypt(pubKey, BigInteger.ZERO);
 			w[i] = DGKOperations.DGKMultiply(pubKey, w[i], exponent(2, i));
 		}
 		
