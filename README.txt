@@ -51,3 +51,6 @@ Protocol2()		Protocol2()
 Protocol3() 		Protocol3()
 
 Please feel free to review the SST REU 2017 project which uses this module to get minimum distance and divide encrypted numbers.
+
+-----------Precuations---------------
+

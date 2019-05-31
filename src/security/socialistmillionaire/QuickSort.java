@@ -10,7 +10,7 @@ import java.math.BigInteger;
  * This has been fused with Protocol 2/3 for DGK comparison to sort 
  * encrypted DGK or Paillier Numbers
  */
-public class QuickSort implements Runnable
+public class QuickSort
 {
 	private alice Alice;
 	private BigInteger [] arr;
@@ -48,8 +48,8 @@ public class QuickSort implements Runnable
 			throws ClassNotFoundException, IOException
 	{
 		BigInteger pivot = arr[high]; 
-		int i = (low-1); // index of smaller element
-		for (int j=low; j<high; j++)
+		int i = (low - 1); // index of smaller element
+		for (int j = low; j < high; j++)
 		{
 			// If current element is smaller than or
 			// equal to pivot
@@ -71,7 +71,7 @@ public class QuickSort implements Runnable
 		arr[i+1] = arr[high];
 		arr[high] = temp;
 
-		return i+1;
+		return i + 1;
 	}
 
 
@@ -81,7 +81,7 @@ public class QuickSort implements Runnable
 	 * low  --> Starting index,
 	 * high  --> Ending index 
 	 */
-	private void sort(BigInteger arr[], int low, int high)
+	void sort(BigInteger arr[], int low, int high)
 			throws ClassNotFoundException, IOException
 	{
 		if (low < high)
@@ -188,7 +188,7 @@ public class QuickSort implements Runnable
 		try 
 		{
 			this.sort(arr, 0, length - 1);
-		} 
+		}
 		catch (ClassNotFoundException | IOException e)
 		{
 			e.printStackTrace();

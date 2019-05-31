@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -26,15 +27,15 @@ public class Main
 		// Build DGK Keys
 		DGKGenerator gen = new DGKGenerator(16, 160, 1024);
 		KeyPair DGK = gen.generateKeyPair();
-		DGKPrivateKey x = (DGKPrivateKey) DGK.getPrivate();
-		DGKPublicKey y = (DGKPublicKey) DGK.getPublic();
+		DGKPublicKey pubKey = (DGKPublicKey) DGK.getPublic();
+		DGKPrivateKey privKey = (DGKPrivateKey) DGK.getPrivate();
 		
 		// Build Paillier Keys
 		PaillierKeyPairGenerator p = new PaillierKeyPairGenerator();
 		p.initialize(1024, null);
 		KeyPair pe = p.generateKeyPair();
-		PaillierPublicKey a = (PaillierPublicKey) pe.getPublic();
-		PaillierPrivateKey b = (PaillierPrivateKey) pe.getPrivate();
+		PaillierPublicKey pk = (PaillierPublicKey) pe.getPublic();
+		PaillierPrivateKey sk = (PaillierPrivateKey) pe.getPrivate();
 		
 		// Paillier Test Addition
 		
@@ -44,86 +45,79 @@ public class Main
 		
 		// DGK Test Multiplication
 		
-		// Division Protocol Test, Paillier
+		// Initialize Alice and Bob
+		ServerSocket bob_socket = null;
+		Socket alice_socket = null;
+		Socket bob_client = null;
+		bob bo = null;
+		alice yujia = null;
+		
+		
 		BigInteger D = new BigInteger("100");
-		D = PaillierCipher.encrypt(D, a);
-		if (isAlice)
+		D = PaillierCipher.encrypt(D, pk);
+		try
 		{
-			Socket s = new Socket("192.168.147.100", 9254);
-			alice al = new alice(s, a, y, false, null);
-			try 
+			if (isAlice)
 			{
-				al.division(D, 2);
-			} 
-			catch (ClassNotFoundException e) 
-			{
-				e.printStackTrace();
+				// I need to ensure that Alice has same Keys as Bob!
+				// and initialize as well
+				alice_socket = new Socket("192.168.147.100", 9254);
+				yujia = new alice(alice_socket, pk, pubKey, false, null);
+				yujia.getDGKPublicKey();
+				yujia.getPaillierPublicKey();
+				
+				// Division Protocol Test, Paillier
+				yujia.division(D, 2);
+					
+				// Division Test, DGK
+				yujia.setDGKstatus(true);
+					
+					
+				// Comparison Protocol Test, Paillier
+				yujia.setDGKstatus(false);
+				yujia.sortArray();
+					
+				// Comparison Test, DGK
+				yujia.setDGKstatus(true);
+					
+				// Clean up
+				alice_socket.close();
+				
 			}
-		}
-		else
-		{
-			bob bo = new bob(null, a, b, y, x, false);
-			try
+			else
 			{
+				// Init
+				bob_socket = new ServerSocket(9254);
+				bob_client = bob_socket.accept();
+				bo = new bob(bob_client, pk, sk, pubKey, privKey, false);
+				bo.getDGKPublicKey();
+				bo.getPaillierPublicKey();
+				
+				// Division Protocol Test, Paillier
 				bo.division(2);
-			}
-			catch (ClassNotFoundException e) 
-			{
-				e.printStackTrace();
-			}
-		}
-		// Division Test, DGK
-		
-		// Comparison Protocol Test, Paillier
-		if (isAlice)
-		{
-			
-		}
-		else
-		{
-			
-		}
-		// Comparison Test, DGK
-		
-	}
-	
-	/*
-    public static void RSAKeyPairGenerator() throws NoSuchAlgorithmException, IOException 
-    {
-    	KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-    	keyGen.initialize(1024);
-    	KeyPair pair = keyGen.generateKeyPair();
-    	PrivateKey privateKey = pair.getPrivate();
-    	PublicKey publicKey = pair.getPublic();
-    	System.out.println(privateKey.getAlgorithm());
-    	System.out.println(privateKey.getFormat());
-    	System.out.println(privateKey.getEncoded()[0]);
+				
+				// Division Test, DGK
+				bo.setDGKMode(true);
 
-    	ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    	ObjectOutput out = null;
-    	byte[] b;
-    	try 
-    	{
-    		out = new ObjectOutputStream(bos);   
-    		out.writeObject(privateKey);
-    		out.flush();
-    		b = bos.toByteArray(); 
-    	}
-    	finally 
-    	{
-    		try 
-    		{
-    			bos.close();
-    		} 
-    		catch (IOException ex) {
-    			// ignore close exception
-    		}
-    	}
-    	System.out.println(b[0]);
-    	if (privateKey instanceof RSAPrivateKey)
-    	{
-    		System.out.println("IS RSA!");
-    	}
-    }
-    */
+				// Comparison Protocol Test, Paillier
+				bo.setDGKMode(false);
+				bo.repeat_Protocol2();
+					
+				// Comparison Test, DGK
+				bo.setDGKMode(true);
+				
+				// Clean up
+				bob_client.close();
+				bob_socket.close();
+			}	
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		catch (ClassNotFoundException e) 
+		{
+			e.printStackTrace();
+		}
+	}
 }

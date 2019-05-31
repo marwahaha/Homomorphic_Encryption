@@ -34,10 +34,9 @@ Protocol 3 and Protocol 4 was created referencing Thjis Veugen's Paper:
 Improving the DGK Comparison Protocol (2012)
 */
 
-public class bob implements Runnable
+public class bob
 {
 	// Key Master
-	protected Socket clientSocket = null;
 	private PaillierPublicKey pk = new PaillierPublicKey();
 	private PaillierPrivateKey sk = new PaillierPrivateKey(1024);
 	
@@ -49,64 +48,32 @@ public class bob implements Runnable
 	private ObjectInputStream fromAlice = null;
 	private boolean isDGK = false;
 
-	public bob (Socket _clientSocket,
+	public bob (Socket clientSocket,
 			PaillierPublicKey _pk, PaillierPrivateKey _sk, DGKPublicKey _pubKey, DGKPrivateKey _privKey,
-			boolean _isDGK)
+			boolean _isDGK) throws IOException
 	{
-		this.clientSocket = _clientSocket;
+		if(clientSocket != null)
+		{
+			this.fromAlice = new ObjectInputStream(clientSocket.getInputStream());
+			this.toAlice = new ObjectOutputStream(clientSocket.getOutputStream());
+		}
 		this.pk = _pk;
 		this.sk = _sk;
 		this.pubKey = _pubKey;
 		this.privKey = _privKey;
 		this.isDGK = _isDGK;
 	}
-
-	public void run()
+	
+	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
+			PaillierPublicKey _pk, PaillierPrivateKey _sk, DGKPublicKey _pubKey, DGKPrivateKey _privKey, boolean _isDGK)
 	{
-		System.out.println("INCOMING REQUEST FROM " + clientSocket.getInetAddress()+ "!!");
-		try 
-		{
-			// Get I/O streams
-			if(clientSocket != null)
-			{
-				toAlice = new ObjectOutputStream(clientSocket.getOutputStream());
-				fromAlice = new ObjectInputStream(clientSocket.getInputStream());
-			}
-
-			/*
-			 * To be used with either
-			 * Finding max/min 
-			 * or Sorting because we have no idea how many times
-			 * Alice needs to call Protocol 2 to do this correctly.
-			 */
-			this.repeat_Protocol2();
-			
-			/*
-			this.Protocol3(new BigInteger("60"));
-			this.Protocol3(new BigInteger("60"));
-			this.Protocol3(new BigInteger("60"));
-			this.Protocol3(new BigInteger("60"));
-			this.Protocol3(new BigInteger("60"));
-			*/
-			
-			/*
-			this.Protocol2();
-			this.Protocol2();
-			this.Protocol2();
-			this.Protocol2();
-			this.Protocol2();
-			*/
-			
-			System.out.println("FINSIHED REQUEST!");
-		} 
-		catch (IOException e1) 
-		{
-			e1.printStackTrace();
-		}
-		catch (ClassNotFoundException e)
-		{
-			e.printStackTrace();
-		}
+		this.fromAlice = _fromAlice;
+		this.toAlice = _toAlice;
+		this.pk = _pk;
+		this.sk = _sk;
+		this.pubKey = _pubKey;
+		this.privKey = _privKey;
+		this.isDGK = _isDGK;
 	}
 	
 	/*
@@ -115,6 +82,15 @@ public class bob implements Runnable
 	 * By the end of this, Alice should have a 
 	 * list of sorted encrypted values. 
 	 */
+	public boolean getDGKMod()
+	{
+		return isDGK;
+	}
+	
+	public void setDGKMode(boolean mode)
+	{
+		isDGK = mode;
+	}
 	
 	public void repeat_Protocol2()
 			throws IOException, ClassNotFoundException
@@ -550,5 +526,45 @@ public class bob implements Runnable
 		{
 			return new BigInteger("-1");
 		}
+	}
+
+	public void getDGKPublicKey() throws IOException
+	{
+		toAlice.writeObject(pubKey);
+		toAlice.flush();
+	}
+	
+	public void getPaillierPublicKey() throws IOException
+	{
+		toAlice.writeObject(pk);
+		toAlice.flush();
+	}
+	
+	/*
+	 *  Ensure that you used the keys from the same key pair!
+	 *  It will be checked upon construction! I had run into this error before,
+	 *  figure it will be a nice tool to have for others to check in case
+	 */
+	
+	public boolean is_valid_DGK_KeyPair()
+	{
+		BigInteger init = new BigInteger("5");
+		long test;
+		BigInteger t = DGKOperations.encrypt(pubKey, init);
+		test = DGKOperations.decrypt(pubKey, privKey, t);
+		return BigInteger.valueOf(test).compareTo(init) == 0;
+	}
+	
+	public boolean is_valid_Paillier_KeyPair()
+	{
+		BigInteger init = new BigInteger("5");
+		BigInteger t = PaillierCipher.encrypt(init, pk);
+		t = PaillierCipher.decrypt(t, sk);
+		return t.compareTo(init) == 0;
+	}
+
+	public String toString()
+	{
+		return "DGK Mode: " + isDGK;
 	}
 }
