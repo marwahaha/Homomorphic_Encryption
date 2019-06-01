@@ -22,6 +22,11 @@ public class Main
 	
 	public static void main(String [] args)
 	{
+		if(args[0] == "Niu")
+		{
+			isAlice = true;
+		}
+		
 		// Build DGK Keys
 		DGKGenerator gen = new DGKGenerator(16, 160, 1024);
 		KeyPair DGK = gen.generateKeyPair();
