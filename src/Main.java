@@ -24,6 +24,7 @@ public class Main
 	{
 		if(args[0] == "Niu")
 		{
+			System.out.println("Alice mode activated...");
 			isAlice = true;
 		}
 		
@@ -64,7 +65,7 @@ public class Main
 			{
 				// I need to ensure that Alice has same Keys as Bob!
 				// and initialize as well
-				alice_socket = new Socket("192.168.147.100", 9254);
+				alice_socket = new Socket("192.168.147.145", 9254);
 				yujia = new alice(alice_socket, pk, pubKey, false, null);
 				yujia.getDGKPublicKey();
 				yujia.getPaillierPublicKey();
@@ -111,6 +112,7 @@ public class Main
 			{
 				// Init
 				bob_socket = new ServerSocket(9254);
+				System.out.println("Bob is ready");
 				bob_client = bob_socket.accept();
 				Niu = new bob(bob_client, pk, sk, pubKey, privKey, false);
 				Niu.sendDGKPublicKey();
