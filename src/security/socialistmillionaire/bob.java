@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
+import java.security.KeyPair;
 
 import security.DGK.DGKOperations;
 import security.DGK.DGKPrivateKey;
@@ -76,6 +77,51 @@ public class bob
 		this.isDGK = _isDGK;
 	}
 	
+	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
+			KeyPair a, KeyPair b, boolean _isDGK)
+	{
+		this.fromAlice = _fromAlice;
+		this.toAlice = _toAlice;
+		if (a.getPublic() instanceof PaillierPublicKey)
+		{
+			this.pk = (PaillierPublicKey) a.getPublic();
+			this.sk = (PaillierPrivateKey) a.getPrivate();
+			if(b.getPublic() instanceof DGKPublicKey)
+			{
+				this.pubKey = (DGKPublicKey) b.getPublic();
+				this.privKey = (DGKPrivateKey) b.getPrivate();
+			}
+			else
+			{
+				throw new IllegalArgumentException("Obtained Paillier Key Pair, Not DGK Key pair!");
+			}
+		}
+		else if (a.getPublic() instanceof DGKPublicKey)
+		{
+			this.pubKey = (DGKPublicKey) a.getPublic();
+			this.privKey = (DGKPrivateKey) a.getPrivate();
+			if (b.getPublic() instanceof PaillierPublicKey)
+			{
+				this.pk = (PaillierPublicKey) a.getPublic();
+				this.sk = (PaillierPrivateKey) a.getPrivate();
+			}
+			else
+			{
+				throw new IllegalArgumentException("Obtained DGK Key Pair, Not Paillier Key pair!");
+			}
+		}
+		else
+		{
+			throw new IllegalArgumentException("First Keypair is neither Paillier or DGK! Invalid!");
+		}
+		this.isDGK = _isDGK;
+	}
+	
+	public bob (Socket clientSocket, KeyPair a, KeyPair b, boolean _isDGK) throws IOException
+	{
+		this(new ObjectInputStream(clientSocket.getInputStream()), new ObjectOutputStream(clientSocket.getOutputStream()), a, b, _isDGK);
+	}
+	
 	/*
 	 * Since Bob has the Public and Private Key
 	 * Alice has the Array of encrypted values.
@@ -92,6 +138,50 @@ public class bob
 		isDGK = mode;
 	}
 	
+	// Get/Set PublicKey
+	public void setPaillierPublicKey(PaillierPublicKey _pk)
+	{
+		pk = _pk;
+	}
+	
+	public PaillierPublicKey getPaillierPublicKey()
+	{
+		return pk;
+	}
+	
+	public void setDGKPublicKey(DGKPublicKey _pk)
+	{
+		pubKey = _pk;
+	}
+	
+	public DGKPublicKey getDGKPublicKey()
+	{
+		return pubKey;
+	}
+	
+	// Get/Set Private Key
+	public void setPaillierPublicKey(PaillierPrivateKey _pk)
+	{
+		sk = _pk;
+	}
+	
+	public PaillierPrivateKey getPaillierPrivateKey()
+	{
+		return sk;
+	}
+	
+	public void setDGKPrivateKey(DGKPrivateKey _pk)
+	{
+		privKey = _pk;
+	}
+	
+	public DGKPrivateKey getDGKPrivateKey()
+	{
+		return privKey;
+	}
+	
+	
+	// Contains the Protocols in Veugen's paper
 	public void repeat_Protocol2()
 			throws IOException, ClassNotFoundException
 	{
@@ -116,7 +206,7 @@ public class bob
 		return answer;
 	}
 	
-	private int Protocol2()
+	public int Protocol2()
 			throws IOException, ClassNotFoundException
 	{
 		//Step 1: Receive z from Alice
@@ -138,6 +228,7 @@ public class bob
 
 		if(z != null)
 		{
+			//[[z]] = [[x - y + 2^l + r]]
 			if(isDGK)
 			{
 				z = BigInteger.valueOf(DGKOperations.decrypt(pubKey, privKey, z));
@@ -191,7 +282,6 @@ public class bob
 		// Bob has the answer as well for [[x <= y]]
 		// Return the answer (method call)
 
-
 		return result.intValue();
 	}
 
@@ -208,7 +298,7 @@ public class bob
 	 * 1 -> x > y
 	 */
 
-	private int Protocol3(BigInteger y)
+	public int Protocol3(BigInteger y)
 			throws IOException, ClassNotFoundException
 	{
 		Object x;
@@ -528,13 +618,13 @@ public class bob
 		}
 	}
 
-	public void getDGKPublicKey() throws IOException
+	public void sendDGKPublicKey() throws IOException
 	{
 		toAlice.writeObject(pubKey);
 		toAlice.flush();
 	}
 	
-	public void getPaillierPublicKey() throws IOException
+	public void sendPaillierPublicKey() throws IOException
 	{
 		toAlice.writeObject(pk);
 		toAlice.flush();

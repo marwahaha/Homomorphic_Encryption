@@ -158,7 +158,7 @@ public class alice
 			z = PaillierCipher.add(x, PaillierCipher.encrypt(r.add(powL), pk), pk);// = [[x + 2^l + r]]
             z = PaillierCipher.subtract(z, y, pk);
             //[[z]] = [[x + 2^l + r - y]]
-			//Systesm.out.println("value of Z: " + Paillier.decrypt(z, sk));
+			//System.out.println("value of Z: " + Paillier.decrypt(z, sk));
 		}
 		toBob.writeObject(z);
 		toBob.flush();
@@ -224,25 +224,18 @@ public class alice
 		}
 		else
 		{
-		    // = [[z/2^l]] * [[r/2^l]]^{-1} = [[z/2^l - r/2^l]]
-            if(zdiv2L != null)
-            {
-                result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
-            }
-            if(result != null)
-            {
-                // = [[z/2^l - r/2^l - (alpha <= beta)]]
-                if(deltaA == 1)
-                {
-                    result = PaillierCipher.subtract(result, PaillierCipher.encrypt(deltaB, pk), pk);
-                }
-                else
-                {
-                    result = PaillierCipher.subtract(result, PaillierCipher.encrypt((1 - deltaB), pk), pk);
-                }
-            }
+		   // = [[z/2^l]] * [[r/2^l]]^{-1} = [[z/2^l - r/2^l]]
+           result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
+           if(deltaA == 1)
+           {
+        	   result = PaillierCipher.subtract(result, PaillierCipher.encrypt(deltaB, pk), pk);
+           }
+           else
+           {
+        	   result = PaillierCipher.subtract(result, PaillierCipher.encrypt((1 - deltaB), pk), pk);  
+           }
 		}
-
+		
 		/*
 		 * Unofficial Step 8:
 		 * Since the result is encrypted...I need to send
@@ -253,6 +246,12 @@ public class alice
 
 		toBob.writeObject(result);
 		comparison = fromBob.readInt();// x <= y
+		// IF SOMETHING HAPPENS...GET POST MORTERM HERE
+		if (comparison != 0 && comparison != 1)
+		{
+			System.err.println("Comparison result: " + comparison);
+			// Get Number of Bits in X and Y? Maybe too big?
+		}
 		return comparison;
 	}
 
@@ -268,9 +267,13 @@ public class alice
 	 * 1 -> x > y
 	 */
 
-	private int Protocol3(BigInteger x, int deltaA)
+	public int Protocol3(BigInteger x, int deltaA)
 			throws ClassNotFoundException, IOException
 	{
+		if(deltaA != 0 && deltaA != 1)
+		{
+			throw new IllegalArgumentException("ONLY 1 or 0 is accepted!");
+		}
 		BigInteger [] EncY;
 		int deltaB;
 		int answer;
