@@ -9,7 +9,7 @@ import java.math.BigInteger;
 
 import java.util.Arrays;
 
-public class MyMergeSort implements Runnable
+public class MyMergeSort
 {
 	// Long
     private long [] array;
@@ -37,7 +37,7 @@ public class MyMergeSort implements Runnable
     	Alice = _sorting;
     }
     
-    private void doMergeSort(int lowerIndex, int higherIndex) 
+    void doMergeSort(int lowerIndex, int higherIndex) 
     		throws ClassNotFoundException, IOException
     {
         if (lowerIndex < higherIndex)
@@ -66,7 +66,7 @@ public class MyMergeSort implements Runnable
             while (i <= middle && j <= higherIndex)
             {
             	// Use DGK Comparison Protocol Here!
-            	//int answer = -1;
+            	// int answer = -1;
                 Alice.sendRequest();
                 if ((Alice.Protocol2(tempBigMerg[i], tempBigMerg[j])) != 1)
                 {
@@ -114,22 +114,6 @@ public class MyMergeSort implements Runnable
             }	
         }
     }
-
-	public void run()
-	{
-        try 
-        {
-			doMergeSort(0, length - 1);
-		} 
-        catch (ClassNotFoundException e) 
-        {
-			e.printStackTrace();
-		} 
-        catch (IOException e) 
-        {
-			e.printStackTrace();
-		}
-	}
 	
 	public BigInteger[] getSortedArray()
 	{

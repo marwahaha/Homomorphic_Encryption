@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 import security.DGK.DGKOperations;
@@ -33,10 +34,10 @@ Improving the DGK Comparison Protocol (2012)
 
 enum Algorithm
 {
-    INSERT_SORT, MERGE_SORT, QUICK_SORT;
+    INSERT_SORT, MERGE_SORT, QUICK_SORT, BUBBLE_SORT;
 }
 
-public class alice implements Runnable
+public class alice
 {
 	class Pair 
 	{
@@ -44,7 +45,6 @@ public class alice implements Runnable
 		BigInteger max;
 	}
 	
-	private final static int BILLION = 1000000000;
 	private Random rnd = new Random();
 	
 	// Alice  will be given the Public Keys
@@ -53,32 +53,31 @@ public class alice implements Runnable
 	
 	// Needed for comparison
 	private boolean isDGK = false;
-	public ArrayList<BigInteger> toSort = new ArrayList<BigInteger>();
-	public BigInteger [] sortedArray;
+	private BigInteger [] toSort = null;
+	public BigInteger [] sortedArray = null;
 	
-	//Socket Communication
-	private Socket clientSocket = null;
+	//I/O
 	private ObjectOutputStream toBob = null;
 	private ObjectInputStream fromBob = null;
 	
 	// Current Algorithm to Sort with...
 	private Algorithm algo;
 	
-	public alice (Socket _clientSocket,
+	public alice (Socket clientSocket,
 			PaillierPublicKey _pk, DGKPublicKey _pubKey,
-            boolean _isDGK, ArrayList<BigInteger> _toSort)
+            boolean _isDGK, BigInteger[] _toSort)
 	{
-		 this.clientSocket = _clientSocket;
-		 this.pk = _pk;
-		 this.pubKey = _pubKey;
-		 this.isDGK = _isDGK;
-		 this.toSort = _toSort;
-		 this.algo = Algorithm.valueOf("QUICK_SORT");
+		
+		this.pk = _pk;
+		this.pubKey = _pubKey;
+		this.isDGK = _isDGK;
+		this.toSort = _toSort;
+		this.algo = Algorithm.valueOf("QUICK_SORT");
 	}
 
 	public alice (ObjectInputStream _fromBob, ObjectOutputStream _toBob,
 			PaillierPublicKey _pk, DGKPublicKey _pubKey,
-			boolean _isDGK, ArrayList<BigInteger> _toSort)
+			boolean _isDGK, BigInteger[] _toSort)
 	{
 		this.fromBob = _fromBob;
 		this.toBob = _toBob;
@@ -89,60 +88,9 @@ public class alice implements Runnable
 		this.algo = Algorithm.valueOf("QUICK_SORT");
 	}
 	
-	@Override
-	public void run()
+	public boolean getDGKStatus()
 	{
-		try
-		{
-			if(clientSocket != null)
-			{	
-				System.out.println("INCOMING REQUEST FROM " + clientSocket.getInetAddress()+ "!!");
-				toBob = new ObjectOutputStream(clientSocket.getOutputStream());
-				fromBob = new ObjectInputStream(clientSocket.getInputStream());				
-			}
-			long start = System.nanoTime();
-			//this.findMinIDX(toSort, true);
-			this.sortArray();
-			
-			/*
-			// Test out Division!
-			BigInteger answer;
-			if(isDGK)
-			{
-				answer = this.division(DGKOperations.encrypt(pubKey, 50), 2);
-				System.out.println("answer: " + DGKOperations.decrypt(pubKey, server.privKey, answer));
-				
-				answer = this.division(DGKOperations.encrypt(pubKey, 100), 2);
-				System.out.println("answer: " + DGKOperations.decrypt(pubKey, server.privKey, answer));
-				
-				answer = this.division(DGKOperations.encrypt(pubKey, 25), 3);
-				System.out.println("answer: " + DGKOperations.decrypt(pubKey, server.privKey, answer));
-			
-			}
-			else
-			{	
-				answer = this.division(Paillier.encrypt(new BigInteger("60"), pk), 2);
-				System.out.println("answer: " + Paillier.decrypt(answer, server.sk));
-				
-				answer = this.division(Paillier.encrypt(new BigInteger("30"), pk), 2);
-				System.out.println("answer: " + Paillier.decrypt(answer, server.sk));
-				
-				answer = this.division(Paillier.encrypt(new BigInteger("30"), pk), 3);
-				System.out.println("answer: " + Paillier.decrypt(answer, server.sk));
-			}
-			*/
-					
-			System.out.println("SORTING REQUEST FINISHED IN " + ((System.nanoTime() - start)/BILLION) + " Seconds");
-			// this.closeThread();
-		}
-		catch (IOException | ClassNotFoundException e)
-		{
-			e.printStackTrace();
-		} 
-		catch (InterruptedException e) 
-		{
-			e.printStackTrace();
-		}
+		return isDGK;
 	}
 	
 	public void setDGKstatus(boolean _isDGK)
@@ -152,7 +100,7 @@ public class alice implements Runnable
 	
 	public void setSorting(ArrayList<BigInteger> _toSort)
 	{
-		toSort = _toSort;
+		toSort = _toSort.toArray(new BigInteger[_toSort.size()]);
 	}
 	
 	public void sendRequest() throws IOException
@@ -210,7 +158,7 @@ public class alice implements Runnable
 			z = PaillierCipher.add(x, PaillierCipher.encrypt(r.add(powL), pk), pk);// = [[x + 2^l + r]]
             z = PaillierCipher.subtract(z, y, pk);
             //[[z]] = [[x + 2^l + r - y]]
-			//Systesm.out.println("value of Z: " + Paillier.decrypt(z, sk));
+			//System.out.println("value of Z: " + Paillier.decrypt(z, sk));
 		}
 		toBob.writeObject(z);
 		toBob.flush();
@@ -276,25 +224,18 @@ public class alice implements Runnable
 		}
 		else
 		{
-		    // = [[z/2^l]] * [[r/2^l]]^{-1} = [[z/2^l - r/2^l]]
-            if(zdiv2L != null)
-            {
-                result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
-            }
-            if(result != null)
-            {
-                // = [[z/2^l - r/2^l - (alpha <= beta)]]
-                if(deltaA == 1)
-                {
-                    result = PaillierCipher.subtract(result, PaillierCipher.encrypt(deltaB, pk), pk);
-                }
-                else
-                {
-                    result = PaillierCipher.subtract(result, PaillierCipher.encrypt((1 - deltaB), pk), pk);
-                }
-            }
+		   // = [[z/2^l]] * [[r/2^l]]^{-1} = [[z/2^l - r/2^l]]
+           result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
+           if(deltaA == 1)
+           {
+        	   result = PaillierCipher.subtract(result, PaillierCipher.encrypt(deltaB, pk), pk);
+           }
+           else
+           {
+        	   result = PaillierCipher.subtract(result, PaillierCipher.encrypt((1 - deltaB), pk), pk);  
+           }
 		}
-
+		
 		/*
 		 * Unofficial Step 8:
 		 * Since the result is encrypted...I need to send
@@ -305,6 +246,12 @@ public class alice implements Runnable
 
 		toBob.writeObject(result);
 		comparison = fromBob.readInt();// x <= y
+		// IF SOMETHING HAPPENS...GET POST MORTERM HERE
+		if (comparison != 0 && comparison != 1)
+		{
+			System.err.println("Comparison result: " + comparison);
+			// Get Number of Bits in X and Y? Maybe too big?
+		}
 		return comparison;
 	}
 
@@ -320,9 +267,13 @@ public class alice implements Runnable
 	 * 1 -> x > y
 	 */
 
-	private int Protocol3(BigInteger x, int deltaA)
+	public int Protocol3(BigInteger x, int deltaA)
 			throws ClassNotFoundException, IOException
 	{
+		if(deltaA != 0 && deltaA != 1)
+		{
+			throw new IllegalArgumentException("ONLY 1 or 0 is accepted!");
+		}
 		BigInteger [] EncY;
 		int deltaB;
 		int answer;
@@ -778,7 +729,7 @@ public class alice implements Runnable
 		// Step F: 
 		for (int i = 0; i < beta_bits.length;i++)
 		{
-			BigInteger product = DGKOperations.encrypt(pubKey, BigInteger.ZERO);
+			//BigInteger product = DGKOperations.encrypt(pubKey, BigInteger.ZERO);
 			w[i] = DGKOperations.DGKMultiply(pubKey, w[i], exponent(2, i));
 		}
 		
@@ -965,7 +916,7 @@ public class alice implements Runnable
 				results.min = arr[1];
 				//System.err.println("Start with 1");
 			}
-			i = 2;  /* set the startung index for loop */
+			i = 2;  /* set the starting index for loop */
 		}
 
 		/* If array has odd number of elements then 
@@ -1045,39 +996,57 @@ public class alice implements Runnable
 	}
 
 	
-	public void sortArray() 
-			throws ClassNotFoundException, IOException, InterruptedException
+	public BigInteger[] sortArray() 
+			throws ClassNotFoundException, IOException
 	{
 		System.out.println("Sorting Initialized!");
-		Thread t;
+		if(toSort == null)
+		{
+			sortedArray = new BigInteger[0];
+			return sortedArray;
+		}
+		if(toSort.length == 1 || toSort.length == 0)
+		{
+			sortedArray = toSort;
+			return sortedArray;
+		}
+		else if (toSort.length == 2)
+		{
+			ArrayList<BigInteger> Sort = new ArrayList<BigInteger>(Arrays.asList(toSort));
+			Pair result = findExtrema(Sort, true);
+			sortedArray = new BigInteger[2];
+			sortedArray[0] = result.min;
+			sortedArray[1] = result.max;
+			toBob.writeBoolean(false);
+			return sortedArray;
+		}
 		
 		switch(algo)
 		{
 			case INSERT_SORT:
+				ArrayList<BigInteger> Sort = new ArrayList<BigInteger>(Arrays.asList(toSort));
 				int counter = 0;
 				Deque<BigInteger> minSorted = new LinkedList<>();
 				Deque<BigInteger> maxSorted = new LinkedList<>();
 			
 				// Since I am getting two a time...be careful
 				// of odd sized arrays!
-				if(toSort.size() % 2 == 1)
+				if(Sort.size() % 2 == 1)
 				{
-					BigInteger min = findExtrema(toSort, false).min;
+					BigInteger min = findExtrema(Sort, false).min;
 					minSorted.addFirst(min);
-					toSort.remove(min);
+					Sort.remove(min);
 				}
-				System.out.println("");
 				System.err.println("Now it is an even sized list!");
 				
-				while(!toSort.isEmpty())
+				while(!Sort.isEmpty())
 				{
-					Pair res = findExtrema(toSort, false);
+					Pair res = findExtrema(Sort, false);
 					minSorted.addLast(res.min);
 					maxSorted.addLast(res.max);
 							
-					toSort.remove(res.max);
-					toSort.remove(res.min);
-					System.out.println("");
+					Sort.remove(res.max);
+					Sort.remove(res.min);
 					System.out.println("Round: " + (++counter));
 				}
 				
@@ -1092,35 +1061,50 @@ public class alice implements Runnable
 				break;
 				
 			case MERGE_SORT:
-		        MyMergeSort mms = new MyMergeSort(toSort.toArray(new BigInteger[toSort.size()]), this);
-		        (t = new Thread(mms)).start();
-		        t.join();
+		        MyMergeSort mms = new MyMergeSort(toSort, this);
+		        mms.doMergeSort(0, toSort.length - 1);
 		        sortedArray = mms.getSortedArray();
 		        break;
 		        
 			case QUICK_SORT:
-				 QuickSort qs = new QuickSort(toSort.toArray(new BigInteger[toSort.size()]), this);
-				 (t = new Thread(qs)).start();
-				 t.join();
-				 sortedArray = qs.getSortedArray();
-				 break;
-				 
+				QuickSort qs = new QuickSort(toSort, this);
+				qs.sort(toSort, 0, toSort.length - 1);
+				sortedArray = qs.getSortedArray();
+				break;
+				
+			case BUBBLE_SORT:
+				BubbleSort bubble = new BubbleSort(toSort, this);
+				bubble.bubbleSort();
+				sortedArray = bubble.getSortedArray();
 			default:
 				break;
 		}
-        
         // Time to end Bob's while loop for Protocol2()
         toBob.writeBoolean(false);
+        return sortedArray;
 	}
-
 	
-	public void closeThread() throws IOException
+	public void getDGKPublicKey() throws IOException, ClassNotFoundException
+	{
+		Object x = fromBob.readObject();
+		if (x instanceof DGKPublicKey)
+		{
+			pubKey = (DGKPublicKey) x;
+		}
+	}
+	
+	public void getPaillierPublicKey() throws IOException, ClassNotFoundException
+	{
+		Object x = fromBob.readObject();
+		if(x instanceof PaillierPublicKey)
+		{
+			pk = (PaillierPublicKey) x;
+		}
+	}
+	
+	public void close() throws IOException
 	{
 		toBob.close();
 		fromBob.close();
-		if(clientSocket != null && clientSocket.isConnected())
-		{
-			clientSocket.close();
-		}
 	}
 }

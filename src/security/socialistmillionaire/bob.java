@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
+import java.security.KeyPair;
 
 import security.DGK.DGKOperations;
 import security.DGK.DGKPrivateKey;
@@ -34,10 +35,9 @@ Protocol 3 and Protocol 4 was created referencing Thjis Veugen's Paper:
 Improving the DGK Comparison Protocol (2012)
 */
 
-public class bob implements Runnable
+public class bob
 {
 	// Key Master
-	protected Socket clientSocket = null;
 	private PaillierPublicKey pk = new PaillierPublicKey();
 	private PaillierPrivateKey sk = new PaillierPrivateKey(1024);
 	
@@ -49,64 +49,77 @@ public class bob implements Runnable
 	private ObjectInputStream fromAlice = null;
 	private boolean isDGK = false;
 
-	public bob (Socket _clientSocket,
+	public bob (Socket clientSocket,
 			PaillierPublicKey _pk, PaillierPrivateKey _sk, DGKPublicKey _pubKey, DGKPrivateKey _privKey,
-			boolean _isDGK)
+			boolean _isDGK) throws IOException
 	{
-		this.clientSocket = _clientSocket;
+		if(clientSocket != null)
+		{
+			this.fromAlice = new ObjectInputStream(clientSocket.getInputStream());
+			this.toAlice = new ObjectOutputStream(clientSocket.getOutputStream());
+		}
 		this.pk = _pk;
 		this.sk = _sk;
 		this.pubKey = _pubKey;
 		this.privKey = _privKey;
 		this.isDGK = _isDGK;
 	}
-
-	public void run()
+	
+	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
+			PaillierPublicKey _pk, PaillierPrivateKey _sk, DGKPublicKey _pubKey, DGKPrivateKey _privKey, boolean _isDGK)
 	{
-		System.out.println("INCOMING REQUEST FROM " + clientSocket.getInetAddress()+ "!!");
-		try 
+		this.fromAlice = _fromAlice;
+		this.toAlice = _toAlice;
+		this.pk = _pk;
+		this.sk = _sk;
+		this.pubKey = _pubKey;
+		this.privKey = _privKey;
+		this.isDGK = _isDGK;
+	}
+	
+	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
+			KeyPair a, KeyPair b, boolean _isDGK)
+	{
+		this.fromAlice = _fromAlice;
+		this.toAlice = _toAlice;
+		if (a.getPublic() instanceof PaillierPublicKey)
 		{
-			// Get I/O streams
-			if(clientSocket != null)
+			this.pk = (PaillierPublicKey) a.getPublic();
+			this.sk = (PaillierPrivateKey) a.getPrivate();
+			if(b.getPublic() instanceof DGKPublicKey)
 			{
-				toAlice = new ObjectOutputStream(clientSocket.getOutputStream());
-				fromAlice = new ObjectInputStream(clientSocket.getInputStream());
+				this.pubKey = (DGKPublicKey) b.getPublic();
+				this.privKey = (DGKPrivateKey) b.getPrivate();
 			}
-
-			/*
-			 * To be used with either
-			 * Finding max/min 
-			 * or Sorting because we have no idea how many times
-			 * Alice needs to call Protocol 2 to do this correctly.
-			 */
-			this.repeat_Protocol2();
-			
-			/*
-			this.Protocol3(new BigInteger("60"));
-			this.Protocol3(new BigInteger("60"));
-			this.Protocol3(new BigInteger("60"));
-			this.Protocol3(new BigInteger("60"));
-			this.Protocol3(new BigInteger("60"));
-			*/
-			
-			/*
-			this.Protocol2();
-			this.Protocol2();
-			this.Protocol2();
-			this.Protocol2();
-			this.Protocol2();
-			*/
-			
-			System.out.println("FINSIHED REQUEST!");
-		} 
-		catch (IOException e1) 
-		{
-			e1.printStackTrace();
+			else
+			{
+				throw new IllegalArgumentException("Obtained Paillier Key Pair, Not DGK Key pair!");
+			}
 		}
-		catch (ClassNotFoundException e)
+		else if (a.getPublic() instanceof DGKPublicKey)
 		{
-			e.printStackTrace();
+			this.pubKey = (DGKPublicKey) a.getPublic();
+			this.privKey = (DGKPrivateKey) a.getPrivate();
+			if (b.getPublic() instanceof PaillierPublicKey)
+			{
+				this.pk = (PaillierPublicKey) a.getPublic();
+				this.sk = (PaillierPrivateKey) a.getPrivate();
+			}
+			else
+			{
+				throw new IllegalArgumentException("Obtained DGK Key Pair, Not Paillier Key pair!");
+			}
 		}
+		else
+		{
+			throw new IllegalArgumentException("First Keypair is neither Paillier or DGK! Invalid!");
+		}
+		this.isDGK = _isDGK;
+	}
+	
+	public bob (Socket clientSocket, KeyPair a, KeyPair b, boolean _isDGK) throws IOException
+	{
+		this(new ObjectInputStream(clientSocket.getInputStream()), new ObjectOutputStream(clientSocket.getOutputStream()), a, b, _isDGK);
 	}
 	
 	/*
@@ -115,7 +128,60 @@ public class bob implements Runnable
 	 * By the end of this, Alice should have a 
 	 * list of sorted encrypted values. 
 	 */
+	public boolean getDGKMod()
+	{
+		return isDGK;
+	}
 	
+	public void setDGKMode(boolean mode)
+	{
+		isDGK = mode;
+	}
+	
+	// Get/Set PublicKey
+	public void setPaillierPublicKey(PaillierPublicKey _pk)
+	{
+		pk = _pk;
+	}
+	
+	public PaillierPublicKey getPaillierPublicKey()
+	{
+		return pk;
+	}
+	
+	public void setDGKPublicKey(DGKPublicKey _pk)
+	{
+		pubKey = _pk;
+	}
+	
+	public DGKPublicKey getDGKPublicKey()
+	{
+		return pubKey;
+	}
+	
+	// Get/Set Private Key
+	public void setPaillierPublicKey(PaillierPrivateKey _pk)
+	{
+		sk = _pk;
+	}
+	
+	public PaillierPrivateKey getPaillierPrivateKey()
+	{
+		return sk;
+	}
+	
+	public void setDGKPrivateKey(DGKPrivateKey _pk)
+	{
+		privKey = _pk;
+	}
+	
+	public DGKPrivateKey getDGKPrivateKey()
+	{
+		return privKey;
+	}
+	
+	
+	// Contains the Protocols in Veugen's paper
 	public void repeat_Protocol2()
 			throws IOException, ClassNotFoundException
 	{
@@ -140,7 +206,7 @@ public class bob implements Runnable
 		return answer;
 	}
 	
-	private int Protocol2()
+	public int Protocol2()
 			throws IOException, ClassNotFoundException
 	{
 		//Step 1: Receive z from Alice
@@ -162,6 +228,7 @@ public class bob implements Runnable
 
 		if(z != null)
 		{
+			//[[z]] = [[x - y + 2^l + r]]
 			if(isDGK)
 			{
 				z = BigInteger.valueOf(DGKOperations.decrypt(pubKey, privKey, z));
@@ -215,7 +282,6 @@ public class bob implements Runnable
 		// Bob has the answer as well for [[x <= y]]
 		// Return the answer (method call)
 
-
 		return result.intValue();
 	}
 
@@ -232,7 +298,7 @@ public class bob implements Runnable
 	 * 1 -> x > y
 	 */
 
-	private int Protocol3(BigInteger y)
+	public int Protocol3(BigInteger y)
 			throws IOException, ClassNotFoundException
 	{
 		Object x;
@@ -550,5 +616,45 @@ public class bob implements Runnable
 		{
 			return new BigInteger("-1");
 		}
+	}
+
+	public void sendDGKPublicKey() throws IOException
+	{
+		toAlice.writeObject(pubKey);
+		toAlice.flush();
+	}
+	
+	public void sendPaillierPublicKey() throws IOException
+	{
+		toAlice.writeObject(pk);
+		toAlice.flush();
+	}
+	
+	/*
+	 *  Ensure that you used the keys from the same key pair!
+	 *  It will be checked upon construction! I had run into this error before,
+	 *  figure it will be a nice tool to have for others to check in case
+	 */
+	
+	public boolean is_valid_DGK_KeyPair()
+	{
+		BigInteger init = new BigInteger("5");
+		long test;
+		BigInteger t = DGKOperations.encrypt(pubKey, init);
+		test = DGKOperations.decrypt(pubKey, privKey, t);
+		return BigInteger.valueOf(test).compareTo(init) == 0;
+	}
+	
+	public boolean is_valid_Paillier_KeyPair()
+	{
+		BigInteger init = new BigInteger("5");
+		BigInteger t = PaillierCipher.encrypt(init, pk);
+		t = PaillierCipher.decrypt(t, sk);
+		return t.compareTo(init) == 0;
+	}
+
+	public String toString()
+	{
+		return "DGK Mode: " + isDGK;
 	}
 }

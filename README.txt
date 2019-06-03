@@ -1,5 +1,20 @@
 This is a module created from the SST REU 2017 project.
 
+--Requirements---
+JRE 1.8
+
+--How to export to JAR file to use in other projects--
+Phase I - Importing into Eclipse
+
+Phase II - Exporting to JAR file
+1- Right-Click Project and select Export
+2- Select Java/Java JAR file
+3- Be sure you selected the right project! 
+4- Be sure to NOT select the default package as that only contains test cases as an example for you to use!
+5- Be sure to select to export only generated class files/resources. The source code is here in this repository anyways!
+6- Select the path of where JAR file will be exported.
+7- SEE AndrewQuijano/SSTREU2017 repository, which shows it uses the jar file from this repository.
+
 -----------STILL A WORK IN PROGRESS----------------
 
 This module contains a function Android and Java support for
@@ -36,3 +51,6 @@ Protocol2()		Protocol2()
 Protocol3() 		Protocol3()
 
 Please feel free to review the SST REU 2017 project which uses this module to get minimum distance and divide encrypted numbers.
+
+-----------Precuations---------------
+
