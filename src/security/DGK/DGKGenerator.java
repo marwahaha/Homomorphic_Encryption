@@ -10,6 +10,7 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 	private int l = 16, t = 160, k = 1024;
 	private SecureRandom rnd = null;
 	private final static int certainty = 40;
+	private boolean no_skip_public_key_maps = true;
 	
 	public DGKGenerator(int _l, int _t, int _k)
 	{
@@ -42,7 +43,19 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 	
 	public void initialize(int keysize, SecureRandom random) 
 	{
-		rnd = new SecureRandom();
+		if (keysize == 0)
+		{
+			no_skip_public_key_maps = false;
+		}
+		
+		if (random == null)
+		{
+			rnd = new SecureRandom();
+		}
+		else
+		{
+			rnd = random;
+		}
 	}
 
 	public KeyPair generateKeyPair() 
@@ -265,8 +278,11 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 
 		System.out.println("Generating hashmaps...");
 		privkey.generategLUT(pubKey);
-		pubKey.generategLUT();
-		pubKey.generatehLUT();
+		if(no_skip_public_key_maps)
+		{
+			pubKey.generategLUT();
+			pubKey.generatehLUT();
+		}
 		System.out.println("FINISHED WITH DGK KEY GENERATION!");
 		return new KeyPair(pubKey, privkey);
 	}
