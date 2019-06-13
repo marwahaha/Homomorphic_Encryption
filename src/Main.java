@@ -52,13 +52,14 @@ public class Main
 		BigInteger D = new BigInteger("100");
 		D = PaillierCipher.encrypt(D, pk);
 		BigInteger d = DGKOperations.encrypt(pubKey, 100);
-		ArrayList<Integer> answers = new ArrayList<Integer>();
+
 		try
 		{
 			// Future Reference in saving keys...
 			// https://stackoverflow.com/questions/1615871/creating-an-x509-certificate-in-java-without-bouncycastle/2037663#2037663
 			// https://bfo.com/blog/2011/03/08/odds_and_ends_creating_a_new_x_509_certificate/
 			
+			// DO NOT USE ASSERT WHEN CONDUCTING THE TESTS!!!!
 			if (isAlice)
 			{
 				// I need to ensure that Alice has same Keys as Bob!
@@ -67,12 +68,13 @@ public class Main
 				yujia = new alice(alice_socket, pk, pubKey, false, null);
 				
 				// Division Protocol Test, Paillier
-				yujia.division(D, 2).compareTo(new BigInteger("50"));
-				yujia.division(D, 4).compareTo(new BigInteger("25"));
-				yujia.division(D, 5).compareTo(new BigInteger("20"));
-				yujia.division(D, 25).compareTo(new BigInteger("4"));
+				System.out.println(yujia.division(D, 2).compareTo(new BigInteger("50")));//100/2 = 50
+				System.out.println(yujia.division(D, 4).compareTo(new BigInteger("25")));//100/4 = 25
+				System.out.println(yujia.division(D, 5).compareTo(new BigInteger("20")));//100/5 = 20
+				System.out.println(yujia.division(D, 25).compareTo(new BigInteger("4")));//100/25 = 4
 				
 				// Division Test, DGK
+				/*
 				yujia.setDGKstatus(true);
 				assert(yujia.division(d, 2).compareTo(new BigInteger("50")) == 0);
 				assert(yujia.division(d, 4).compareTo(new BigInteger("25")) == 0);
@@ -100,7 +102,7 @@ public class Main
 				assert(yujia.Protocol3(new BigInteger("100"), 0) == 1);
 				assert(yujia.Protocol3(new BigInteger("100"), 0) == 0);
 				assert(yujia.Protocol3(new BigInteger("100"), 0) == 0);
-				
+				*/
 				// Clean up
 				alice_socket.close();
 			}
@@ -119,6 +121,7 @@ public class Main
 				Niu.division(25);
 				
 				// Division Test, DGK
+				/*
 				Niu.setDGKMode(true);
 				Niu.division(2);
 				Niu.division(4);
@@ -147,7 +150,7 @@ public class Main
 				Niu.Protocol3(new BigInteger("102"));
 				Niu.Protocol3(new BigInteger("98"));
 				Niu.Protocol3(new BigInteger("35"));
-				
+				*/
 				// Clean up
 				bob_client.close();
 				bob_socket.close();
