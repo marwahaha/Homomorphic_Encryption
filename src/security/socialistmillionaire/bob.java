@@ -616,6 +616,7 @@ public class bob
 		{
 			toAlice.writeObject(PaillierCipher.encrypt(c, pk));
 		}
+		toAlice.flush();
 		
 		// Get answer from Alice [[x/d]]
 		alice = fromAlice.readObject();
@@ -629,7 +630,7 @@ public class bob
 			}
 			else
 			{
-				toAlice.writeObject(PaillierCipher.decrypt(z, sk));
+				System.out.println(PaillierCipher.decrypt(z, sk));	
 			}
 			return z;
 		}

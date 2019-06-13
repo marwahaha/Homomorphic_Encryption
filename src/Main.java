@@ -67,11 +67,11 @@ public class Main
 				alice_socket = new Socket("192.168.147.145", 9254);
 				yujia = new alice(alice_socket, pk, pubKey, false, null);
 				
-				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);
-				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);
-				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);
-				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 0);
-				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 0);
+				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);//100
+				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);//101
+				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);//102
+				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 0);//98
+				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 0);//35
 				
 				// Division Protocol Test, Paillier
 				// REMEMBER THE OUTPUT IS THE ENCRYPTED ANSWER 

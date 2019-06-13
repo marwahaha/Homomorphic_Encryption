@@ -820,6 +820,7 @@ public class alice
 			answer = PaillierCipher.add(answer, PaillierCipher.encrypt(BigInteger.ONE, pk), pk);
 		}
 		toBob.writeObject(answer);
+		toBob.flush();
 		return answer;
 	}
 
