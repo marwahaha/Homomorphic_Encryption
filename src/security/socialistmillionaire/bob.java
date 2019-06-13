@@ -595,7 +595,7 @@ public class bob
 		}
 		else
 		{
-			return new BigInteger("-1");
+			throw new IllegalArgumentException("No BigInteger found!");
 		}
 		
 		if(isDGK)
@@ -623,11 +623,21 @@ public class bob
 		alice = fromAlice.readObject();
 		if (alice instanceof BigInteger)
 		{
-			return (BigInteger) alice;
+			// VERIFY ANSWER HERE!
+			z = (BigInteger) alice;
+			if(isDGK)
+			{
+				System.out.println(DGKOperations.decrypt(pubKey, privKey, z));	
+			}
+			else
+			{
+				toAlice.writeObject(PaillierCipher.decrypt(z, sk));
+			}
+			return z;
 		}
 		else
 		{
-			return new BigInteger("-1");
+			throw new IllegalArgumentException("No BigInteger found!");
 		}
 	}
 

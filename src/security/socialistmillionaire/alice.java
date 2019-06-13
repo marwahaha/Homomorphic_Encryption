@@ -777,7 +777,7 @@ public class alice
 		toBob.flush();
 		
 		int t = Protocol3(r.mod(BigInteger.valueOf(d)), rnd.nextInt(2));
-		//System.out.println("(Division) Protocol 3 answer is: " + t);
+		System.out.println("(Division) Protocol 3 answer is: " + t);
 		
 		in = fromBob.readObject();
 		if (in instanceof BigInteger)

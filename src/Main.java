@@ -68,10 +68,12 @@ public class Main
 				yujia = new alice(alice_socket, pk, pubKey, false, null);
 				
 				// Division Protocol Test, Paillier
-				System.out.println(yujia.division(D, 2).compareTo(new BigInteger("50")));//100/2 = 50
-				System.out.println(yujia.division(D, 4).compareTo(new BigInteger("25")));//100/4 = 25
-				System.out.println(yujia.division(D, 5).compareTo(new BigInteger("20")));//100/5 = 20
-				System.out.println(yujia.division(D, 25).compareTo(new BigInteger("4")));//100/25 = 4
+				// REMEMBER THE OUTPUT IS THE ENCRYPTED ANSWER 
+				// BOB CAN KNOW THE ANSWER ONLY!
+				System.out.println(yujia.division(D, 2));//100/2 = 50
+				System.out.println(yujia.division(D, 4));//100/4 = 25
+				System.out.println(yujia.division(D, 5));//100/5 = 20
+				System.out.println(yujia.division(D, 25));//100/25 = 4
 				
 				// Division Test, DGK
 				/*
@@ -104,7 +106,7 @@ public class Main
 				assert(yujia.Protocol3(new BigInteger("100"), 0) == 0);
 				*/
 				// Clean up
-				alice_socket.close();
+				// alice_socket.close();
 			}
 			else
 			{
