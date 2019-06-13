@@ -50,8 +50,8 @@ public class bob
 	private boolean isDGK = false;
 
 	public bob (Socket clientSocket,
-			PaillierPublicKey _pk, PaillierPrivateKey _sk, DGKPublicKey _pubKey, DGKPrivateKey _privKey,
-			boolean _isDGK) throws IOException
+			PaillierPublicKey _pk, PaillierPrivateKey _sk,
+			DGKPublicKey _pubKey, DGKPrivateKey _privKey, boolean _isDGK) throws IOException
 	{
 		if(clientSocket != null)
 		{
@@ -69,6 +69,8 @@ public class bob
 		this.isDGK = _isDGK;
 		this.sendDGKPublicKey();
 		this.sendPaillierPublicKey();
+		System.out.println(pk.toString());
+		System.out.println(pubKey.toString());
 	}
 	
 	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
@@ -184,7 +186,6 @@ public class bob
 	{
 		return privKey;
 	}
-	
 	
 	// Contains the Protocols in Veugen's paper
 	public void repeat_Protocol2()
@@ -371,7 +372,6 @@ public class bob
 		else if (x instanceof BigInteger)
 		{
 			deltaA = (BigInteger) x;
-
 			// Case 1 delta B is 0
 			// 1 XOR 0 = 0
 			// x <= y -> 1 (true)
@@ -380,7 +380,6 @@ public class bob
 				answer = 1;
 				return answer;
 			}
-
 			// Case 2, delta B is 0
 			// 0 XOR 0 = 0
 			// x <= y -> 0 (false)

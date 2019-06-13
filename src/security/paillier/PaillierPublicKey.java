@@ -32,11 +32,6 @@ public class PaillierPublicKey implements PublicKey, Serializable
         aOutputStream.defaultWriteObject();
     }
 
-    public String toString()
-    {
-        return "k1 = " + k1 + ", n = " + n + ", modulus = " + modulus;
-    }
-
 	public String getAlgorithm() 
 	{
 		return "Paillier";
@@ -51,4 +46,13 @@ public class PaillierPublicKey implements PublicKey, Serializable
 	{
 		return null;
 	}
+	
+    public String toString()
+    {
+    	String answer = "";
+    	answer += "k1 = " + k1 + ", ";
+    	answer += "n = " + n + ", ";
+    	answer += "modulus = " + modulus;
+        return answer;
+    }
 }

@@ -141,4 +141,17 @@ public class DGKPublicKey implements Serializable, PublicKey
 	{
 		return null;
 	}
+	
+    public String toString()
+    {
+    	String answer = "";
+    	answer += "n: " + n + ", ";
+    	answer += "g: " + g + ", ";
+    	answer += "h: " + h + ", ";
+    	answer += "u: " + bigU + ", ";
+    	answer += "l: " + l + ", ";
+    	answer += "t: " + t + ", ";
+    	answer += "k: " + k + ", ";
+    	return answer;
+    }
 }

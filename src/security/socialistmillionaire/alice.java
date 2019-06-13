@@ -83,6 +83,8 @@ public class alice
 		this.algo = Algorithm.valueOf("QUICK_SORT");
 		this.getDGKPublicKey();
 		this.getPaillierPublicKey();
+		System.out.println(pk.toString());
+		System.out.println(pubKey.toString());
 	}
 
 	public alice (ObjectInputStream _fromBob, ObjectOutputStream _toBob,
