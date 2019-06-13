@@ -118,6 +118,13 @@ public class Main
 				bob_client = bob_socket.accept();
 				Niu = new bob(bob_client, pk, sk, pubKey, privKey, false);
 
+				// Comparison Test, DGK
+				Niu.Protocol3(new BigInteger("100"));
+				Niu.Protocol3(new BigInteger("101"));
+				Niu.Protocol3(new BigInteger("102"));
+				Niu.Protocol3(new BigInteger("98"));
+				Niu.Protocol3(new BigInteger("35"));
+				
 				// Division Protocol Test, Paillier
 				Niu.division(2);
 				Niu.division(4);
@@ -147,13 +154,6 @@ public class Main
 				
 				Niu.repeat_Protocol2();
 				*/
-				
-				// Comparison Test, DGK
-				Niu.Protocol3(new BigInteger("100"));
-				Niu.Protocol3(new BigInteger("101"));
-				Niu.Protocol3(new BigInteger("102"));
-				Niu.Protocol3(new BigInteger("98"));
-				Niu.Protocol3(new BigInteger("35"));
 				
 				// Clean up
 				bob_client.close();

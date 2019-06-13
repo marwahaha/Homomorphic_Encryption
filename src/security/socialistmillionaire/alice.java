@@ -760,8 +760,8 @@ public class alice
 		Object in;
 		BigInteger answer;
 		BigInteger c = null;
-		BigInteger z;
-		BigInteger r;
+		BigInteger z = null;
+		BigInteger r = null;
 		
 		if(isDGK)
 		{
