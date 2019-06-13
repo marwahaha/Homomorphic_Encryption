@@ -83,8 +83,8 @@ public class alice
 		this.algo = Algorithm.valueOf("QUICK_SORT");
 		this.getDGKPublicKey();
 		this.getPaillierPublicKey();
-		//System.out.println(pk.toString());
-		//System.out.println(pubKey.toString());
+		System.out.println(pk.toString());
+		System.out.println(pubKey.toString());
 	}
 
 	public alice (ObjectInputStream _fromBob, ObjectOutputStream _toBob,
@@ -758,6 +758,12 @@ public class alice
 	 * See Protocol 2:
 	 * Encrypted Integer Division by
 	 * Thjis Veugen
+	 * 
+	 * Input Alice: [x] and d
+	 * Input Bob: d, and Private Key K
+	 * Output Alice: [x/d]
+	 * Constraints: 0 <= x <= N * 2^{-sigma} and 0 <= d < N
+	 * sigma = 80 usually?
 	 */
 	
 	public BigInteger division(BigInteger x, int d) 
@@ -769,6 +775,7 @@ public class alice
 		BigInteger z = null;
 		BigInteger r = null;
 		
+		// Step 1
 		if(isDGK)
 		{
 			r = NTL.RandomBnd(log2((int) (pubKey.u - 1)/2));
@@ -782,9 +789,12 @@ public class alice
 		toBob.writeObject(z);
 		toBob.flush();
 		
-		int t = Protocol3(r.mod(BigInteger.valueOf(d)), rnd.nextInt(2));
-		System.out.println("(Division) Protocol 3 answer is: " + t);
+		// Step 2: Executed by Bob
 		
+		// Step 3: Compute secure comparison Protocol 
+		int t = Protocol3(r.mod(BigInteger.valueOf(d)), rnd.nextInt(2));
+		
+		// Step 4: Bob computes c and Alice receives it
 		in = fromBob.readObject();
 		if (in instanceof BigInteger)
 		{
@@ -795,28 +805,19 @@ public class alice
 			throw new IllegalArgumentException("Alice: BigInteger not found!");
 		}
 		
-		/*
-		 * The Protocol works...
-		 * But for some odd reason it is always 1 off...
-		 */
+		// Step 5: Alice computes [x/d]
+		// [[z/d - r/d]]
+		// [[z/d - r/d - t]]
 		if (isDGK)
 		{
-			// [[z/d - r/d]]
 			answer = DGKOperations.DGKSubtract(pubKey, c, DGKOperations.encrypt(pubKey, r.divide(BigInteger.valueOf(d))));
-			
-			// [[z/d - r/d - t]]
 			answer = DGKOperations.DGKSubtract(pubKey, answer, DGKOperations.encrypt(pubKey, t));
-
 			answer = DGKOperations.DGKAdd(pubKey, answer, DGKOperations.encrypt(pubKey, 1));
 		}
 		else
 		{
-			// [[z/d - r/d]]
 			answer = PaillierCipher.subtract(c, PaillierCipher.encrypt(r.divide(BigInteger.valueOf(d)), pk), pk);
-			
-			// [[z/d - r/d - t]]
 			answer = PaillierCipher.subtract(answer, PaillierCipher.encrypt(BigInteger.valueOf(t), pk), pk);
-				
 			answer = PaillierCipher.add(answer, PaillierCipher.encrypt(BigInteger.ONE, pk), pk);
 		}
 		toBob.writeObject(answer);

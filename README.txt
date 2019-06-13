@@ -3,6 +3,12 @@ This is a module created from the SST REU 2017 project.
 --Requirements---
 JRE 1.8
 
+----Papers------------
+Encrypted Integer Division by Thjis Veugen (Division Method, Used Protocol 2 in the Paper)
+Improving the DGK comparison protocol by Thjis Veugen
+Implemented Protocol 1(In Progress), 2, 3, 4 (In Progress)
+
+
 --How to export to JAR file to use in other projects--
 Phase I - Importing into Eclipse
 
@@ -22,10 +28,6 @@ This module contains a function Android and Java support for
 - DGK
 - DGK Comparison Protocols (NOTE: PROTOCOL 4 IS NOT COMPLETE. May complete later)
 - Encrypted Integer Divison.
-
-Papers Cited:
-Encrypted Integer Division by Thjis Veugen
-Improving the DGK comparison protocol by Thjis Veugen
 
 Context:
 In the case of Comparison Protocols. Alice has [[x]] and [[y]], two DGK or Paillier encrypted values. Bob has the DGK and/or Paillier Private Key.
@@ -52,5 +54,5 @@ Protocol3() 		Protocol3()
 
 Please feel free to review the SST REU 2017 project which uses this module to get minimum distance and divide encrypted numbers.
 
------------Precuations---------------
+-----------Precautions---------------
 
