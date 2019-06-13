@@ -41,14 +41,6 @@ public class Main
 		PaillierPublicKey pk = (PaillierPublicKey) pe.getPublic();
 		PaillierPrivateKey sk = (PaillierPrivateKey) pe.getPrivate();
 		
-		// Paillier Test Addition
-		
-		// Paillier Test Multiplication
-		
-		// DGK Test Addition
-		
-		// DGK Test Multiplication
-		
 		// Initialize Alice and Bob
 		ServerSocket bob_socket = null;
 		Socket alice_socket = null;
@@ -61,14 +53,18 @@ public class Main
 		BigInteger d = DGKOperations.encrypt(pubKey, 100);
 		try
 		{
+			// Future Reference in saving keys...
+			// https://stackoverflow.com/questions/1615871/creating-an-x509-certificate-in-java-without-bouncycastle/2037663#2037663
+			// https://bfo.com/blog/2011/03/08/odds_and_ends_creating_a_new_x_509_certificate/
+			
 			if (isAlice)
 			{
 				// I need to ensure that Alice has same Keys as Bob!
 				// and initialize as well
 				alice_socket = new Socket("192.168.147.145", 9254);
 				yujia = new alice(alice_socket, pk, pubKey, false, null);
-				yujia.getDGKPublicKey();
-				yujia.getPaillierPublicKey();
+				//yujia.getDGKPublicKey();
+				//yujia.getPaillierPublicKey();
 				
 				// Division Protocol Test, Paillier
 				assert(yujia.division(D, 2).compareTo(new BigInteger("50")) == 0);
@@ -115,8 +111,8 @@ public class Main
 				System.out.println("Bob is ready");
 				bob_client = bob_socket.accept();
 				Niu = new bob(bob_client, pk, sk, pubKey, privKey, false);
-				Niu.sendDGKPublicKey();
-				Niu.sendPaillierPublicKey();
+				//Niu.sendDGKPublicKey();
+				//Niu.sendPaillierPublicKey();
 				
 				// Division Protocol Test, Paillier
 				Niu.division(2);
@@ -164,10 +160,6 @@ public class Main
 			e.printStackTrace();
 		}
 		catch (ClassNotFoundException e) 
-		{
-			e.printStackTrace();
-		} 
-		catch (InterruptedException e) 
 		{
 			e.printStackTrace();
 		}

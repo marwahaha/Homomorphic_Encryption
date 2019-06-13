@@ -225,49 +225,58 @@ public class bob
 		{
 			z = (BigInteger) Obj;
 		}
-
-		if(z != null)
+		else
 		{
-			//[[z]] = [[x - y + 2^l + r]]
-			if(isDGK)
-			{
-				z = BigInteger.valueOf(DGKOperations.decrypt(pubKey, privKey, z));
-			}
-			else
-			{
-				z = PaillierCipher.decrypt(z, sk);
-			}
-
-			//Step 2: compute Beta = z (mod 2^l),
-			betaZZ = z.mod(powL);
-
-			//Step 3: Alice computes r (mod 2^l) (Alpha)
-
-			/*
-			 * Step 4: Run Protocol 3
-			 * x = alpha, y = beta
-			 */
-			Protocol3(betaZZ);
-
-			//Step 5" Send [[z/2^l]], Alice has the solution from Protocol 3 already...
-			if(isDGK)
-			{
-				zDiv = DGKOperations.encrypt(pubKey, z.divide(powL));
-			}
-			else
-			{
-				zDiv = PaillierCipher.encrypt(z.divide(powL), pk);
-				//System.out.println("Z/2^l: " + Paillier.decrypt(zDiv, sk));
-			}
+			throw new IllegalArgumentException("Bob Step 1: Obtaining Z failed!");
 		}
 
+		//[[z]] = [[x - y + 2^l + r]]
+		if(isDGK)
+		{
+			z = BigInteger.valueOf(DGKOperations.decrypt(pubKey, privKey, z));
+		}
+		else
+		{
+			z = PaillierCipher.decrypt(z, sk);
+		}
+
+		//Step 2: compute Beta = z (mod 2^l),
+		betaZZ = z.mod(powL);
+
+		//Step 3: Alice computes r (mod 2^l) (Alpha)
+
+		/*
+		 * Step 4: Run Protocol 3
+		 * x = alpha, y = beta
+		 */
+		Protocol3(betaZZ);
+
+		//Step 5" Send [[z/2^l]], Alice has the solution from Protocol 3 already...
+		if(isDGK)
+		{
+			zDiv = DGKOperations.encrypt(pubKey, z.divide(powL));
+		}
+		else
+		{
+			zDiv = PaillierCipher.encrypt(z.divide(powL), pk);
+		}
+		
 		toAlice.writeObject(zDiv);
 		toAlice.flush();
 
 		//Step 6 - 7: Alice Computes [[x <= y]]
 
 		//Step 8 (UNOFFICIAL): Alice needs the answer...
-		result = (BigInteger) fromAlice.readObject();
+		Obj = fromAlice.readObject();
+		if (Obj instanceof BigInteger)
+		{
+			result = (BigInteger) Obj;
+		}
+		else
+		{
+			throw new IllegalArgumentException("Step 8 in Protocol 2 failure");
+		}
+		
 		if(isDGK)
 		{
 			result = BigInteger.valueOf(DGKOperations.decrypt(pubKey, privKey, result));
@@ -281,7 +290,6 @@ public class bob
 
 		// Bob has the answer as well for [[x <= y]]
 		// Return the answer (method call)
-
 		return result.intValue();
 	}
 
@@ -461,7 +469,6 @@ public class bob
 			zDiv = PaillierCipher.encrypt(z.divide(BigInteger.valueOf(powL)), pk);
 			System.out.println("Z/2^l: " + PaillierCipher.decrypt(zDiv, sk));	
 		}
-
 		toAlice.writeObject(zDiv);
 		toAlice.flush();
 
@@ -623,11 +630,13 @@ public class bob
 	public void sendDGKPublicKey() throws IOException
 	{
 		toAlice.writeObject(pubKey);
+		toAlice.flush();
 	}
 	
 	public void sendPaillierPublicKey() throws IOException
 	{
 		toAlice.writeObject(pk);
+		toAlice.flush();
 	}
 	
 	/*

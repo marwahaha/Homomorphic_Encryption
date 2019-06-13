@@ -65,9 +65,17 @@ public class alice
 	
 	public alice (Socket clientSocket,
 			PaillierPublicKey _pk, DGKPublicKey _pubKey,
-            boolean _isDGK, BigInteger[] _toSort)
+            boolean _isDGK, BigInteger[] _toSort) throws IOException
 	{
-		
+		if(clientSocket != null)
+		{
+			toBob = new ObjectOutputStream(clientSocket.getOutputStream());
+			fromBob =  new ObjectInputStream(clientSocket.getInputStream());
+		}
+		else
+		{
+			throw new NullPointerException("Client Socket is null!");
+		}
 		this.pk = _pk;
 		this.pubKey = _pubKey;
 		this.isDGK = _isDGK;
