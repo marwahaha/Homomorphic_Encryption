@@ -159,5 +159,9 @@ public class Main
 		{
 			e.printStackTrace();
 		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 	}
 }

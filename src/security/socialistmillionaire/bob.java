@@ -38,8 +38,8 @@ Improving the DGK Comparison Protocol (2012)
 public class bob
 {
 	// Key Master
-	private PaillierPublicKey pk = new PaillierPublicKey();
-	private PaillierPrivateKey sk = new PaillierPrivateKey(1024);
+	private PaillierPublicKey pk = null;
+	private PaillierPrivateKey sk = null;
 	
 	private DGKPublicKey pubKey = null;
 	private DGKPrivateKey privKey = null;

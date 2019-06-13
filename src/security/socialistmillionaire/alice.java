@@ -407,7 +407,7 @@ public class alice
 			{
 				minus [i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), EncY[i]);
 				// Step 4 = [1] - [y_i bit] + [c_i]
-				C_i[i]= DGKOperations.DGKAdd(pubKey, C_i[i], minus[yBits-1-i]);
+				C_i[i] = DGKOperations.DGKAdd(pubKey, C_i[i], minus[yBits-1-i]);
 			}
 			else
 			{
