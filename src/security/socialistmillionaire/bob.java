@@ -58,15 +58,23 @@ public class bob
 			this.fromAlice = new ObjectInputStream(clientSocket.getInputStream());
 			this.toAlice = new ObjectOutputStream(clientSocket.getOutputStream());
 		}
+		else
+		{
+			throw new NullPointerException("Client Socket is null!");
+		}
 		this.pk = _pk;
 		this.sk = _sk;
 		this.pubKey = _pubKey;
 		this.privKey = _privKey;
 		this.isDGK = _isDGK;
+		this.sendDGKPublicKey();
+		this.sendPaillierPublicKey();
 	}
 	
 	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
-			PaillierPublicKey _pk, PaillierPrivateKey _sk, DGKPublicKey _pubKey, DGKPrivateKey _privKey, boolean _isDGK)
+			PaillierPublicKey _pk, PaillierPrivateKey _sk, 
+			DGKPublicKey _pubKey, DGKPrivateKey _privKey, boolean _isDGK) 
+					throws IOException
 	{
 		this.fromAlice = _fromAlice;
 		this.toAlice = _toAlice;
@@ -75,6 +83,8 @@ public class bob
 		this.pubKey = _pubKey;
 		this.privKey = _privKey;
 		this.isDGK = _isDGK;
+		this.sendDGKPublicKey();
+		this.sendPaillierPublicKey();
 	}
 	
 	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
@@ -115,11 +125,6 @@ public class bob
 			throw new IllegalArgumentException("First Keypair is neither Paillier or DGK! Invalid!");
 		}
 		this.isDGK = _isDGK;
-	}
-	
-	public bob (Socket clientSocket, KeyPair a, KeyPair b, boolean _isDGK) throws IOException
-	{
-		this(new ObjectInputStream(clientSocket.getInputStream()), new ObjectOutputStream(clientSocket.getOutputStream()), a, b, _isDGK);
 	}
 	
 	/*

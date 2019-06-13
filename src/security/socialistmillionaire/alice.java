@@ -65,7 +65,7 @@ public class alice
 	
 	public alice (Socket clientSocket,
 			PaillierPublicKey _pk, DGKPublicKey _pubKey,
-            boolean _isDGK, BigInteger[] _toSort) throws IOException
+            boolean _isDGK, BigInteger[] _toSort) throws IOException, ClassNotFoundException
 	{
 		if(clientSocket != null)
 		{
@@ -81,6 +81,8 @@ public class alice
 		this.isDGK = _isDGK;
 		this.toSort = _toSort;
 		this.algo = Algorithm.valueOf("QUICK_SORT");
+		this.getDGKPublicKey();
+		this.getPaillierPublicKey();
 	}
 
 	public alice (ObjectInputStream _fromBob, ObjectOutputStream _toBob,

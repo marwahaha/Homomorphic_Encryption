@@ -63,8 +63,6 @@ public class Main
 				// and initialize as well
 				alice_socket = new Socket("192.168.147.145", 9254);
 				yujia = new alice(alice_socket, pk, pubKey, false, null);
-				//yujia.getDGKPublicKey();
-				//yujia.getPaillierPublicKey();
 				
 				// Division Protocol Test, Paillier
 				assert(yujia.division(D, 2).compareTo(new BigInteger("50")) == 0);
@@ -111,9 +109,7 @@ public class Main
 				System.out.println("Bob is ready");
 				bob_client = bob_socket.accept();
 				Niu = new bob(bob_client, pk, sk, pubKey, privKey, false);
-				//Niu.sendDGKPublicKey();
-				//Niu.sendPaillierPublicKey();
-				
+
 				// Division Protocol Test, Paillier
 				Niu.division(2);
 				Niu.division(4);
