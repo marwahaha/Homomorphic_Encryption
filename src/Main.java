@@ -3,6 +3,7 @@ import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyPair;
+import java.util.ArrayList;
 
 import security.DGK.DGKGenerator;
 import security.DGK.DGKOperations;
@@ -51,6 +52,7 @@ public class Main
 		BigInteger D = new BigInteger("100");
 		D = PaillierCipher.encrypt(D, pk);
 		BigInteger d = DGKOperations.encrypt(pubKey, 100);
+		ArrayList<Integer> answers = new ArrayList<Integer>();
 		try
 		{
 			// Future Reference in saving keys...
@@ -65,10 +67,10 @@ public class Main
 				yujia = new alice(alice_socket, pk, pubKey, false, null);
 				
 				// Division Protocol Test, Paillier
-				assert(yujia.division(D, 2).compareTo(new BigInteger("50")) == 0);
-				assert(yujia.division(D, 4).compareTo(new BigInteger("25")) == 0);
-				assert(yujia.division(D, 5).compareTo(new BigInteger("20")) == 0);
-				assert(yujia.division(D, 25).compareTo(new BigInteger("4")) == 0);
+				yujia.division(D, 2).compareTo(new BigInteger("50"));
+				yujia.division(D, 4).compareTo(new BigInteger("25"));
+				yujia.division(D, 5).compareTo(new BigInteger("20"));
+				yujia.division(D, 25).compareTo(new BigInteger("4"));
 				
 				// Division Test, DGK
 				yujia.setDGKstatus(true);
