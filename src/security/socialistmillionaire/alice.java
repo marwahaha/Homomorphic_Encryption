@@ -83,8 +83,8 @@ public class alice
 		this.algo = Algorithm.valueOf("QUICK_SORT");
 		this.getDGKPublicKey();
 		this.getPaillierPublicKey();
-		System.out.println(pk.toString());
-		System.out.println(pubKey.toString());
+		//System.out.println(pk.toString());
+		//System.out.println(pubKey.toString());
 	}
 
 	public alice (ObjectInputStream _fromBob, ObjectOutputStream _toBob,
@@ -299,7 +299,7 @@ public class alice
 		}
 		else
 		{
-			throw new IllegalArgumentException("Protocol 3 Step 1 error!");
+			throw new IllegalArgumentException("Protocol 3 Step 1: Missing Y-bits!");
 		}
 		int yBits = EncY.length;
 
@@ -784,6 +784,10 @@ public class alice
 		{
 			c = (BigInteger) in;
 		}
+		else
+		{
+			throw new IllegalArgumentException("Alice: BigInteger not found!");
+		}
 		
 		/*
 		 * The Protocol works...
@@ -796,10 +800,7 @@ public class alice
 			
 			// [[z/d - r/d - t]]
 			answer = DGKOperations.DGKSubtract(pubKey, answer, DGKOperations.encrypt(pubKey, t));
-			
-			// DO NOT USE BELOW
-			//answer = DGKOperations.DGKAdd(pubKey, answer, DGKOperations.encrypt(pubKey, t));
-			
+
 			answer = DGKOperations.DGKAdd(pubKey, answer, DGKOperations.encrypt(pubKey, 1));
 		}
 		else
@@ -809,10 +810,7 @@ public class alice
 			
 			// [[z/d - r/d - t]]
 			answer = PaillierCipher.subtract(answer, PaillierCipher.encrypt(BigInteger.valueOf(t), pk), pk);
-			
-			// DO NOT USE BELOW
-			//answer = Paillier.add(answer, Paillier.encrypt(BigInteger.valueOf(t), pk), pk);
-			
+				
 			answer = PaillierCipher.add(answer, PaillierCipher.encrypt(BigInteger.ONE, pk), pk);
 		}
 		toBob.writeObject(answer);
@@ -973,7 +971,6 @@ public class alice
 		return results;
 	}
 
-	
 	public BigInteger[] sortArray() 
 			throws ClassNotFoundException, IOException
 	{

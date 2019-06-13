@@ -67,6 +67,12 @@ public class Main
 				alice_socket = new Socket("192.168.147.145", 9254);
 				yujia = new alice(alice_socket, pk, pubKey, false, null);
 				
+				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);
+				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);
+				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);
+				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 0);
+				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 0);
+				
 				// Division Protocol Test, Paillier
 				// REMEMBER THE OUTPUT IS THE ENCRYPTED ANSWER 
 				// BOB CAN KNOW THE ANSWER ONLY!
@@ -85,11 +91,7 @@ public class Main
 				
 				// Comparison Protocol Test, Paillier
 				yujia.setDGKstatus(false);
-				assert(yujia.Protocol3(new BigInteger("100"), 0) == 1);
-				assert(yujia.Protocol3(new BigInteger("100"), 0) == 1);
-				assert(yujia.Protocol3(new BigInteger("100"), 0) == 1);
-				assert(yujia.Protocol3(new BigInteger("100"), 0) == 0);
-				assert(yujia.Protocol3(new BigInteger("100"), 0) == 0);
+
 				assert(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("100"), pk)) == 1);
 				assert(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);
 				assert(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("102"), pk)) == 1);
@@ -143,16 +145,16 @@ public class Main
 				Niu.Protocol2();
 				Niu.Protocol2();
 				
-				//Niu.repeat_Protocol2();
-					
+				Niu.repeat_Protocol2();
+				*/
+				
 				// Comparison Test, DGK
-				Niu.setDGKMode(true);
 				Niu.Protocol3(new BigInteger("100"));
 				Niu.Protocol3(new BigInteger("101"));
 				Niu.Protocol3(new BigInteger("102"));
 				Niu.Protocol3(new BigInteger("98"));
 				Niu.Protocol3(new BigInteger("35"));
-				*/
+				
 				// Clean up
 				bob_client.close();
 				bob_socket.close();

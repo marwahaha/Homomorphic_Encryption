@@ -69,8 +69,8 @@ public class bob
 		this.isDGK = _isDGK;
 		this.sendDGKPublicKey();
 		this.sendPaillierPublicKey();
-		System.out.println(pk.toString());
-		System.out.println(pubKey.toString());
+		//System.out.println(pk.toString());
+		//System.out.println(pubKey.toString());
 	}
 	
 	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
@@ -326,9 +326,7 @@ public class bob
 		for (int i = 0; i < y.bitLength(); i++)
 		{
 			EncY[i] = DGKOperations.encrypt(pubKey, NTL.bit(y, i));
-			//System.out.print(NTL.bit(y, i));
 		}
-		//System.out.println("");
 		toAlice.writeObject(EncY);
 		toAlice.flush();
 
@@ -595,7 +593,7 @@ public class bob
 		}
 		else
 		{
-			throw new IllegalArgumentException("No BigInteger found!");
+			throw new IllegalArgumentException("Divison: No BigInteger found!");
 		}
 		
 		if(isDGK)
