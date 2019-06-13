@@ -307,8 +307,6 @@ public class bob
 		BigInteger deltaA;
 		int answer = -1;
 
-		//Get the input and output streams
-
 		//Step 1: Bob sends encrypted bits to Alice
 		BigInteger EncY[] = new BigInteger[y.bitLength()];
 		for (int i = 0; i < y.bitLength(); i++)
@@ -351,10 +349,12 @@ public class bob
 		 */
 
 		x = fromAlice.readObject();
+		// Number of bits are the same for both numbers
 		if (x instanceof BigInteger [])
 		{
 			C = (BigInteger []) x;
 		}
+		// Number of bits gives away the answer!
 		else if (x instanceof BigInteger)
 		{
 			deltaA = (BigInteger) x;
@@ -377,20 +377,20 @@ public class bob
 				return answer;
 			}
 		}
+		else
+		{
+			throw new IllegalArgumentException("Bob Step 4 error in Protocol 3!");
+		}
 
 		// Delta B is already set to 0!
 		// Check for x = y as well!
 		// Alice will send deltaA + sum(X xor Y) and Bob must decrypt it!
-
-		if(C != null)
+		for (BigInteger C_i: C)
 		{
-			for (BigInteger C_i: C)
+			if (DGKOperations.decrypt(pubKey, privKey, C_i) == 0)
 			{
-				if (DGKOperations.decrypt(pubKey, privKey, C_i) == 0)
-				{
-					deltaB = 1;
-					break;
-				}
+				deltaB = 1;
+				break;
 			}
 		}
 
@@ -398,15 +398,17 @@ public class bob
 		toAlice.writeInt(deltaB);
 		toAlice.flush();
 
-		// Step 8: Not part of Thjis...
-		// FLAW: ANSWER IS COMING IN AS PLAIN TEXT!
-		// Negotiate some key exchange?
+		// Step 8: Not part of Thjis' paper
 		x = fromAlice.readObject();
 		if (x instanceof BigInteger)
 		{
-			answer = ((BigInteger) x).intValue();
+			deltaA = (BigInteger) x;
+			answer = (int) DGKOperations.decrypt(pubKey, privKey, deltaA);
 		}
-
+		else
+		{
+			throw new IllegalArgumentException("No response from Alice in Step 8");
+		}
 		return answer;
 	}
 	

@@ -16,12 +16,12 @@ public class QuickSort
 	private BigInteger [] arr;
 	private int length;
 
-	QuickSort(int [] arr)
+	public QuickSort(int [] arr)
 	{
 		this.sort(arr, 0, arr.length - 1);
 	}
 
-	QuickSort(long [] arr)
+	public QuickSort(long [] arr)
 	{
 		this.sort(arr, 0, arr.length - 1);
 	}
@@ -58,7 +58,6 @@ public class QuickSort
 			if(Alice.Protocol2(arr[j], pivot) != 1)
 			{
 				i++;
-
 				// swap arr[i] and arr[j]
 				BigInteger temp = arr[i];
 				arr[i] = arr[j];

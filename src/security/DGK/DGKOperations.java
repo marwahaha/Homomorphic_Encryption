@@ -13,6 +13,7 @@ import javax.crypto.ShortBufferException;
 import security.DGK.DGKPrivateKey;
 import security.DGK.DGKPublicKey;
 import security.paillier.PaillierCipher;
+import security.paillier.PaillierKeyPairGenerator;
 import security.paillier.PaillierPublicKey;
 import security.paillier.PaillierPrivateKey;
 
@@ -20,6 +21,7 @@ import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
@@ -573,31 +575,30 @@ public class DGKOperations extends CipherSpi
 
 		// Step 3: Select gamma A and set up C_i
 		int GammaA = rnd.nextInt(2);
-		//Protocol 3 only works if GammaA = 1, in ALL cases.
-		//Protocol 3 doesn't work if x = y and GammaA = 0
-		GammaA = 1;
 		System.out.println("Gamma A is: " + GammaA);
 
 		//Collect index of all index where x_i = GammaA
 		ArrayList <Integer> ListofGammaA = new ArrayList<Integer>();
-		for (int i=0;i<max;i++)
+		for (int i = 0;i < max + 1;i++)
 		{
 			if (NTL.bit(x, i) == GammaA)
 			{
 				ListofGammaA.add(i);
 			}
 		}
-
-		BigInteger [] C_i = new BigInteger [max];
+		
+		// Step 4A
+		BigInteger [] C_i = new BigInteger [max + 1];
 		BigInteger product = encrypt(pubKey, 0);
-
 		System.out.println("new C_i");
 		for (int i = 0; i < max; i++)
 		{
 			C_i [max-1-i] = product;
 			product = DGKAdd(pubKey,product, encXORY[i]);
-			System.out.print(decrypt(pubKey, privKey,C_i[max-1-i]));
+			System.out.print(decrypt(pubKey, privKey, C_i[max-1-i]));
 		}
+		// Equality....
+		C_i[max] = DGKAdd(pubKey, encrypt(pubKey, GammaA), C_i[max - 1]);
 
 		//Step 4B, alter C_i using Gamma A
 
@@ -607,7 +608,7 @@ public class DGKOperations extends CipherSpi
 
 		for(int i = 0; i < max; i++)
 		{
-			BigInteger temp = DGKSubtract(pubKey, encrypt(pubKey,1), EncY[i]);
+			BigInteger temp = DGKSubtract(pubKey, encrypt(pubKey, 1), EncY[i]);
 			minus [i] = temp;
 			System.out.print(decrypt(pubKey, privKey, minus[i]));
 		}
@@ -617,7 +618,7 @@ public class DGKOperations extends CipherSpi
 			if (GammaA==0)
 			{
 				// Step 4 = [1] - [y_i bit] + [c_i]
-				C_i[i]= DGKAdd(pubKey,C_i[i], minus[max-1-i]);
+				C_i[i]= DGKAdd(pubKey, C_i[i], minus[max-1-i]);
 			}
 			else
 			{
@@ -625,6 +626,13 @@ public class DGKOperations extends CipherSpi
 				C_i[i]= DGKAdd(pubKey, C_i[i], EncY[max-1-i]);
 			}
 		}
+		// -----------------Equality-------------
+		if(GammaA == 0)
+		{
+			C_i[max] = DGKOperations.DGKAdd(pubKey, C_i[max], encrypt(pubKey, 1));
+		}
+		// ------------------Equality-------------
+		
 		System.out.println("");
 		System.out.println("Updated C_i");
 		for (int i = 0; i < max; i++)
@@ -653,7 +661,7 @@ public class DGKOperations extends CipherSpi
 		//Step 6: Compute gamma A XOR gamma B.
 		int GammaB = 0;
 
-		for (int i = 0; i < max; i++)
+		for (int i = 0; i < max + 1; i++)
 		{
 			if (DGKOperations.decrypt(pubKey, privKey, C_i[i]) == 0)
 			{
@@ -983,6 +991,27 @@ public class DGKOperations extends CipherSpi
 			--counter;
 		}
 		return answer;
+	}
+	
+	public static void main(String [] args)
+	{
+		// Build DGK Keys
+		DGKGenerator gen = new DGKGenerator(16, 160, 1024);
+		KeyPair DGK = gen.generateKeyPair();
+		DGKPublicKey pubKey = (DGKPublicKey) DGK.getPublic();
+		DGKPrivateKey privKey = (DGKPrivateKey) DGK.getPrivate();
+		
+		// Build Paillier Keys
+		PaillierKeyPairGenerator p = new PaillierKeyPairGenerator();
+		p.initialize(1024, null);
+		KeyPair pe = p.generateKeyPair();
+		PaillierPublicKey pk = (PaillierPublicKey) pe.getPublic();
+		PaillierPrivateKey sk = (PaillierPrivateKey) pe.getPrivate();
+		
+		BigInteger x = PaillierCipher.encrypt(new BigInteger("65"), pk);
+		BigInteger y = PaillierCipher.encrypt(new BigInteger("100"), pk);
+		BigInteger a = DGKOperations.Protocol2(x, y, pubKey, privKey, pk, sk);
+		System.out.println(PaillierCipher.decrypt(a, sk));
 	}
 
 }//END OF CLASS

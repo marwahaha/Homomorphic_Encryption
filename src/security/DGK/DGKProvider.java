@@ -9,7 +9,7 @@ public class DGKProvider extends Provider
 	public DGKProvider() 
 	{
 		// Sometimes 1.9 needs to be a String value???
-		 super("DGK", 1.0, "DGK v1.0");
+		 super("DGK", "1.0", "DGK v1.0");
 		 put("KeyGenerator.DGK", DGKGenerator.class.getName());
 		 put("Cipher.DGK", DGKOperations.class.getName());
 	}

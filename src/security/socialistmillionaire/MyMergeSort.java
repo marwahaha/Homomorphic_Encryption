@@ -12,8 +12,8 @@ import java.util.Arrays;
 public class MyMergeSort
 {
 	// Long
-    private long [] array;
-    private long [] tempMergArr;
+    public long [] array;
+    public long [] tempMergArr;
     
     // BigInteger...Encrypted!
     private BigInteger [] bigArray = null;

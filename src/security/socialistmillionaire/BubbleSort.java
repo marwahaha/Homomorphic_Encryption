@@ -8,9 +8,8 @@ import java.math.BigInteger;
 public class BubbleSort
 {
 	// Arrays to Sort
-	/*
-	private int [] arr;
-	private long [] long_arr;
+	public int [] arr;
+	public long [] long_arr;
 	public BubbleSort(int _arr[])
 	{
 		arr = _arr;
@@ -20,7 +19,6 @@ public class BubbleSort
 	{
 		long_arr = _arr;
 	}
-	*/
 	
 	private BigInteger [] encrypted;
 	private alice Alice;

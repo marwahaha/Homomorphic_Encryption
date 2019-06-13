@@ -9,7 +9,7 @@ public class PaillierProvider extends Provider
 	public PaillierProvider() 
 	{
 		// Sometimes 1.9 needs to be a String value???
-		super("Paillier", 1.0, "Paillier v 1.0");
+		super("Paillier", "1.0", "Paillier v 1.0");
 		put("KeyPairGenerator.Paillier", PaillierKeyPairGenerator.class.getName());
 		put("Cipher.Paillier", PaillierCipher.class.getName());
 	}

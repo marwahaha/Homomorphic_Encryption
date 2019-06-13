@@ -287,11 +287,9 @@ public class alice
 		}
 		else
 		{
-			System.err.println("Error: " + obj.getClass());
-			return -1;
+			throw new IllegalArgumentException("Protocol 3 Step 1 error!");
 		}
 		int yBits = EncY.length;
-		//System.out.println("size of EncY: " + max);
 
 		/*
 		 * Currently by design of the program
@@ -319,7 +317,7 @@ public class alice
 		// y has more bits -> y is bigger
 		if (x.bitLength() < yBits)
 		{
-			toBob.writeObject(new BigInteger("1"));
+			toBob.writeObject(BigInteger.ONE);
 			toBob.flush();
 			// x <= y -> 1 (true)
 			return 1;
@@ -329,7 +327,7 @@ public class alice
 		// x has more bits -> x is bigger
 		else if(x.bitLength() > yBits)
 		{
-			toBob.writeObject(new BigInteger("0"));
+			toBob.writeObject(BigInteger.ZERO);
 			toBob.flush();
 			// x <= y -> 0 (false)
 			return 0;
@@ -351,22 +349,17 @@ public class alice
 			{
 				XOR[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), EncY[i]);
 			}
-			//System.out.print(DGKOperations.decrypt(pubKey, privKey, encXORY[i]));
 		}
-		//System.out.println("");
-
+		
 		/*
 		 * Step 3A: Select gamma A and set up C_i
 		 * Protocol 3 only works if GammaA = 1, in ALL cases.
 		 * Protocol 3 doesn't work if x = y and GammaA = 0
 		 */
 
-		// THIS STEP IS ALREADY DONE AT THE START!!!
-		// System.out.println("Gamma A is: " + GammaA);
-
 		// Step 3B: Collect index of all index where x_i = GammaA
 		ArrayList <Integer> ListofGammaA = new ArrayList<>();
-		for (int i=0;i < yBits;i++)
+		for (int i = 0;i < yBits + 1;i++)
 		{
 			if (NTL.bit(x, i) == deltaA)
 			{
@@ -393,22 +386,16 @@ public class alice
 		 * Also compute:
 		 * [1] - [y_i bit]
 		 */
-		//System.out.println("");
-		//System.out.println("1 - y_i:");
-		BigInteger [] minus = new BigInteger[yBits];
 
-		for(int i = 0; i < yBits; i++)
-		{
-			minus [i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey,1), EncY[i]);
-			//System.out.print(DGKOperations.decrypt(pubKey, privKey, minus[i]));
-		}
+		BigInteger [] minus = new BigInteger[yBits];
 
 		for (int i = 0; i < yBits; i++)
 		{
 			if (deltaA==0)
 			{
+				minus [i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), EncY[i]);
 				// Step 4 = [1] - [y_i bit] + [c_i]
-				C_i[i]= DGKOperations.DGKAdd(pubKey,C_i[i], minus[yBits-1-i]);
+				C_i[i]= DGKOperations.DGKAdd(pubKey, C_i[i], minus[yBits-1-i]);
 			}
 			else
 			{
@@ -417,46 +404,16 @@ public class alice
 			}
 		}
 
-		/*
-		System.out.println("");
-		System.out.println("Updated C_i");
-		for (int i = 0; i < max; i++)
-		{
-			System.out.print(DGKOperations.decrypt(pubKey, privKey, C_i[max-1-i]));
-		}
-		System.out.println("");
-	    */
-
 		//Step 5: Apply the Blinding to C_i and send it to Bob
 		for (int i = 0; i < yBits;i++)
 		{
 			// if i is NOT in L, just place a random NON-ZERO
 			if(!ListofGammaA.contains(i))
 			{
-				// System.out.println("NOT in L: " + i);
-				// Should be random numbers! Just used 7 for debugging purposes!
 				C_i[yBits-1-i] = DGKOperations.encrypt(pubKey, 7);
 			}
-
-			// if i is IN L, raise by some exponent r_i of 2t bits...
-			// Note Bob will look for 0, which will determine the answer!
-            /*
-			else
-			{
-
-			}
-			*/
 		}
-
-		/*
-        System.out.println("Updated C_i with blinding...");
-        for (int i = 0; i < yBits;i++)
-		{
-			System.out.print(DGKOperations.decrypt(pubKey, privKey, C_i[max-1-i]));
-		}
-		System.out.println("");
-		*/
-
+		
 		//This is your c_{-1}
 		C_i[yBits] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
 		C_i[yBits] = DGKOperations.DGKAdd(pubKey, C_i[yBits], DGKOperations.encrypt(pubKey,deltaA));
@@ -493,7 +450,8 @@ public class alice
 		 * Send him the encrypted answer!
 		 * Alice and Bob know now without revealing x or y!
 		 */
-		toBob.writeObject(BigInteger.valueOf(answer));
+		toBob.writeObject(DGKOperations.encrypt(pubKey, BigInteger.valueOf(answer)));
+		//toBob.writeObject(BigInteger.valueOf(answer));
 		toBob.flush();
 		return answer;
 	}
@@ -508,7 +466,7 @@ public class alice
 		BigInteger result = null;
 		Object bob = null;
 
-		BigInteger powL = BigInteger.valueOf(exponent(2,pubKey.l - 2));//2^l
+		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));//2^l
 		//System.out.println("2^l: "+ powL);
 
 		//  Step 1: 0 <= r < N
@@ -636,12 +594,20 @@ public class alice
 		{
 			d = (BigInteger) in;
 		}
+		else
+		{
+			throw new IllegalArgumentException("BigInteger: d not found!");
+		}
 		
 		// Step B: get beta_bits from Bob
 		in = fromBob.readObject();
 		if (in instanceof BigInteger[])
 		{
 			beta_bits = (BigInteger []) in;
+		}
+		else
+		{
+			throw new IllegalArgumentException("BigInteger []: C not found!");
 		}
 		
 		/*
@@ -670,17 +636,17 @@ public class alice
 		// y has more bits -> y is bigger
 		if (alpha.bitLength() < beta_bits.length)
 		{
-			toBob.writeObject(new BigInteger("1"));
+			toBob.writeObject(BigInteger.ONE);
 			toBob.flush();
 			// x <= y -> 1 (true)
 			return 1;
 		}
 
-		// Case 2 delta B is 0
+		// Case 2, delta B is ALWAYS INITIALIZED to 0
 		// x has more bits -> x is bigger
 		else if(alpha.bitLength() > beta_bits.length)
 		{
-			toBob.writeObject(new BigInteger("0"));
+			toBob.writeObject(BigInteger.ZERO);
 			toBob.flush();
 			// x <= y -> 0 (false)
 			return 0;
