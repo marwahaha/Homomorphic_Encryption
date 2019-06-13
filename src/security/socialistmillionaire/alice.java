@@ -400,12 +400,18 @@ public class alice
 		 */
 
 		BigInteger [] minus = new BigInteger[yBits];
-
+		if (deltaA == 0)
+		{
+			for(int i = 0; i < yBits; i++)
+			{
+				minus [i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), EncY[i]);
+			}
+		}
+		
 		for (int i = 0; i < yBits; i++)
 		{
 			if (deltaA==0)
 			{
-				minus [i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), EncY[i]);
 				// Step 4 = [1] - [y_i bit] + [c_i]
 				C_i[i] = DGKOperations.DGKAdd(pubKey, C_i[i], minus[yBits-1-i]);
 			}
@@ -426,9 +432,9 @@ public class alice
 			}
 		}
 		
-		//This is your c_{-1}
+		//This is c_{-1}
 		C_i[yBits] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
-		C_i[yBits] = DGKOperations.DGKAdd(pubKey, C_i[yBits], DGKOperations.encrypt(pubKey,deltaA));
+		C_i[yBits] = DGKOperations.DGKAdd(pubKey, C_i[yBits], DGKOperations.encrypt(pubKey, deltaA));
 
 		//Send to Bob, C_i and sum of XOR (equality check)
 		toBob.writeObject(C_i);
