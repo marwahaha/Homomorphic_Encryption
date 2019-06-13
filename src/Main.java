@@ -22,7 +22,7 @@ public class Main
 	
 	public static void main(String [] args)
 	{
-		if(args[0] == "Niu")
+		if(args[0].equals("Niu"))
 		{
 			System.out.println("Alice mode activated...");
 			isAlice = true;
@@ -164,6 +164,10 @@ public class Main
 			e.printStackTrace();
 		}
 		catch (ClassNotFoundException e) 
+		{
+			e.printStackTrace();
+		} 
+		catch (InterruptedException e) 
 		{
 			e.printStackTrace();
 		}

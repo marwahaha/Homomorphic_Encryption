@@ -1057,6 +1057,10 @@ public class alice
 		{
 			pubKey = (DGKPublicKey) x;
 		}
+		else
+		{
+			throw new IllegalArgumentException("DGK Public Key not obtained!");
+		}
 	}
 	
 	public void getPaillierPublicKey() throws IOException, ClassNotFoundException
@@ -1065,6 +1069,10 @@ public class alice
 		if(x instanceof PaillierPublicKey)
 		{
 			pk = (PaillierPublicKey) x;
+		}
+		else
+		{
+			throw new IllegalArgumentException("Paillier Public Key not obtained!");
 		}
 	}
 	

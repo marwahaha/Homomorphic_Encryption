@@ -623,13 +623,11 @@ public class bob
 	public void sendDGKPublicKey() throws IOException
 	{
 		toAlice.writeObject(pubKey);
-		toAlice.flush();
 	}
 	
 	public void sendPaillierPublicKey() throws IOException
 	{
 		toAlice.writeObject(pk);
-		toAlice.flush();
 	}
 	
 	/*
