@@ -83,8 +83,8 @@ public class alice
 		this.algo = Algorithm.valueOf("QUICK_SORT");
 		this.getDGKPublicKey();
 		this.getPaillierPublicKey();
-		System.out.println(pk.toString());
-		System.out.println(pubKey.toString());
+		//System.out.println(pk.toString());
+		//System.out.println(pubKey.toString());
 	}
 
 	public alice (ObjectInputStream _fromBob, ObjectOutputStream _toBob,
@@ -282,6 +282,7 @@ public class alice
 	public int Protocol3(BigInteger x, int deltaA)
 			throws ClassNotFoundException, IOException
 	{
+		//deltaA = rnd.nextInt(2);
 		if(deltaA != 0 && deltaA != 1)
 		{
 			throw new IllegalArgumentException("ONLY 1 or 0 is accepted!");
@@ -595,6 +596,7 @@ public class alice
 		return comparison;
 	}
 	
+	// Modified Protocol 3 for Protocol 4
 	private int Protocol3(BigInteger alpha, BigInteger r) 
 			throws ClassNotFoundException, IOException
 	{

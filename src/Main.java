@@ -65,7 +65,7 @@ public class Main
 				// I need to ensure that Alice has same Keys as Bob!
 				// and initialize as well
 				alice_socket = new Socket("192.168.147.145", 9254);
-				yujia = new alice(alice_socket, pk, pubKey, false, null);
+				yujia = new alice(alice_socket, pk, pubKey, true, null);
 				
 				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);//100
 				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);//101
@@ -75,11 +75,12 @@ public class Main
 				
 				// Division Protocol Test, Paillier
 				// REMEMBER THE OUTPUT IS THE ENCRYPTED ANSWER 
-				// BOB CAN KNOW THE ANSWER ONLY!
-				System.out.println(yujia.division(D, 2));//100/2 = 50
-				System.out.println(yujia.division(D, 4));//100/4 = 25
-				System.out.println(yujia.division(D, 5));//100/5 = 20
-				System.out.println(yujia.division(D, 25));//100/25 = 4
+				// ONLY BOB CAN VERIFY THE ANSWER!
+
+				yujia.division(d, 2);//100/2 = 50
+				yujia.division(d, 4);//100/4 = 25
+				yujia.division(d, 5);//100/5 = 20
+				yujia.division(d, 25);//100/25 = 4
 				
 				// Division Test, DGK
 				/*
@@ -116,7 +117,7 @@ public class Main
 				bob_socket = new ServerSocket(9254);
 				System.out.println("Bob is ready");
 				bob_client = bob_socket.accept();
-				Niu = new bob(bob_client, pk, sk, pubKey, privKey, false);
+				Niu = new bob(bob_client, pk, sk, pubKey, privKey, true);
 
 				// Comparison Test, DGK
 				Niu.Protocol3(new BigInteger("100"));

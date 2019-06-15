@@ -69,8 +69,8 @@ public class bob
 		this.isDGK = _isDGK;
 		this.sendDGKPublicKey();
 		this.sendPaillierPublicKey();
-		System.out.println(pk.toString());
-		System.out.println(pubKey.toString());
+		//System.out.println(pk.toString());
+		//System.out.println(pubKey.toString());
 	}
 	
 	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
