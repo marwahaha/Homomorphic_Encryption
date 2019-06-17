@@ -460,7 +460,7 @@ public class bob
 
 		// Step 4: Run Modified DGK Comparison Protocol
 		// x = alpha, y = beta
-		Protocol3(betaZZ, z);
+		Modified_Protocol3(betaZZ, z);
 
 		//Step 5" Send [[z/2^l]], Alice has the solution from Protocol 3 already...
 		if(isDGK)
@@ -495,7 +495,7 @@ public class bob
 		return result.intValue();
 	}
 	
-	private int Protocol3(BigInteger beta, BigInteger z) 
+	public int Modified_Protocol3(BigInteger beta, BigInteger z) 
 			throws IOException, ClassNotFoundException
 	{
 		Object in;
@@ -565,6 +565,10 @@ public class bob
 				answer = 0;
 				return answer;
 			}
+		}
+		else
+		{
+			throw new IllegalArgumentException("Modified Protocol3");
 		}
 		
 		for (int i = 0; i < C.length;i++)

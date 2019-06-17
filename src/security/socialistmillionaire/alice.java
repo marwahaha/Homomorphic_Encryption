@@ -140,19 +140,25 @@ public class alice
 	public int Protocol2(BigInteger x, BigInteger y) 
 			throws IOException, ClassNotFoundException
 	{
-		int protocolThree = -1;
+		int x_leq_y = -1;
 		int comparison = -1;
 		BigInteger z = null;
 		BigInteger zdiv2L =  null;
 		BigInteger result = null;
 		Object bob = null;
+		BigInteger r = null;
 
 		BigInteger powL = BigInteger.valueOf(exponent(2,pubKey.l - 2));//2^l
-		//System.out.println("2^l: "+ powL);
 
 		//  Step 1: 0 <= r < N
-		BigInteger r = NTL.RandomBnd(pubKey.u);
-		//System.out.println("r: " + bigR);
+		if (isDGK)
+		{
+			r = NTL.RandomBnd(pubKey.u);
+		}
+		else
+		{
+			r = NTL.RandomBnd(pk.n);
+		}
 
 		/*
 		 * Step 2: Alice computes [[z]] = [[x - y + 2^l + r]]
@@ -161,16 +167,12 @@ public class alice
 		if (isDGK)
 		{
 			z = DGKOperations.DGKAdd(pubKey, x, DGKOperations.encrypt(pubKey, r.add(powL)));//[[x + 2^l + r]]
-			//System.out.println("z + 2^l + x: " + Paillier.decrypt(z, sk));
 			z = DGKOperations.DGKSubtract(pubKey, z, y);//[[z]] = [[x - y + 2^l + r]]
-			//System.out.println("value of Z: " + Paillier.decrypt(z, sk));
 		}
 		else
 		{
 			z = PaillierCipher.add(x, PaillierCipher.encrypt(r.add(powL), pk), pk);// = [[x + 2^l + r]]
             z = PaillierCipher.subtract(z, y, pk);
-            //[[z]] = [[x + 2^l + r - y]]
-			//System.out.println("value of Z: " + Paillier.decrypt(z, sk));
 		}
 		toBob.writeObject(z);
 		toBob.flush();
@@ -179,27 +181,9 @@ public class alice
 
 		// Step 3: alpha = r (mod 2^l)
 		BigInteger alphaZZ = NTL.POSMOD(r, powL);
-		//System.err.println("alpha: " + alphaZZ + " beta: " + Paillier.decrypt(z, sk).mod(powL));
 
 		// Step 4: Complete Protocol 1 or Protocol 3
-        int deltaA = rnd.nextInt(2);
-		int deltaB;
-        protocolThree = Protocol3(alphaZZ, deltaA);
-		
-        /*
-		 * BE CAREFUL DO NOT USE THE DIRECT ANSWER FROM PROTOCOL 3
-		 *
-		 * deltaA XOR deltaB = protocolThree
-		 * deltaA XOR protocolThree = deltaB
-		 */
-		if(deltaA == protocolThree)
-        {
-            deltaB = 0;
-        }
-        else
-        {
-            deltaB = 1;
-        }
+        x_leq_y = Protocol3(alphaZZ);
 		
 		// Step 5: Bob sends z/2^l and GammaB 
 		bob = fromBob.readObject();
@@ -209,7 +193,7 @@ public class alice
 		}
 		else
 		{
-			System.err.println("Invalid object: " + bob.getClass());
+			throw new IllegalArgumentException("Protocol 2, Step 5: BigInteger not found!");
 		}
 
 		/*
@@ -224,28 +208,18 @@ public class alice
 
 		/*
 		 * Step 7, Alice Computes [[x <= y]]
-		 * = [[x <= y]]
 		 * = [[z/2^l]] * ([[r/2^l]] [[alpha < Beta]])^-1 
 		 * = [[z/2^l - r/2^l - (alpha <= beta)]]
 		 */
-
 		if(isDGK)
 		{
 			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, DGKOperations.encrypt(pubKey, r.divide(powL)));
-			result = DGKOperations.DGKSubtract(pubKey, result, DGKOperations.encrypt(pubKey, protocolThree));
+			result = DGKOperations.DGKSubtract(pubKey, result, DGKOperations.encrypt(pubKey, x_leq_y));
 		}
 		else
 		{
-		   // = [[z/2^l]] * [[r/2^l]]^{-1} = [[z/2^l - r/2^l]]
            result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
-           if(deltaA == 1)
-           {
-        	   result = PaillierCipher.subtract(result, PaillierCipher.encrypt(deltaB, pk), pk);
-           }
-           else
-           {
-        	   result = PaillierCipher.subtract(result, PaillierCipher.encrypt((1 - deltaB), pk), pk);  
-           }
+           result = PaillierCipher.subtract(result, PaillierCipher.encrypt( x_leq_y, pk), pk);
 		}
 		
 		/*
@@ -271,20 +245,17 @@ public class alice
 	 * Input Alice: x (unencrypted BigInteger x)
 	 * Input Bob: y (unencrypted BigInteger y), Private Keys
 	 * 
-	 * Result: 
-	 * Alice and Bob WITHOUT revealing x, y know
-	 * 0 -> x <= y
-	 * 1 -> x > y
+	 * Result: [[x <= y]] or [x <= y]
+	 * Alice and Bob WITHOUT revealing x, y
+	 * It is boolean value! 
+	 * x <= y -> [[1]]
+	 * x > y -> [[0]]
 	 */
 
-	public int Protocol3(BigInteger x, int deltaA)
+	public int Protocol3(BigInteger x)
 			throws ClassNotFoundException, IOException
 	{
-		//deltaA = rnd.nextInt(2);
-		if(deltaA != 0 && deltaA != 1)
-		{
-			throw new IllegalArgumentException("ONLY 1 or 0 is accepted!");
-		}
+		int deltaA = rnd.nextInt(2);
 		BigInteger [] EncY;
 		int deltaB;
 		int answer;
@@ -389,7 +360,6 @@ public class alice
 			// Goes from yBits - 1 to 0
 			C_i [yBits-1-i] = product;
 			product = DGKOperations.DGKAdd(pubKey, product, XOR[i]);
-			//System.out.print(DGKOperations.decrypt(pubKey, privKey,C_i[max-1-i]));
 		}
 
 		/*
@@ -468,7 +438,6 @@ public class alice
 		 * Alice and Bob know now without revealing x or y!
 		 */
 		toBob.writeObject(DGKOperations.encrypt(pubKey, BigInteger.valueOf(answer)));
-		//toBob.writeObject(BigInteger.valueOf(answer));
 		toBob.flush();
 		return answer;
 	}
@@ -476,8 +445,9 @@ public class alice
 	public int Protocol4(BigInteger x, BigInteger y) 
 			throws IOException, ClassNotFoundException
 	{
-		int protocolThree = -1;
+		int alpha_leq_beta = -1;
 		int comparison = -1;
+		BigInteger r = null;
 		BigInteger z = null;
 		BigInteger zdiv2L =  null;
 		BigInteger result = null;
@@ -502,7 +472,14 @@ public class alice
 		}
 		
 		//  Step 1: 0 <= r < N
-		BigInteger bigR = NTL.RandomBnd(pubKey.u);
+		if(isDGK)
+		{
+			r = NTL.RandomBnd(pubKey.u);
+		}
+		else
+		{
+			r = NTL.RandomBnd(pk.n);
+		}
 
 		/*
 		 * Step 2: Alice computes [[z]] = [[x - y + 2^l + r]]
@@ -514,13 +491,13 @@ public class alice
 		if (isDGK)
 		{
 			BigInteger xminusy = DGKOperations.DGKSubtract(pubKey, x, y);
-			BigInteger newData = DGKOperations.encrypt(pubKey, bigR.add(powL));
+			BigInteger newData = DGKOperations.encrypt(pubKey, r.add(powL));
 			z = DGKOperations.DGKSubtract(pubKey, xminusy, newData);
 		}
 		else
 		{			
 			BigInteger xminusy = PaillierCipher.subtract(x, y, pk);
-			BigInteger newData = PaillierCipher.encrypt(bigR.add(powL), pk);
+			BigInteger newData = PaillierCipher.encrypt(r.add(powL), pk);
 			z = PaillierCipher.add(xminusy, newData, pk);
 		}
 		toBob.writeObject(z);
@@ -529,10 +506,12 @@ public class alice
 		// Step 2: Bob decrypts[[z]] and computes beta = z (mod 2^l)
 
 		// Step 3: alpha = r (mod 2^l)
-		BigInteger alphaZZ = NTL.POSMOD(bigR, powL);
+		BigInteger alphaZZ = NTL.POSMOD(r, powL);
 
 		// Step 4: See Modified Comparison Protocol
-		protocolThree = Protocol3(alphaZZ, z);
+		// alpha_leq_beta = 0, 1
+		// Step 5 Bob sending Delta B is not needed obviously!
+		alpha_leq_beta = Modified_Protocol3(alphaZZ, z);
 		
 		// Step 5: Bob sends z/2^l and GammaB 
 		bob = fromBob.readObject();
@@ -561,15 +540,15 @@ public class alice
 		// = [[z/2^l - r/2^l - (alpha <= beta)]]
 		if(isDGK)
 		{
-			BigInteger rdiv2L = DGKOperations.encrypt(pubKey, bigR.divide(powL));
+			BigInteger rdiv2L = DGKOperations.encrypt(pubKey, r.divide(powL));
 			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, rdiv2L);
-			result = DGKOperations.DGKSubtract(pubKey, result, DGKOperations.encrypt(pubKey, protocolThree));
+			result = DGKOperations.DGKSubtract(pubKey, result, DGKOperations.encrypt(pubKey, alpha_leq_beta));
 		}
 		else
 		{			
-			BigInteger rdiv2L = PaillierCipher.encrypt(bigR.divide(powL), pk);
+			BigInteger rdiv2L = PaillierCipher.encrypt(r.divide(powL), pk);
 			result = PaillierCipher.subtract(zdiv2L, rdiv2L, pk);
-			result = PaillierCipher.subtract(result, PaillierCipher.encrypt(protocolThree, pk), pk);
+			result = PaillierCipher.subtract(result, PaillierCipher.encrypt(alpha_leq_beta, pk), pk);
 		}
 
 		/*
@@ -586,9 +565,14 @@ public class alice
 	}
 	
 	// Modified Protocol 3 for Protocol 4
-	private int Protocol3(BigInteger alpha, BigInteger r) 
+	// For testing...
+	public int Modified_Protocol3(BigInteger alpha, BigInteger r) 
 			throws ClassNotFoundException, IOException
 	{
+		if (alpha == null)
+		{
+			alpha = r.mod(BigInteger.valueOf(exponent(2, pubKey.l - 2)));
+		}
 		Object in;
 		BigInteger [] beta_bits = null;
 		BigInteger [] encAlphaXORBeta = null;
@@ -783,7 +767,7 @@ public class alice
 		// Step 2: Executed by Bob
 		
 		// Step 3: Compute secure comparison Protocol 
-		int t = Protocol3(r.mod(BigInteger.valueOf(d)), rnd.nextInt(2));
+		int t = Protocol3(r.mod(BigInteger.valueOf(d)));
 		
 		// Step 4: Bob computes c and Alice receives it
 		in = fromBob.readObject();

@@ -84,7 +84,7 @@ public class DGKPrivateKey implements Serializable, PrivateKey
 		for (BigInteger k : LUT.keySet()) 
 		{
 			System.out.println(k + "," + this.LUT.get(k));
-		    printWriter.print(k + "," + this.LUT.get(k));
+		    printWriter.println(k + "," + this.LUT.get(k));
 		}
 	    printWriter.close();
     }
