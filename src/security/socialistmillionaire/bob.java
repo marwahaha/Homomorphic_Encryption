@@ -135,7 +135,7 @@ public class bob
 	 * By the end of this, Alice should have a 
 	 * list of sorted encrypted values. 
 	 */
-	public boolean getDGKMod()
+	public boolean getDGKMode()
 	{
 		return isDGK;
 	}

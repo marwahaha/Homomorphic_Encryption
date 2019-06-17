@@ -1,8 +1,10 @@
 package security.DGK;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.PrivateKey;
@@ -17,7 +19,7 @@ public class DGKPrivateKey implements Serializable, PrivateKey
     private BigInteger vp;
     private BigInteger vq;
     private long u;
-    private HashMap <BigInteger, Long> LUT = new HashMap <BigInteger, Long>();
+    private HashMap <BigInteger, Long> LUT = null;
     
     // DGK Private Key Constructor. ONLY variables, append LUT after
     public DGKPrivateKey(BigInteger P, BigInteger Q, BigInteger VP,
@@ -69,29 +71,41 @@ public class DGKPrivateKey implements Serializable, PrivateKey
 
     public void printLUT()
     {
+	    FileWriter fileWriter = null;
+		try 
+		{
+			fileWriter = new FileWriter("/home/andrew/keys.txt");
+		} 
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
+	    PrintWriter printWriter = new PrintWriter(fileWriter);
 		for (BigInteger k : LUT.keySet()) 
 		{
-			System.out.println(k + "," + LUT.get(k));
+			System.out.println(k + "," + this.LUT.get(k));
+		    printWriter.print(k + "," + this.LUT.get(k));
 		}
+	    printWriter.close();
     }
     
     public void generategLUT (DGKPublicKey pubKey)
     {
-    	if(LUT != null)
+    	if(this.LUT != null)
     	{
     		return;
     	}
     	else
     	{
-    		LUT = new HashMap<BigInteger, Long>();
+    		this.LUT = new HashMap<BigInteger, Long>();
     	}
         BigInteger g = pubKey.g;
         BigInteger gvp = NTL.POSMOD(g,p).modPow(vp,p);
         // Build LUT
         for (int i = 0; i < u; ++i)
         {
-            BigInteger decipher = gvp.modPow(NTL.POSMOD(BigInteger.valueOf((long) i),p),p);
-            LUT.put(decipher, (long) i);
+            BigInteger decipher = gvp.modPow(NTL.POSMOD(BigInteger.valueOf((long) i), p), p);
+            this.LUT.put(decipher, (long) i);
         }
     }
 

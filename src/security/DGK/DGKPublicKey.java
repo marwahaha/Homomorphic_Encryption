@@ -20,9 +20,8 @@ public class DGKPublicKey implements Serializable, PublicKey
 	public int l;
 	public int t;
 	public int k;
-	//public BigInteger u;
-	public HashMap <Long, BigInteger> gLUT = new HashMap <Long, BigInteger> ();
-	public HashMap <Long, BigInteger> hLUT = new HashMap <Long, BigInteger> ();
+	public HashMap <Long, BigInteger> gLUT = null;
+	public HashMap <Long, BigInteger> hLUT = null;
 		
 	public DGKPublicKey(BigInteger N, BigInteger G, BigInteger H, long U, int L, int T, int K)
 	{
@@ -53,7 +52,7 @@ public class DGKPublicKey implements Serializable, PublicKey
 		}
 		else
 		{
-			hLUT = new HashMap<Long, BigInteger>();
+			this.hLUT = new HashMap<Long, BigInteger>();
 		}
 		
 		for (int i = 0; i < 2*t; ++i)
@@ -62,7 +61,7 @@ public class DGKPublicKey implements Serializable, PublicKey
 			//e = 2^i (mod n)
 			BigInteger out = h.modPow(e,n);
 			//h^{2^i (mod n)} (mod n)
-			hLUT.put((long)i,out);
+			this.hLUT.put((long)i,out);
 			//f(i) = h^{2^i}(mod n)
 		}
 	}
@@ -75,13 +74,13 @@ public class DGKPublicKey implements Serializable, PublicKey
 		}
 		else
 		{
-			gLUT = new HashMap<Long, BigInteger>();
+			this.gLUT = new HashMap<Long, BigInteger>();
 		}
 		
 		for (int i = 0; i < u; ++i)
 		{
 			BigInteger out = g.modPow(BigInteger.valueOf((long)i), n);
-			gLUT.put((long) i, out);
+			this.gLUT.put((long) i, out);
 		}
 	}
 		

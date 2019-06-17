@@ -189,7 +189,6 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 		while(true)
 		{
 			r = NTL.generateXBitRandom(n.bitLength());
-
 			g = r.modPow(rprq,n); //g = r^{rp*rq}(mod n)
 
 			if (g.equals(BigInteger.ONE))
@@ -273,7 +272,7 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 
 		// Preemptively build key with just the variables and 
 		// not the Lookup Tables
-		pubKey =  new DGKPublicKey(n, g, h, u, l, t, k);
+		pubKey =  new DGKPublicKey(n, g, h, u, this.l, this.t, this.k);
 		privkey = new DGKPrivateKey(p, q, vp, vq, u);
 
 		System.out.println("Generating hashmaps...");
