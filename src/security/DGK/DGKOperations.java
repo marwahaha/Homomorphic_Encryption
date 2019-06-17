@@ -209,7 +209,7 @@ public class DGKOperations extends CipherSpi
 		}
 
 		// If it is null, just fill the HashMap to avoid Null Pointer!
-		if (pubKey.gLUT.get(plaintext)==null)
+		if (pubKey.gLUT.get(plaintext) == null)
 		{
 			//Overwrite the HashMap
 			pubKey.gLUT.put(plaintext, pubKey.g.modPow(BigInteger.valueOf(plaintext),n));
@@ -222,13 +222,7 @@ public class DGKOperations extends CipherSpi
 
 		//First part = g^m
 		BigInteger firstpart = pubKey.gLUT.get(plaintext);
-		BigInteger secondpart = BigInteger.ZERO;
-
-		if (h.equals(BigInteger.ZERO))
-		{
-			secondpart = BigInteger.ZERO;
-		}
-		secondpart = BigInteger.ONE;
+		BigInteger secondpart = BigInteger.ONE;
 
 		BigInteger tempH;
 		for(int i = 0; i < r.bitLength(); ++i)
@@ -236,17 +230,15 @@ public class DGKOperations extends CipherSpi
 			//second part = h^r
 			if(NTL.bit(r, i) == 1)
 			{
-				//System.out.println("Value of Second Part: (inside for):" + secondpart);
 				tempH = pubKey.hLUT.get((long) i);
 				if(tempH == null)
 				{
-					BigInteger e = new BigInteger("2").modPow(BigInteger.valueOf((long)(i)),n);
 					//e = 2^i (mod n)
-					BigInteger out = h.modPow(e,n);
-					//h^{2^i (mod n)} (mod n)
-					pubKey.hLUT.put((long)i, out);
-					//f(i) = h^{2^i}(mod n)		
-					tempH = out;
+					//e = 2^i (mod n)
+					//f(i) = h^{2^i}(mod n)	
+					BigInteger e = new BigInteger("2").modPow(BigInteger.valueOf((long)(i)), n);
+					tempH = h.modPow(e, n);
+					pubKey.hLUT.put((long)i, tempH);	
 				}
 				secondpart = secondpart.multiply(tempH);
 			}
@@ -262,7 +254,7 @@ public class DGKOperations extends CipherSpi
 		BigInteger p = privKey.getP();
 		BigInteger n = pubKey.n;
 
-		if (ciphertext.signum()==-1)
+		if (ciphertext.signum() == -1)
 		{
 			throw new IllegalArgumentException("decryption Invalid Parameter : the cipher text is not in Zn, "
 			+ "value of cipher text is: (c < 0)" + ciphertext);

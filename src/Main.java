@@ -83,7 +83,7 @@ public class Main
 				 * SEE WHERE PROTOCOL BREAKS GIVEN DEFAULT!
 				 */
 				
-				// Test Protocol 3
+				// Test Protocol 3, mode doesn't matter as DGK is always used!
 				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);//100
 				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);//101
 				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);//102
@@ -92,6 +92,7 @@ public class Main
 				
 				// Test Protocol 2 (Builds on Protocol 3)
 				// Paillier
+				yujia.setDGKMode(false);
 				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("100"), pk)) == 1);
 				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);
 				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("102"), pk)) == 1);
@@ -136,15 +137,6 @@ public class Main
 				yujia.division(d, 4);//100/4 = 25
 				yujia.division(d, 5);//100/5 = 20
 				yujia.division(d, 25);//100/25 = 4
-				
-				// Division Test, DGK
-				/*
-				yujia.setDGKstatus(true);
-				assert(yujia.division(d, 2).compareTo(new BigInteger("50")) == 0);
-				assert(yujia.division(d, 4).compareTo(new BigInteger("25")) == 0);
-				assert(yujia.division(d, 5).compareTo(new BigInteger("20")) == 0);
-				assert(yujia.division(d, 25).compareTo(new BigInteger("4")) == 0);
-				*/
 			}
 			else
 			{
@@ -162,6 +154,7 @@ public class Main
 				Niu.Protocol3(new BigInteger("35"));
 				
 				// Test Protocol 2 with Paillier
+				Niu.setDGKMode(false);
 				Niu.Protocol2();
 				Niu.Protocol2();
 				Niu.Protocol2();
@@ -177,6 +170,7 @@ public class Main
 				Niu.Protocol2();
 				
 				// Test Protocol 4 with Paillier
+				Niu.setDGKMode(false);
 				Niu.Protocol4();
 				Niu.Protocol4();
 				Niu.Protocol4();
@@ -192,6 +186,7 @@ public class Main
 				Niu.Protocol4();
 				
 				// Division Protocol Test, Paillier
+				Niu.setDGKMode(false);
 				Niu.division(2);
 				Niu.division(4);
 				Niu.division(5);
