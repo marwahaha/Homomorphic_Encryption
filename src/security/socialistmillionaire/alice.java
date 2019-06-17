@@ -148,7 +148,7 @@ public class alice
 		Object bob = null;
 		BigInteger r = null;
 
-		BigInteger powL = BigInteger.valueOf(exponent(2,pubKey.l - 2));//2^l
+		BigInteger powL = BigInteger.valueOf(exponent(2,pubKey.l));
 
 		//  Step 1: 0 <= r < N
 		if (isDGK)
@@ -163,15 +163,17 @@ public class alice
 		/*
 		 * Step 2: Alice computes [[z]] = [[x - y + 2^l + r]]
 		 * Send Z to Bob
+		 * [[x + 2^l + r]]
+		 * [[z]] = [[x - y + 2^l + r]]
 		 */
 		if (isDGK)
 		{
-			z = DGKOperations.DGKAdd(pubKey, x, DGKOperations.encrypt(pubKey, r.add(powL)));//[[x + 2^l + r]]
-			z = DGKOperations.DGKSubtract(pubKey, z, y);//[[z]] = [[x - y + 2^l + r]]
+			z = DGKOperations.DGKAdd(pubKey, x, DGKOperations.encrypt(pubKey, r.add(powL)));
+			z = DGKOperations.DGKSubtract(pubKey, z, y);
 		}
 		else
 		{
-			z = PaillierCipher.add(x, PaillierCipher.encrypt(r.add(powL), pk), pk);// = [[x + 2^l + r]]
+			z = PaillierCipher.add(x, PaillierCipher.encrypt(r.add(powL), pk), pk);
             z = PaillierCipher.subtract(z, y, pk);
 		}
 		toBob.writeObject(z);
@@ -454,7 +456,7 @@ public class alice
 		Object bob = null;
 		int bit = -1;
 		
-		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));//2^l
+		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l));
 		
 		if (isDGK)
 		{
@@ -571,7 +573,7 @@ public class alice
 	{
 		if (alpha == null)
 		{
-			alpha = r.mod(BigInteger.valueOf(exponent(2, pubKey.l - 2)));
+			alpha = r.mod(BigInteger.valueOf(exponent(2, pubKey.l)));
 		}
 		Object in;
 		BigInteger [] beta_bits = null;

@@ -498,6 +498,10 @@ public class bob
 	public int Modified_Protocol3(BigInteger beta, BigInteger z) 
 			throws IOException, ClassNotFoundException
 	{
+		if (beta == null)
+		{
+			beta = z.mod(BigInteger.valueOf(exponent(2, pubKey.l)));
+		}
 		Object in;
 		BigInteger [] C = null;
 		BigInteger [] beta_bits = new BigInteger[beta.bitLength()];
