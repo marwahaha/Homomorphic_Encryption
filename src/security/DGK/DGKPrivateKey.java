@@ -74,8 +74,8 @@ public class DGKPrivateKey implements Serializable, PrivateKey
 	    FileWriter fileWriter = null;
 		try 
 		{
-			fileWriter = new FileWriter("/home/andrew/keys.txt");
-		} 
+			fileWriter = new FileWriter("./LUT.txt");
+		}
 		catch (IOException e) 
 		{
 			e.printStackTrace();

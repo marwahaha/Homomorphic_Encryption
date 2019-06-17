@@ -299,15 +299,12 @@ public class bob
 		return result.intValue();
 	}
 
-
 	/*
-	 * Alice has x, x is NOT encrypted!
-	 * Bob has y, y is NOT encrypted!
-	 * Bob has Public and Private Keys for DGK 
-	 * 
+	 * Input Alice: x (unencrypted BigInteger x)
+	 * Input Bob: y (unencrypted BigInteger y), Private Keys
 	 * 
 	 * Result: 
-	 * Alice and Bob know the answer...
+	 * Alice and Bob WITHOUT revealing x, y know
 	 * 0 -> x <= y
 	 * 1 -> x > y
 	 */
@@ -422,7 +419,7 @@ public class bob
 		return answer;
 	}
 	
-	public int Protocol4(BigInteger x, BigInteger y) 
+	public int Protocol4() 
 			throws IOException, ClassNotFoundException
 	{
 		//Step 1: Receive z from Alice
@@ -440,6 +437,10 @@ public class bob
 		if (Objz instanceof BigInteger)
 		{
 			EncZ = (BigInteger) Objz;
+		}
+		else
+		{
+			throw new IllegalArgumentException("Protocol 4: No BigInteger found!");
 		}
 
 		if(isDGK)

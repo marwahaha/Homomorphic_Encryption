@@ -100,12 +100,12 @@ public class alice
 		this.algo = Algorithm.valueOf("QUICK_SORT");
 	}
 	
-	public boolean getDGKStatus()
+	public boolean getDGKMode()
 	{
 		return isDGK;
 	}
 	
-	public void setDGKstatus(boolean _isDGK)
+	public void setDGKMode(boolean _isDGK)
 	{
 		isDGK = _isDGK;
 	}
@@ -268,13 +268,11 @@ public class alice
 	}
 
 	/*
-	 * Alice has x, x is NOT encrypted!
-	 * Bob has y, y is NOT encrypted!
-	 * Bob has Public and Private Keys for DGK 
-	 * 
+	 * Input Alice: x (unencrypted BigInteger x)
+	 * Input Bob: y (unencrypted BigInteger y), Private Keys
 	 * 
 	 * Result: 
-	 * Alice and Bob know the answer...
+	 * Alice and Bob WITHOUT revealing x, y know
 	 * 0 -> x <= y
 	 * 1 -> x > y
 	 */
@@ -484,39 +482,46 @@ public class alice
 		BigInteger zdiv2L =  null;
 		BigInteger result = null;
 		Object bob = null;
-
+		int bit = -1;
+		
 		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));//2^l
-		//System.out.println("2^l: "+ powL);
-
+		
+		if (isDGK)
+		{
+			bit = log2((int) (pubKey.u - 1)/2);
+		}
+		else
+		{
+			bit = pk.n.subtract(BigInteger.ONE).divide(new BigInteger("2")).bitCount();
+		}
+		
+		// Constraint: l + 2 < log_2(N)
+		if (pubKey.l - 2 < bit)
+		{
+			throw new IllegalArgumentException("bit: " + bit + " key-bits: " + (pubKey.l - 2));
+		}
+		
 		//  Step 1: 0 <= r < N
 		BigInteger bigR = NTL.RandomBnd(pubKey.u);
-		//System.out.println("r: " + bigR);
 
 		/*
 		 * Step 2: Alice computes [[z]] = [[x - y + 2^l + r]]
 		 * Send Z to Bob
 		 */
+		//[[x - y]]
+		//[[2^l + r]]
+		//[[z]] = [[x - y + 2^l + r]]
 		if (isDGK)
 		{
-			BigInteger xminusy = DGKOperations.DGKSubtract(pubKey, x, y);//[[x - y]]
-			//System.out.println("x - y: " + Paillier.decrypt(xminusy, sk));
-
-			BigInteger newData = DGKOperations.encrypt(pubKey, bigR.add(powL));//[[2^l + r]]
-			//System.out.println("z + 2^l: " + Paillier.decrypt(newData, sk));
-
-			z = DGKOperations.DGKSubtract(pubKey, xminusy, newData);//[[z]] = [[x - y + 2^l + r]]
-			//System.out.println("value of Z: " + Paillier.decrypt(z, sk));
+			BigInteger xminusy = DGKOperations.DGKSubtract(pubKey, x, y);
+			BigInteger newData = DGKOperations.encrypt(pubKey, bigR.add(powL));
+			z = DGKOperations.DGKSubtract(pubKey, xminusy, newData);
 		}
 		else
 		{			
-			BigInteger xminusy = PaillierCipher.subtract(x, y, pk);//[[x - y]]
-			//System.out.println("x - y: " + Paillier.decrypt(xminusy, sk));
-
-			BigInteger newData = PaillierCipher.encrypt(bigR.add(powL), pk);//[[2^l + r]]
-			//System.out.println("z + 2^l: " + Paillier.decrypt(newData, sk));
-
-			z = PaillierCipher.add(xminusy, newData, pk);//[[z]] = [[x - y + 2^l + r]]
-			//Systesm.out.println("value of Z: " + Paillier.decrypt(z, sk));
+			BigInteger xminusy = PaillierCipher.subtract(x, y, pk);
+			BigInteger newData = PaillierCipher.encrypt(bigR.add(powL), pk);
+			z = PaillierCipher.add(xminusy, newData, pk);
 		}
 		toBob.writeObject(z);
 		toBob.flush();
@@ -525,7 +530,6 @@ public class alice
 
 		// Step 3: alpha = r (mod 2^l)
 		BigInteger alphaZZ = NTL.POSMOD(bigR, powL);
-		//System.err.println("alpha: " + alphaZZ + " beta: " + Paillier.decrypt(z, sk).mod(powL));
 
 		// Step 4: See Modified Comparison Protocol
 		protocolThree = Protocol3(alphaZZ, z);
@@ -538,7 +542,7 @@ public class alice
 		}
 		else
 		{
-			System.err.println("Invalid object: " + bob.getClass());
+			throw new IllegalArgumentException("Protocol 4, Step 5: BigInteger not found!");
 		}
 
 		/*
@@ -551,13 +555,10 @@ public class alice
 		 * I just encrpyt the answer from Protocol 3...
 		 */
 
-		/*
-		 * Step 7, Alice Computes [[x <= y]]
-		 * = [[x <= y]]
-		 * = [[z/2^l]] * ([[r/2^l]] [[alpha < Beta]])^-1 
-		 * = [[z/2^l - r/2^l - (alpha <= beta)]]
-		 */
-
+		// Step 7, Alice Computes [[x <= y]]
+		// = [[r/2^l]]
+		// = [[z/2^l]] * [[r/2^l]]^{-1} = [[z/2^l - r/2^l]]
+		// = [[z/2^l - r/2^l - (alpha <= beta)]]
 		if(isDGK)
 		{
 			BigInteger rdiv2L = DGKOperations.encrypt(pubKey, bigR.divide(powL));
@@ -566,21 +567,9 @@ public class alice
 		}
 		else
 		{			
-			// = [[r/2^l]]
-			//System.out.println("(z - r)/2^l= (x - y)/2^l: " + (Paillier.decrypt(z, sk).subtract(bigR)).divide(powL));
 			BigInteger rdiv2L = PaillierCipher.encrypt(bigR.divide(powL), pk);
-
-			// = [[z/2^l]] * [[r/2^l]]^{-1} = [[z/2^l - r/2^l]]
-			//System.out.println("z/2^l: " + Paillier.decrypt(zdiv2L, sk));
-			//System.out.println("r/2^l: "+ Paillier.decrypt(rdiv2L, sk));
 			result = PaillierCipher.subtract(zdiv2L, rdiv2L, pk);
-
-			//Should expect a 0 or 1.
-			//System.out.println("[[z/2^l - r/2^l]]: " + Paillier.decrypt(result, sk));			
-
-			// = [[z/2^l - r/2^l - (alpha <= beta)]]
 			result = PaillierCipher.subtract(result, PaillierCipher.encrypt(protocolThree, pk), pk);
-			//System.out.println("[[z/2^l - r/2^l - (a <= b)]]: " + Paillier.decrypt(result, sk));	
 		}
 
 		/*
@@ -872,7 +861,6 @@ public class alice
 		{
 			toBob.writeBoolean(false);
 		}
-		
 		return result;
 	}
 	
@@ -881,7 +869,7 @@ public class alice
 			throws ClassNotFoundException, IOException
 	{
 		Pair results = new Pair();   
-		int i; 
+		int i;
 
 		/* If array has even number of elements then 
 		    initialize the first two elements as minimum and 
@@ -1029,7 +1017,6 @@ public class alice
 					Pair res = findExtrema(Sort, false);
 					minSorted.addLast(res.min);
 					maxSorted.addLast(res.max);
-							
 					Sort.remove(res.max);
 					Sort.remove(res.min);
 					System.out.println("Round: " + (++counter));

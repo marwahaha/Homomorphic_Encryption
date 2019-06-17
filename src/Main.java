@@ -3,7 +3,6 @@ import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyPair;
-import java.util.ArrayList;
 
 import security.DGK.DGKGenerator;
 import security.DGK.DGKOperations;
@@ -67,16 +66,72 @@ public class Main
 				alice_socket = new Socket("192.168.147.145", 9254);
 				yujia = new alice(alice_socket, pk, pubKey, true, null);
 				
+				// All answers should print true!
+				// Size is 16 bits, 2^16 is the range
+				/*
+				 * 6-bits: 64
+				 * 7-bits: 128
+				 * 8-bits: 256
+				 * 9-bts: 512
+				 * 10-bits: 1024
+				 * 11-bits: 2048
+				 * 12-bits: 4096
+				 * 13-bits: 8192
+				 * 14-bits: 16384
+				 * 15-bits: 32768
+				 * 16-bits: 65536
+				 * SEE WHERE PROTOCOL BREAKS GIVEN DEFAULT!
+				 */
+				
+				// Test Protocol 3
 				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);//100
 				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);//101
 				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 1);//102
 				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 0);//98
 				System.out.println(yujia.Protocol3(new BigInteger("100"), 0) == 0);//35
 				
-				// Division Protocol Test, Paillier
-				// REMEMBER THE OUTPUT IS THE ENCRYPTED ANSWER 
-				// ONLY BOB CAN VERIFY THE ANSWER!
-
+				// Test Protocol 2 (Builds on Protocol 3)
+				// Paillier
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("100"), pk)) == 1);
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("102"), pk)) == 1);
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("98"), pk)) == 0);
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("35"), pk)) == 0);
+				
+				// DGK
+				yujia.setDGKMode(true);
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("100"), pk)) == 1);
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("102"), pk)) == 1);
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("98"), pk)) == 0);
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("35"), pk)) == 0);
+				
+				// Test Protocol 4 (Builds on Protocol 3)
+				// Paillier
+				yujia.setDGKMode(false);
+				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("100"), pk)) == 1);
+				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);
+				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("102"), pk)) == 1);
+				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("98"), pk)) == 0);
+				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("35"), pk)) == 0);
+				
+				// DGK
+				yujia.setDGKMode(true);
+				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("100"), pk)) == 1);
+				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);
+				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("102"), pk)) == 1);
+				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("98"), pk)) == 0);
+				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("35"), pk)) == 0);
+				
+				// Division Test, Paillier
+				// REMEMBER THE OUTPUT IS THE ENCRYPTED ANSWER, ONLY BOB CAN VERIFY THE ANSWER
+				yujia.setDGKMode(false);
+				yujia.division(d, 2);//100/2 = 50
+				yujia.division(d, 4);//100/4 = 25
+				yujia.division(d, 5);//100/5 = 20
+				yujia.division(d, 25);//100/25 = 4
+				
+				yujia.setDGKMode(true);
 				yujia.division(d, 2);//100/2 = 50
 				yujia.division(d, 4);//100/4 = 25
 				yujia.division(d, 5);//100/5 = 20
@@ -89,27 +144,7 @@ public class Main
 				assert(yujia.division(d, 4).compareTo(new BigInteger("25")) == 0);
 				assert(yujia.division(d, 5).compareTo(new BigInteger("20")) == 0);
 				assert(yujia.division(d, 25).compareTo(new BigInteger("4")) == 0);
-				
-				// Comparison Protocol Test, Paillier
-				yujia.setDGKstatus(false);
-
-				assert(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("100"), pk)) == 1);
-				assert(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);
-				assert(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("102"), pk)) == 1);
-				assert(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("98"), pk)) == 0);
-				assert(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("35"), pk)) == 0);
-				//yujia.sortArray();
-					
-				// Comparison Test, DGK
-				yujia.setDGKstatus(true);
-				assert(yujia.Protocol3(new BigInteger("100"), 0) == 1);
-				assert(yujia.Protocol3(new BigInteger("100"), 0) == 1);
-				assert(yujia.Protocol3(new BigInteger("100"), 0) == 1);
-				assert(yujia.Protocol3(new BigInteger("100"), 0) == 0);
-				assert(yujia.Protocol3(new BigInteger("100"), 0) == 0);
 				*/
-				// Clean up
-				// alice_socket.close();
 			}
 			else
 			{
@@ -119,12 +154,42 @@ public class Main
 				bob_client = bob_socket.accept();
 				Niu = new bob(bob_client, pk, sk, pubKey, privKey, true);
 
-				// Comparison Test, DGK
+				// Test Protocol 3
 				Niu.Protocol3(new BigInteger("100"));
 				Niu.Protocol3(new BigInteger("101"));
 				Niu.Protocol3(new BigInteger("102"));
 				Niu.Protocol3(new BigInteger("98"));
 				Niu.Protocol3(new BigInteger("35"));
+				
+				// Test Protocol 2 with Paillier
+				Niu.Protocol2();
+				Niu.Protocol2();
+				Niu.Protocol2();
+				Niu.Protocol2();
+				Niu.Protocol2();
+				
+				// Test Procotol 2 with DGK
+				Niu.setDGKMode(true);
+				Niu.Protocol2();
+				Niu.Protocol2();
+				Niu.Protocol2();
+				Niu.Protocol2();
+				Niu.Protocol2();
+				
+				// Test Protocol 4 with Paillier
+				Niu.Protocol4();
+				Niu.Protocol4();
+				Niu.Protocol4();
+				Niu.Protocol4();
+				Niu.Protocol4();
+				
+				// Test Procotol 4 with DGK
+				Niu.setDGKMode(true);
+				Niu.Protocol4();
+				Niu.Protocol4();
+				Niu.Protocol4();
+				Niu.Protocol4();
+				Niu.Protocol4();
 				
 				// Division Protocol Test, Paillier
 				Niu.division(2);
@@ -133,28 +198,11 @@ public class Main
 				Niu.division(25);
 				
 				// Division Test, DGK
-				/*
 				Niu.setDGKMode(true);
 				Niu.division(2);
 				Niu.division(4);
 				Niu.division(5);
 				Niu.division(25);
-
-				// Comparison Protocol Test, Paillier
-				Niu.setDGKMode(false);
-				Niu.Protocol3(new BigInteger("100"));
-				Niu.Protocol3(new BigInteger("101"));
-				Niu.Protocol3(new BigInteger("102"));
-				Niu.Protocol3(new BigInteger("98"));
-				Niu.Protocol3(new BigInteger("35"));
-				Niu.Protocol2();
-				Niu.Protocol2();
-				Niu.Protocol2();
-				Niu.Protocol2();
-				Niu.Protocol2();
-				
-				Niu.repeat_Protocol2();
-				*/
 				
 				// Clean up
 				bob_client.close();
