@@ -419,15 +419,15 @@ public class DGKOperations extends CipherSpi
 	
 	public static BigInteger DGKSum (DGKPublicKey pubKey, BigInteger [] parts, int limit)
 	{
+		BigInteger sum = DGKOperations.encrypt(pubKey, 0);
 		if (limit > parts.length)
 		{
 			return DGKSum(pubKey, parts);
 		}
 		else if(limit <= 0)
 		{
-			return encrypt(pubKey, 0);
+			return sum;
 		}
-		BigInteger sum = BigInteger.ZERO;
 		for (int i = 0; i < parts.length; i++)
 		{
 			sum = DGKAdd(pubKey, sum, parts[i]);
