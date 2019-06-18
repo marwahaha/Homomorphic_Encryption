@@ -417,7 +417,7 @@ public class DGKOperations extends CipherSpi
 		return sum;
 	}
 	
-	public static BigInteger DGKSum (DGKPublicKey pubKey, DGKPrivateKey privKey, BigInteger [] parts, int limit)
+	public static BigInteger DGKSum (DGKPublicKey pubKey, BigInteger [] parts, int limit)
 	{
 		BigInteger sum = DGKOperations.encrypt(pubKey, 0);
 		if (limit > parts.length)
@@ -428,10 +428,9 @@ public class DGKOperations extends CipherSpi
 		{
 			return sum;
 		}
-		for (int i = 0; i < parts.length; i++)
+		for (int i = 0; i < limit; i++)
 		{
 			sum = DGKAdd(pubKey, sum, parts[i]);
-			System.out.print(decrypt(pubKey, privKey, sum) + ",");
 		}
 		return sum;
 	}
