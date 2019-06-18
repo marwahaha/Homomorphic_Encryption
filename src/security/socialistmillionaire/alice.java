@@ -265,7 +265,7 @@ public class alice
 		Object bob = null;
 		BigInteger r = null;
 
-		BigInteger powL = BigInteger.valueOf(exponent(2,pubKey.l));
+		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l));
 
 		//  Step 1: 0 <= r < N
 		if (isDGK)

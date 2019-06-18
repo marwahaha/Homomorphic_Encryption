@@ -199,7 +199,7 @@ public class NTL
 
     public static long POSMOD(long x, long n)
     {
-        return ((x%n)+n)%n;
+        return ((x % n) + n) % n;
     }
 
     public static BigInteger POSMOD(long x, BigInteger n)
