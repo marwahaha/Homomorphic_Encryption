@@ -280,6 +280,8 @@ public class alice
 		if (isDGK)
 		{
 			z = DGKOperations.DGKAdd(pubKey, x, DGKOperations.encrypt(pubKey, r.add(powL)));
+			System.out.println("Z: " + z);
+			System.out.println("Y: " + y);
 			z = DGKOperations.DGKSubtract(pubKey, z, y);
 		}
 		else

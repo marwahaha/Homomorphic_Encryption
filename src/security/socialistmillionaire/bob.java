@@ -241,14 +241,6 @@ public class bob
 		if(in instanceof BigInteger[])
 		{
 			C = (BigInteger []) in;
-			for (BigInteger C_i: C)
-			{
-				if (DGKOperations.decrypt(pubKey, privKey, C_i) == 0)
-				{
-					deltaB = 1;
-					break;
-				}
-			}
 		}
 		else if (in instanceof BigInteger)
 		{
@@ -260,6 +252,15 @@ public class bob
 			throw new IllegalArgumentException("Protocol 1, Step 6: Invalid object!");
 		}
 		
+		for (BigInteger C_i: C)
+		{
+			if (DGKOperations.decrypt(pubKey, privKey, C_i) == 0)
+			{
+				deltaB = 1;
+				break;
+			}
+		}
+	
 		// Step 7: UNOFFICIAL
 		// Inform Alice what deltaB is
 		toAlice.writeInt(deltaB);
