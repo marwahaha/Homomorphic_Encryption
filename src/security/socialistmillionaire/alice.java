@@ -191,15 +191,14 @@ public class alice
 			//Enc[x XOR y] = [1] - [y_i]
 			else
 			{
-				XOR[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), 
+				XOR[i] = DGKOperations.DGKSubtract(pubKey, 
+						DGKOperations.encrypt(pubKey, 1), 
 						Encrypted_Y[i]);
 			}
 		}
-		System.out.println("XOR Results");
-		print_bits(XOR);
-		
+	
 		// Step 3: Alice picks deltaA and computes S
-		//BigInteger s = DGKOperations.encrypt(pubKey, 1 - 2 * deltaA);
+		// BigInteger s = DGKOperations.encrypt(pubKey, 1 - 2 * deltaA);
 		// FIX AT DELTA = 0
 		BigInteger s = DGKOperations.encrypt(pubKey, 1);
 		
@@ -210,9 +209,8 @@ public class alice
 		// Compute the Product of XORS
 		for (int i = 0; i < Encrypted_Y.length;i++)
 		{
-			product = DGKOperations.DGKSum(pubKey, XOR, Encrypted_Y.length - i);
-			System.out.println(DGKOperations.decrypt(pubKey, privKey, product));
-			C[i] = DGKOperations.DGKMultiply(pubKey, product, 3);
+			product = DGKOperations.DGKSum(pubKey, XOR, Encrypted_Y.length - 1 - i);
+			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKMultiply(pubKey, product, 3);
 		}
 		System.out.println("C w/ only Product Sum");
 		print_bits(C);
