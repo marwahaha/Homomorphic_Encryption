@@ -211,6 +211,7 @@ public class alice
 		for (int i = 0; i < Encrypted_Y.length;i++)
 		{
 			product = DGKOperations.DGKSum(pubKey, XOR, Encrypted_Y.length - 1 - i);
+			System.out.println(DGKOperations.decrypt(pubKey, privKey, product));
 			C[i] = DGKOperations.DGKMultiply(pubKey, product, 3);
 		}
 		System.out.println("C w/ only Product Sum");
