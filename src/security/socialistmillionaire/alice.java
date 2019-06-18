@@ -220,8 +220,8 @@ public class alice
 		}
 		
 		//This is c_{-1}
-		C_i[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
-		C_i[Encrypted_Y.length] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
+		C[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
+		C[Encrypted_Y.length] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
 
 		
 		// Step 5: Blinds C_i and send to Bob
