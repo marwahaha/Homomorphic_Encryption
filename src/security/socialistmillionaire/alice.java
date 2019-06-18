@@ -196,7 +196,7 @@ public class alice
 						Encrypted_Y[i]);
 			}
 		}
-		System.out.println("XOR Results (Probably correct but never hurts");
+		System.out.println("XOR Results");
 		print_bits(XOR);
 		
 		// Step 3: Alice picks deltaA and computes S
@@ -214,6 +214,8 @@ public class alice
 			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKMultiply(pubKey, product, 3);
 			product = DGKOperations.DGKAdd(pubKey, product, XOR[i]);
 		}
+		System.out.println("C w/ only Product Sum");
+		print_bits(C);
 		
 		for (int i = 0; i < Encrypted_Y.length; i++)
 		{
@@ -224,6 +226,8 @@ public class alice
 			// C_i -= y_i
 			C[i] = DGKOperations.DGKSubtract(pubKey, s, Encrypted_Y[i]);
 		}
+		System.out.println("C_i + s + x - y");
+		print_bits(C);
 		
 		//This is c_{-1}
 		C[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
@@ -1186,7 +1190,7 @@ public class alice
 	{
 		for (int i = 0; i < bits.length; i++)
 		{
-			System.out.print(DGKOperations.decrypt(pubKey, privKey, bits[bits.length - 1 - i]));
+			System.out.print(DGKOperations.decrypt(pubKey, privKey, bits[i]));
 		}
 		System.out.println("");
 	}
