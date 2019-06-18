@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Random;
 
 import security.DGK.DGKOperations;
+import security.DGK.DGKPrivateKey;
 import security.DGK.DGKPublicKey;
 import security.DGK.NTL;
 import security.paillier.PaillierCipher;
@@ -188,9 +189,13 @@ public class alice
 						Encrypted_Y[i]);
 			}
 		}
+		System.out.println("XOR Results (Probably correct but never hurts");
+		print_bits(XOR);
 		
 		// Step 3: Alice picks deltaA and computes S
-		BigInteger s = DGKOperations.encrypt(pubKey, 1 - 2 * deltaA);
+		//BigInteger s = DGKOperations.encrypt(pubKey, 1 - 2 * deltaA);
+		// FIX AT DELTA = 0
+		BigInteger s = DGKOperations.encrypt(pubKey, 1);
 		
 		// Step 4: Compute C_i
 		C = new BigInteger[Encrypted_Y.length + 1];
@@ -226,7 +231,7 @@ public class alice
 		
 		// Step 7: Obtain Delta B from Bob
 		deltaB = fromBob.readInt();
-
+		
 		// 1 XOR 1 = 0 and 0 XOR 0 = 0, so X > Y
 		if (deltaA == deltaB)
 		{
@@ -351,7 +356,6 @@ public class alice
 		if (comparison != 0 && comparison != 1)
 		{
 			System.err.println("Comparison result: " + comparison);
-			// Get Number of Bits in X and Y? Maybe too big?
 		}
 		return comparison;
 	}
@@ -1168,5 +1172,16 @@ public class alice
 	{
 		toBob.close();
 		fromBob.close();
+	}
+	
+	// Debug Protocol 1 and 3
+	public void print_bits(BigInteger [] bits) throws ClassNotFoundException, IOException
+	{
+		DGKPrivateKey privKey = (DGKPrivateKey) fromBob.readObject();
+		for (int i = 0; i < bits.length; i++)
+		{
+			System.out.print(DGKOperations.decrypt(pubKey, privKey, bits[bits.length - 1 - i]));
+		}
+		System.out.println("");
 	}
 }
