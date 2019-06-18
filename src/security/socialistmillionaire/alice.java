@@ -675,7 +675,6 @@ public class alice
 		if (alpha == null)
 		{
 			alpha = r.mod(BigInteger.valueOf(exponent(2, pubKey.l)));
-			System.out.println(alpha);
 		}
 		int answer;
 		Object in;
