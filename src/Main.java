@@ -106,6 +106,7 @@ public class Main
 				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 0);//98
 				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 0);//35
 				
+				/*
 				// Test Protocol 2 (Builds on Protocol 3)
 				// Paillier
 				System.out.println("Protocol 2 Tests...Paillier");
@@ -159,6 +160,7 @@ public class Main
 				yujia.division(d, 4);//100/4 = 25
 				yujia.division(d, 5);//100/5 = 20
 				yujia.division(d, 25);//100/25 = 4
+				*/
 			}
 			else
 			{
@@ -189,6 +191,7 @@ public class Main
 				Niu.Modified_Protocol3(null, new BigInteger("98"));
 				Niu.Modified_Protocol3(null, new BigInteger("35"));
 				
+				/*
 				// Test Protocol 2 with Paillier
 				Niu.setDGKMode(false);
 				Niu.Protocol2();
@@ -234,7 +237,7 @@ public class Main
 				Niu.division(4);
 				Niu.division(5);
 				Niu.division(25);
-				
+				*/
 				// Clean up
 				bob_client.close();
 				bob_socket.close();
