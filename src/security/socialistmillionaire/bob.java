@@ -212,6 +212,72 @@ public class bob
 		return answer;
 	}
 	
+	public int Protocol1(BigInteger y) throws IOException, ClassNotFoundException
+	{
+		Object in;
+		int deltaB = 0;
+		BigInteger deltaA = null;
+		BigInteger [] C = null;
+		
+		//Step 1: Bob sends encrypted bits to Alice
+		BigInteger EncY[] = new BigInteger[y.bitLength()];
+		for (int i = 0; i < y.bitLength(); i++)
+		{
+			EncY[i] = DGKOperations.encrypt(pubKey, NTL.bit(y, i));
+		}
+		toAlice.writeObject(EncY);
+		toAlice.flush();
+		
+		// Step 2: Alice...
+		
+		// Step 3: Alice...
+		
+		// Step 4: Alice...
+		
+		// Step 5: Alice...
+		
+		// Step 6: Check if one of the numbers in C_i is decrypted to 0.
+		in = fromAlice.readObject();
+		if(in instanceof BigInteger[])
+		{
+			C = (BigInteger []) in;
+			for (BigInteger C_i: C)
+			{
+				if (DGKOperations.decrypt(pubKey, privKey, C_i) == 0)
+				{
+					deltaB = 1;
+					break;
+				}
+			}
+		}
+		else if (in instanceof BigInteger)
+		{
+			deltaA = (BigInteger) in;
+			return deltaA.intValue();
+		}
+		else
+		{
+			throw new IllegalArgumentException("Protocol 1, Step 6: Invalid object!");
+		}
+		
+		// Step 7: UNOFFICIAL
+		// Inform Alice what deltaB is
+		toAlice.writeInt(deltaB);
+		
+		// Step 8: UNOFFICIAL
+		// Alice computes deltaA XOR deltaB and returns exncrypted answer
+		in = fromAlice.readObject();
+		if (in instanceof BigInteger)
+		{
+			deltaA = (BigInteger) in;
+			return (int) DGKOperations.decrypt(pubKey, privKey, deltaA);
+		}
+		else
+		{
+			throw new IllegalArgumentException("No response from Alice in Step 8");
+		}
+	}
+	
 	public int Protocol2()
 			throws IOException, ClassNotFoundException
 	{
@@ -312,11 +378,10 @@ public class bob
 	public int Protocol3(BigInteger y)
 			throws IOException, ClassNotFoundException
 	{
-		Object x;
+		Object x = null;
 		BigInteger [] C = null;
 		int deltaB = 0;
-		BigInteger deltaA;
-		int answer = -1;
+		BigInteger deltaA = null;
 
 		//Step 1: Bob sends encrypted bits to Alice
 		BigInteger EncY[] = new BigInteger[y.bitLength()];
@@ -335,6 +400,8 @@ public class bob
 
 		//Step 5: After blinding, Alice sends C_i to Bob
 
+		//Step 6: Bob checks if there is a 0 in C_i and seta deltaB accordingly
+		
 		/*
 		 * Currently by design of the program
 		 * 1- Alice KNOWS that bob will assume deltaB = 0.
@@ -362,6 +429,14 @@ public class bob
 		if (x instanceof BigInteger [])
 		{
 			C = (BigInteger []) x;
+			for (BigInteger C_i: C)
+			{
+				if (DGKOperations.decrypt(pubKey, privKey, C_i) == 0)
+				{
+					deltaB = 1;
+					break;
+				}
+			}
 		}
 		// Number of bits gives away the answer!
 		else if (x instanceof BigInteger)
@@ -372,33 +447,19 @@ public class bob
 			// x <= y -> 1 (true)
 			if (deltaA.intValue() == 1)
 			{
-				answer = 1;
-				return answer;
+				return 1;
 			}
 			// Case 2, delta B is 0
 			// 0 XOR 0 = 0
 			// x <= y -> 0 (false)
 			if (deltaA.intValue() == 0)
 			{
-				answer = 0;
-				return answer;
+				return 0;
 			}
 		}
 		else
 		{
-			throw new IllegalArgumentException("Bob Step 4 error in Protocol 3!");
-		}
-
-		// Delta B is already set to 0!
-		// Check for x = y as well!
-		// Alice will send deltaA + sum(X xor Y) and Bob must decrypt it!
-		for (BigInteger C_i: C)
-		{
-			if (DGKOperations.decrypt(pubKey, privKey, C_i) == 0)
-			{
-				deltaB = 1;
-				break;
-			}
+			throw new IllegalArgumentException("Protocol 3, Step 4: Invalid object!");
 		}
 
 		// Step 7: Return Gamma B to Alice, Alice will compute GammaA XOR GammaB
@@ -410,13 +471,12 @@ public class bob
 		if (x instanceof BigInteger)
 		{
 			deltaA = (BigInteger) x;
-			answer = (int) DGKOperations.decrypt(pubKey, privKey, deltaA);
+			return (int) DGKOperations.decrypt(pubKey, privKey, deltaA);
 		}
 		else
 		{
 			throw new IllegalArgumentException("No response from Alice in Step 8");
 		}
-		return answer;
 	}
 	
 	public int Protocol4() 

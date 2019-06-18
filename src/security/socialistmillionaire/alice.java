@@ -137,6 +137,122 @@ public class alice
 		return (int) (Math.log10((double) value)/Math.log(2.0));
 	}
 
+	public int Protocol1(BigInteger x) throws IOException, ClassNotFoundException
+	{
+		int answer = -1;
+		int deltaB = -1;
+		int deltaA = rnd.nextInt(2);
+		Object in;
+		BigInteger [] Encrypted_Y;
+		BigInteger [] C;
+		
+		// Step 1: Get Y bits from Bob
+		in = fromBob.readObject();
+		if (in instanceof BigInteger[])
+		{
+			Encrypted_Y = (BigInteger []) in;
+		}
+		else
+		{
+			throw new IllegalArgumentException("Protocol 3 Step 1: Missing Y-bits!");
+		}
+
+		// Case 1, delta B is ALWAYS INITIALIZED TO 0
+		// y has more bits -> y is bigger
+		if (x.bitLength() < Encrypted_Y.length)
+		{
+			toBob.writeObject(BigInteger.ONE);
+			toBob.flush();
+			// x <= y -> 1 (true)
+			return 1;
+		}
+
+		// Case 2 delta B is 0
+		// x has more bits -> x is bigger
+		else if(x.bitLength() > Encrypted_Y.length)
+		{
+			toBob.writeObject(BigInteger.ZERO);
+			toBob.flush();
+			// x <= y -> 0 (false)
+			return 0;
+		}
+
+		// Otherwise, if bit size is equal, proceed!
+		// Step 2: compute Encrypted X XOR Y
+		BigInteger [] XOR = new BigInteger[Encrypted_Y.length];
+		for (int i = 0; i < Encrypted_Y.length; i++)
+		{
+			//Enc[x XOR y] = [y_i]
+			if (NTL.bit(x, i) == 0)
+			{
+				XOR[i] = Encrypted_Y[i];
+			}
+			//Enc[x XOR y] = [1] - [y_i]
+			else
+			{
+				XOR[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), 
+						Encrypted_Y[i]);
+			}
+		}
+		
+		// Step 3: Alice picks deltaA and computes S
+		BigInteger s = DGKOperations.encrypt(pubKey, 1);
+		
+		// Step 4: Compute C_i
+		C = new BigInteger[Encrypted_Y.length + 1];
+		BigInteger product = DGKOperations.encrypt(pubKey, 0);
+		
+		// Compute the Product of XORS
+		for (int i = 0; i < Encrypted_Y.length;i++)
+		{
+			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKMultiply(pubKey, product, 3);
+			product = DGKOperations.DGKAdd(pubKey, product, XOR[i]);
+		}
+		
+		for (int i = 0; i < Encrypted_Y.length; i++)
+		{
+			// C_i += [s] 
+			C[i] = DGKOperations.DGKAdd(pubKey, C[i], DGKOperations.encrypt(pubKey, NTL.bit(x, i)));
+			// C_i += [x_i]
+			C[i] = DGKOperations.DGKAdd(pubKey, C[i], s);
+			// C_i -= y_i
+			C[i] = DGKOperations.DGKSubtract(pubKey, s, Encrypted_Y[i]);
+		}
+		
+		//This is c_{-1}
+		C_i[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
+		C_i[Encrypted_Y.length] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
+
+		
+		// Step 5: Blinds C_i and send to Bob
+		toBob.writeObject(C);
+		
+		// Step 6: Bob...
+		
+		// Step 7: Obtain Delta B from Bob
+		deltaB = fromBob.readInt();
+
+		// 1 XOR 1 = 0 and 0 XOR 0 = 0, so X > Y
+		if (deltaA == deltaB)
+		{
+			answer = 0;
+		}
+		// 1 XOR 0 = 1 and 0 XOR 1 = 1, so X <= Y
+		else
+		{
+			answer = 1;
+		}
+
+		/*
+		 * Step 8: Bob has the Private key anyways...
+		 * Send him the encrypted answer!
+		 * Alice and Bob know now without revealing x or y!
+		 */
+		toBob.writeObject(DGKOperations.encrypt(pubKey, BigInteger.valueOf(answer)));
+		toBob.flush();
+		return answer;
+	}
+	
 	public int Protocol2(BigInteger x, BigInteger y) 
 			throws IOException, ClassNotFoundException
 	{
@@ -258,22 +374,21 @@ public class alice
 			throws ClassNotFoundException, IOException
 	{
 		int deltaA = rnd.nextInt(2);
-		BigInteger [] EncY;
+		BigInteger [] Encrypted_Y;
 		int deltaB;
 		int answer;
-		Object obj;
+		Object in;
 
 		//Step 1: Receive y_i bits from Bob
-		obj = fromBob.readObject();
-		if (obj instanceof BigInteger[])
+		in = fromBob.readObject();
+		if (in instanceof BigInteger[])
 		{
-			EncY = (BigInteger []) obj;
+			Encrypted_Y = (BigInteger []) in;
 		}
 		else
 		{
 			throw new IllegalArgumentException("Protocol 3 Step 1: Missing Y-bits!");
 		}
-		int yBits = EncY.length;
 
 		/*
 		 * Currently by design of the program
@@ -299,7 +414,7 @@ public class alice
 
 		// Case 1, delta B is ALWAYS INITIALIZED TO 0
 		// y has more bits -> y is bigger
-		if (x.bitLength() < yBits)
+		if (x.bitLength() < Encrypted_Y.length)
 		{
 			toBob.writeObject(BigInteger.ONE);
 			toBob.flush();
@@ -309,7 +424,7 @@ public class alice
 
 		// Case 2 delta B is 0
 		// x has more bits -> x is bigger
-		else if(x.bitLength() > yBits)
+		else if(x.bitLength() > Encrypted_Y.length)
 		{
 			toBob.writeObject(BigInteger.ZERO);
 			toBob.flush();
@@ -318,32 +433,27 @@ public class alice
 		}
 
 		// if equal bits, proceed!
-
-		//Step 2: compute Encrypted X XOR Y
-		BigInteger [] XOR = new BigInteger[yBits];
-		for (int i = 0; i < yBits; i++)
+		// Step 2: compute Encrypted X XOR Y
+		BigInteger [] XOR = new BigInteger[Encrypted_Y.length];
+		for (int i = 0; i < Encrypted_Y.length; i++)
 		{
 			//Enc[x XOR y] = [y_i]
 			if (NTL.bit(x, i) == 0)
 			{
-				XOR[i] = EncY[i];
+				XOR[i] = Encrypted_Y[i];
 			}
 			//Enc[x XOR y] = [1] - [y_i]
 			else
 			{
-				XOR[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), EncY[i]);
+				XOR[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), 
+						Encrypted_Y[i]);
 			}
 		}
 		
-		/*
-		 * Step 3A: Select gamma A and set up C_i
-		 * Protocol 3 only works if GammaA = 1, in ALL cases.
-		 * Protocol 3 doesn't work if x = y and GammaA = 0
-		 */
-
+		// Step 3A: delta A is computed on initialization, it is 0 or 1.
 		// Step 3B: Collect index of all index where x_i = GammaA
 		ArrayList <Integer> ListofGammaA = new ArrayList<>();
-		for (int i = 0;i < yBits + 1;i++)
+		for (int i = 0;i < Encrypted_Y.length + 1; i++)
 		{
 			if (NTL.bit(x, i) == deltaA)
 			{
@@ -351,16 +461,15 @@ public class alice
 			}
 		}
 
-		//Step 4A: Generate C_i, see c_{-1} to test for equality!
-		//C_{-1} = C_i[yBits], will be computed at the end...
-		BigInteger [] C_i = new BigInteger [yBits + 1];
+		// Step 4A: Generate C_i, see c_{-1} to test for equality!
+		// C_{-1} = C_i[yBits], will be computed at the end...
+		BigInteger [] C_i = new BigInteger [Encrypted_Y.length + 1];
+		
 		BigInteger product = DGKOperations.encrypt(pubKey, 0);
-
-		//System.out.println("new C_i");
-		for (int i = 0; i < yBits; i++)
+		for (int i = 0; i < Encrypted_Y.length; i++)
 		{
 			// Goes from yBits - 1 to 0
-			C_i [yBits-1-i] = product;
+			C_i [Encrypted_Y.length - 1 - i] = product;
 			product = DGKOperations.DGKAdd(pubKey, product, XOR[i]);
 		}
 
@@ -370,57 +479,49 @@ public class alice
 		 * [1] - [y_i bit]
 		 */
 
-		BigInteger [] minus = new BigInteger[yBits];
+		BigInteger [] minus = new BigInteger[Encrypted_Y.length];
 		if (deltaA == 0)
 		{
-			for(int i = 0; i < yBits; i++)
+			for(int i = 0; i < Encrypted_Y.length; i++)
 			{
-				minus [i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), EncY[i]);
+				minus [i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), 
+						Encrypted_Y[i]);
 			}
 		}
 		
-		for (int i = 0; i < yBits; i++)
+		for (int i = 0; i < Encrypted_Y.length; i++)
 		{
 			if (deltaA==0)
 			{
 				// Step 4 = [1] - [y_i bit] + [c_i]
-				C_i[i] = DGKOperations.DGKAdd(pubKey, C_i[i], minus[yBits-1-i]);
+				C_i[i] = DGKOperations.DGKAdd(pubKey, C_i[i], minus[Encrypted_Y.length - 1 - i]);
 			}
 			else
 			{
 				// Step 4 = [y_i] + [c_i]
-				C_i[i]= DGKOperations.DGKAdd(pubKey, C_i[i], EncY[yBits-1-i]);
+				C_i[i]= DGKOperations.DGKAdd(pubKey, C_i[i], Encrypted_Y[Encrypted_Y.length - 1 - i]);
 			}
 		}
 
 		//Step 5: Apply the Blinding to C_i and send it to Bob
-		for (int i = 0; i < yBits;i++)
+		for (int i = 0; i < Encrypted_Y.length;i++)
 		{
 			// if i is NOT in L, just place a random NON-ZERO
 			if(!ListofGammaA.contains(i))
 			{
-				C_i[yBits-1-i] = DGKOperations.encrypt(pubKey, 7);
+				C_i[Encrypted_Y.length - 1 - i] = DGKOperations.encrypt(pubKey, 7);
 			}
 		}
 		
 		//This is c_{-1}
-		C_i[yBits] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
-		C_i[yBits] = DGKOperations.DGKAdd(pubKey, C_i[yBits], DGKOperations.encrypt(pubKey, deltaA));
+		C_i[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
+		C_i[Encrypted_Y.length] = DGKOperations.DGKAdd(pubKey, C_i[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
 
 		//Send to Bob, C_i and sum of XOR (equality check)
 		toBob.writeObject(C_i);
 		toBob.flush();
 
-		/*
-		 * Step 7: Obtain GammaB from Bob
-		 * GammaA XOR GammaB = 0 or 1.
-		 * Now I am not sure if GammaB should be encrypted or not?
-		 */
-
-		// Get GammaB from Bob
-		// Security not compromised
-		// because deltaA is secret from Bob
-		// and random!
+		// Step 7: Obtain Delta B from Bob
 		deltaB = fromBob.readInt();
 
 		// 1 XOR 1 = 0 and 0 XOR 0 = 0, so X > Y

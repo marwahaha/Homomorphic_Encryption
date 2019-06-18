@@ -191,8 +191,10 @@ public class DGKOperations extends CipherSpi
 
 		if (plaintext < 0)
 		{
+			/*
 			throw new IllegalArgumentException("Encryption Invalid Parameter: the plaintext is not in Zu (plaintext < 0)"
 				+ " value of Plain Text is: " + plaintext);
+			*/
 			/*
 			 * System.err.println("ERROR SPOTTED: PLAINTEXT < 0 AT ENCRYPT");
 			 * plaintext = NTL.POSMOD(plaintext,u).longValue();
