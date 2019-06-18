@@ -205,12 +205,12 @@ public class alice
 		
 		// Step 4: Compute C_i
 		C = new BigInteger[Encrypted_Y.length + 1];
-		BigInteger product = DGKOperations.encrypt(pubKey, 0);
+		BigInteger product;
 		
 		// Compute the Product of XORS
-		for (int i = 0; i < Encrypted_Y.length - 1;i++)
+		for (int i = 0; i < Encrypted_Y.length;i++)
 		{
-			product = DGKOperations.DGKSum(pubKey, XOR, Encrypted_Y.length - 1 - i);
+			product = DGKOperations.DGKSum(pubKey, privKey, XOR, Encrypted_Y.length - i);
 			System.out.println(DGKOperations.decrypt(pubKey, privKey, product));
 			C[i] = DGKOperations.DGKMultiply(pubKey, product, 3);
 		}
@@ -1192,7 +1192,7 @@ public class alice
 		{
 			if (bits[i] != null)
 			{
-				System.out.println("i=" + i + " " + DGKOperations.decrypt(pubKey, privKey, bits[i]));
+				System.out.print(DGKOperations.decrypt(pubKey, privKey, bits[i]));
 			}
 		}
 		System.out.println("");
