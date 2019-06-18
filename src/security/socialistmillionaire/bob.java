@@ -263,6 +263,7 @@ public class bob
 		// Step 7: UNOFFICIAL
 		// Inform Alice what deltaB is
 		toAlice.writeInt(deltaB);
+		toAlice.flush();
 		
 		// Step 8: UNOFFICIAL
 		// Alice computes deltaA XOR deltaB and returns exncrypted answer
@@ -581,6 +582,7 @@ public class bob
 			d = DGKOperations.encrypt(pubKey, BigInteger.ZERO);
 		}
 		toAlice.writeObject(d);
+		toAlice.flush();
 		
 		// Step B: Send the encrypted Beta bits
 		for (int i = 0; i < beta_bits.length;i++)
@@ -588,6 +590,7 @@ public class bob
 			beta_bits[i] = DGKOperations.encrypt(pubKey, NTL.bit(beta, i));
 		}
 		toAlice.writeObject(beta_bits);
+		toAlice.flush();
 		
 		// Step C: Alice corrects d...
 		
@@ -628,9 +631,11 @@ public class bob
 			}
 		}
 		toAlice.writeInt(deltaB);
+		toAlice.flush();
 		
 		// Extra step...Bob gets the answer from Alice
 		answer = fromAlice.readInt();
+		toAlice.flush();
 		return answer;
 	}
 	

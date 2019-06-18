@@ -226,8 +226,9 @@ public class alice
 		
 		// Step 5: Blinds C_i and send to Bob
 		toBob.writeObject(C);
+		toBob.flush();
 		
-		// Step 6: Bob...
+		// Step 6: Bob looks for any 0's in C_i and computes DeltaB
 		
 		// Step 7: Obtain Delta B from Bob
 		deltaB = fromBob.readInt();
@@ -611,9 +612,8 @@ public class alice
 		// Step 3: alpha = r (mod 2^l)
 		BigInteger alphaZZ = NTL.POSMOD(r, powL);
 
-		// Step 4: See Modified Comparison Protocol
+		// Step 4: Use Modified Protocol 3
 		// alpha_leq_beta = 0, 1
-		// Step 5 Bob sending Delta B is not needed obviously!
 		alpha_leq_beta = Modified_Protocol3(alphaZZ, z);
 		
 		// Step 5: Bob sends z/2^l and GammaB 
@@ -814,6 +814,7 @@ public class alice
 			c[i] = DGKOperations.DGKMultiply(pubKey, c[i], 7);
 		}
 		toBob.writeObject(c);
+		toBob.flush();
 		
 		// Step J: Bob checks whether a C_i has a zero or not...get delta B.
 		int deltaB = fromBob.readInt();
@@ -827,6 +828,7 @@ public class alice
 			answer = 1;
 		}
 		toBob.writeInt(answer);
+		toBob.flush();
 		return answer;
 	}
 	
