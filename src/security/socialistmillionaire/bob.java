@@ -87,6 +87,12 @@ public class bob
 		this.isDGK = _isDGK;
 		this.sendDGKPublicKey();
 		this.sendPaillierPublicKey();
+	
+		// ONLY FOR DEBUGGING
+		toAlice.writeObject(privKey);
+		toAlice.flush();
+		toAlice.writeObject(sk);
+		toAlice.flush();
 	}
 	
 	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
@@ -227,8 +233,6 @@ public class bob
 		}
 		toAlice.writeObject(EncY);
 		toAlice.flush();
-		
-		sendDGKPrivateKey();
 		
 		// Step 2: Alice...
 		
@@ -703,12 +707,6 @@ public class bob
 	public void sendDGKPublicKey() throws IOException
 	{
 		toAlice.writeObject(pubKey);
-		toAlice.flush();
-	}
-	
-	public void sendDGKPrivateKey() throws IOException
-	{
-		toAlice.writeObject(privKey);
 		toAlice.flush();
 	}
 	

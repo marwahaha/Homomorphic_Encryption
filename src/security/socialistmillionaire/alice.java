@@ -14,6 +14,7 @@ import security.DGK.DGKPrivateKey;
 import security.DGK.DGKPublicKey;
 import security.DGK.NTL;
 import security.paillier.PaillierCipher;
+import security.paillier.PaillierPrivateKey;
 import security.paillier.PaillierPublicKey;
 
 import java.util.Deque;
@@ -64,6 +65,10 @@ public class alice
 	// Current Algorithm to Sort with...
 	private Algorithm algo;
 	
+	// REMOVE LATER, FOR DEBUGGING
+	private DGKPrivateKey privKey = null;
+	private PaillierPrivateKey sk = null;
+	
 	public alice (Socket clientSocket,
 			PaillierPublicKey _pk, DGKPublicKey _pubKey,
             boolean _isDGK, BigInteger[] _toSort) throws IOException, ClassNotFoundException
@@ -86,6 +91,8 @@ public class alice
 		this.getPaillierPublicKey();
 		//System.out.println(pk.toString());
 		//System.out.println(pubKey.toString());
+		privKey = (DGKPrivateKey) fromBob.readObject();
+		sk = (PaillierPrivateKey) fromBob.readObject();
 	}
 
 	public alice (ObjectInputStream _fromBob, ObjectOutputStream _toBob,
@@ -1177,7 +1184,6 @@ public class alice
 	// Debug Protocol 1 and 3
 	public void print_bits(BigInteger [] bits) throws ClassNotFoundException, IOException
 	{
-		DGKPrivateKey privKey = (DGKPrivateKey) fromBob.readObject();
 		for (int i = 0; i < bits.length; i++)
 		{
 			System.out.print(DGKOperations.decrypt(pubKey, privKey, bits[bits.length - 1 - i]));
