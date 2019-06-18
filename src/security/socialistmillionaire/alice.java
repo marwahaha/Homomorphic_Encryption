@@ -677,6 +677,7 @@ public class alice
 			alpha = r.mod(BigInteger.valueOf(exponent(2, pubKey.l)));
 			System.out.println(alpha);
 		}
+		int answer;
 		Object in;
 		BigInteger [] beta_bits = null;
 		BigInteger [] encAlphaXORBeta = null;
@@ -807,22 +808,20 @@ public class alice
 			c[i] = DGKOperations.DGKAdd(pubKey, S, DGKOperations.encrypt(pubKey, NTL.bit(alpha, i)));
 		}
 		
-		// Step I: BLIND THE EXPONENTS
+		// Step I: BLIND THE EXPONENTS AND SEND TO BOB
 		for (int i = 0; i < beta_bits.length;i++)
 		{
 			c[i] = DGKOperations.DGKMultiply(pubKey, c[i], 7);
 		}
+		toBob.writeObject(c);
 		
 		// Step J: Bob checks whether a C_i has a zero or not...get delta B.
 		int deltaB = fromBob.readInt();
 		
-		int answer = -1;
-		// 1 XOR 1 = 0 and 0 XOR 0 = 0, so X > Y
 		if (deltaA == deltaB)
 		{
 			answer = 0;
 		}
-		// 1 XOR 0 = 1 and 0 XOR 1 = 1, so X <= Y
 		else
 		{
 			answer = 1;
