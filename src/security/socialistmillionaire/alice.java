@@ -169,7 +169,6 @@ public class alice
 		{
 			toBob.writeObject(BigInteger.ONE);
 			toBob.flush();
-			// x <= y -> 1 (true)
 			return 1;
 		}
 		else if(x.bitLength() > Encrypted_Y.length)
@@ -211,8 +210,8 @@ public class alice
 		// Compute the Product of XORS
 		for (int i = 0; i < Encrypted_Y.length;i++)
 		{
-			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKMultiply(pubKey, product, 3);
-			product = DGKOperations.DGKAdd(pubKey, product, XOR[i]);
+			product = DGKOperations.DGKSum(pubKey, XOR, Encrypted_Y.length - 1 - i);
+			C[i] = DGKOperations.DGKMultiply(pubKey, product, 3);
 		}
 		System.out.println("C w/ only Product Sum");
 		print_bits(C);
@@ -1190,7 +1189,10 @@ public class alice
 	{
 		for (int i = 0; i < bits.length; i++)
 		{
-			System.out.print(DGKOperations.decrypt(pubKey, privKey, bits[i]));
+			if (bits[i] != null)
+			{
+				System.out.print(DGKOperations.decrypt(pubKey, privKey, bits[i]));
+			}
 		}
 		System.out.println("");
 	}
