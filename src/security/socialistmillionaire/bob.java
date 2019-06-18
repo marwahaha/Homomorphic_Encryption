@@ -71,6 +71,9 @@ public class bob
 		this.sendPaillierPublicKey();
 		//System.out.println(pk.toString());
 		//System.out.println(pubKey.toString());
+		
+		// ONLY FOR DEBUGGING
+		this.debug();
 	}
 	
 	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
@@ -89,10 +92,7 @@ public class bob
 		this.sendPaillierPublicKey();
 	
 		// ONLY FOR DEBUGGING
-		toAlice.writeObject(privKey);
-		toAlice.flush();
-		toAlice.writeObject(sk);
-		toAlice.flush();
+		this.debug();
 	}
 	
 	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
@@ -737,6 +737,14 @@ public class bob
 		BigInteger t = PaillierCipher.encrypt(init, pk);
 		t = PaillierCipher.decrypt(t, sk);
 		return t.compareTo(init) == 0;
+	}
+	
+	private void debug() throws IOException
+	{
+		toAlice.writeObject(privKey);
+		toAlice.flush();
+		toAlice.writeObject(sk);
+		toAlice.flush();
 	}
 
 	public String toString()

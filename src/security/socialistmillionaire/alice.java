@@ -89,15 +89,14 @@ public class alice
 		this.algo = Algorithm.valueOf("QUICK_SORT");
 		this.getDGKPublicKey();
 		this.getPaillierPublicKey();
+		this.getkey();
 		//System.out.println(pk.toString());
 		//System.out.println(pubKey.toString());
-		privKey = (DGKPrivateKey) fromBob.readObject();
-		sk = (PaillierPrivateKey) fromBob.readObject();
 	}
 
 	public alice (ObjectInputStream _fromBob, ObjectOutputStream _toBob,
 			PaillierPublicKey _pk, DGKPublicKey _pubKey,
-			boolean _isDGK, BigInteger[] _toSort)
+			boolean _isDGK, BigInteger[] _toSort) throws ClassNotFoundException, IOException
 	{
 		this.fromBob = _fromBob;
 		this.toBob = _toBob;
@@ -106,6 +105,7 @@ public class alice
 		this.isDGK = _isDGK;
 		this.toSort = _toSort;
 		this.algo = Algorithm.valueOf("QUICK_SORT");
+		this.getkey();
 	}
 	
 	public boolean getDGKMode()
@@ -1189,5 +1189,28 @@ public class alice
 			System.out.print(DGKOperations.decrypt(pubKey, privKey, bits[bits.length - 1 - i]));
 		}
 		System.out.println("");
+	}
+	
+	public void getkey() throws ClassNotFoundException, IOException
+	{
+		Object in;
+		in = fromBob.readObject();
+		if (in instanceof DGKPrivateKey)
+		{
+			privKey = (DGKPrivateKey) in;
+		}
+		else
+		{
+			System.err.println("BAD DGK");
+		}
+		in = fromBob.readObject();
+		if (in instanceof PaillierPrivateKey)
+		{
+			sk = (PaillierPrivateKey) in;
+		}
+		else
+		{
+			System.err.println("BAD PAILLIER");
+		}
 	}
 }
