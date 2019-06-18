@@ -501,6 +501,7 @@ public class bob
 		if (beta == null)
 		{
 			beta = z.mod(BigInteger.valueOf(exponent(2, pubKey.l)));
+			System.out.println(beta);
 		}
 		Object in;
 		BigInteger [] C = null;

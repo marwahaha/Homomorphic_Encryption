@@ -567,13 +567,14 @@ public class alice
 	}
 	
 	// Modified Protocol 3 for Protocol 4
-	// For testing...
+	// This should mostly use ONLY DGK stuff!
 	public int Modified_Protocol3(BigInteger alpha, BigInteger r) 
 			throws ClassNotFoundException, IOException
 	{
 		if (alpha == null)
 		{
 			alpha = r.mod(BigInteger.valueOf(exponent(2, pubKey.l)));
+			System.out.println(alpha);
 		}
 		Object in;
 		BigInteger [] beta_bits = null;
@@ -668,7 +669,6 @@ public class alice
 			{
 				encAlphaXORBeta[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), beta_bits[i]);				
 			}
-			//System.out.print(DGKOperations.decrypt(pubKey, privKey, encXORY[i]));
 		}
 		
 		// Step E: Compute Alpha Hat
@@ -690,7 +690,6 @@ public class alice
 		// Step F: 
 		for (int i = 0; i < beta_bits.length;i++)
 		{
-			//BigInteger product = DGKOperations.encrypt(pubKey, BigInteger.ZERO);
 			w[i] = DGKOperations.DGKMultiply(pubKey, w[i], exponent(2, i));
 		}
 		
