@@ -16,7 +16,7 @@ public class DGKPublicKey implements Serializable, PublicKey
 	public BigInteger g;
 	public BigInteger h;
 	public long u;
-	public BigInteger bigU;
+	public BigInteger bigU = null;
 	public int l;
 	public int t;
 	public int k;
@@ -57,12 +57,12 @@ public class DGKPublicKey implements Serializable, PublicKey
 		
 		for (int i = 0; i < 2*t; ++i)
 		{
-			BigInteger e = new BigInteger("2").modPow(BigInteger.valueOf((long)(i)),n);
 			//e = 2^i (mod n)
-			BigInteger out = h.modPow(e,n);
 			//h^{2^i (mod n)} (mod n)
-			this.hLUT.put((long)i,out);
 			//f(i) = h^{2^i}(mod n)
+			BigInteger e = new BigInteger("2").modPow(BigInteger.valueOf((long)(i)),n);
+			BigInteger out = h.modPow(e,n);
+			this.hLUT.put((long) i, out);
 		}
 	}
 	

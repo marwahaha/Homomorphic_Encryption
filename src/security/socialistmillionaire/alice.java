@@ -157,8 +157,6 @@ public class alice
 			throw new IllegalArgumentException("Protocol 3 Step 1: Missing Y-bits!");
 		}
 
-		// Case 1, delta B is ALWAYS INITIALIZED TO 0
-		// y has more bits -> y is bigger
 		if (x.bitLength() < Encrypted_Y.length)
 		{
 			toBob.writeObject(BigInteger.ONE);
@@ -166,14 +164,10 @@ public class alice
 			// x <= y -> 1 (true)
 			return 1;
 		}
-
-		// Case 2 delta B is 0
-		// x has more bits -> x is bigger
 		else if(x.bitLength() > Encrypted_Y.length)
 		{
 			toBob.writeObject(BigInteger.ZERO);
 			toBob.flush();
-			// x <= y -> 0 (false)
 			return 0;
 		}
 
@@ -196,7 +190,7 @@ public class alice
 		}
 		
 		// Step 3: Alice picks deltaA and computes S
-		BigInteger s = DGKOperations.encrypt(pubKey, 1);
+		BigInteger s = DGKOperations.encrypt(pubKey, 1 - 2 * deltaA);
 		
 		// Step 4: Compute C_i
 		C = new BigInteger[Encrypted_Y.length + 1];
@@ -211,9 +205,9 @@ public class alice
 		
 		for (int i = 0; i < Encrypted_Y.length; i++)
 		{
-			// C_i += [s] 
+			// C_i += [x_i] 
 			C[i] = DGKOperations.DGKAdd(pubKey, C[i], DGKOperations.encrypt(pubKey, NTL.bit(x, i)));
-			// C_i += [x_i]
+			// C_i += [s]
 			C[i] = DGKOperations.DGKAdd(pubKey, C[i], s);
 			// C_i -= y_i
 			C[i] = DGKOperations.DGKSubtract(pubKey, s, Encrypted_Y[i]);
@@ -222,7 +216,7 @@ public class alice
 		//This is c_{-1}
 		C[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
 		C[Encrypted_Y.length] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
-
+		
 		
 		// Step 5: Blinds C_i and send to Bob
 		toBob.writeObject(C);

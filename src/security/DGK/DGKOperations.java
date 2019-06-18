@@ -339,7 +339,8 @@ public class DGKOperations extends CipherSpi
 	// [a]/[b] = [a - b]
 	public static BigInteger DGKSubtract(DGKPublicKey pubKey, BigInteger a, BigInteger b)
 	{
-		return DGKOperations.DGKAdd(pubKey, a, DGKMultiply(pubKey, b, pubKey.u - 1));
+		BigInteger minus_b = DGKMultiply(pubKey, b, pubKey.u - 1);
+		return DGKAdd(pubKey, a, minus_b);
 	}
 
 	//cipher a * Plain text
@@ -352,7 +353,7 @@ public class DGKOperations extends CipherSpi
 	{
 		BigInteger n = pubKey.n;
 		BigInteger bigU = pubKey.bigU;
-		if (cipher.signum()==-1)
+		if (cipher.signum() == -1)
 		{
 			throw new IllegalArgumentException("DGKMultiply Invalid Parameter: the ciphertext is not in Zn: " + cipher);
 			/*
@@ -360,7 +361,7 @@ public class DGKOperations extends CipherSpi
 			cipher = NTL.POSMOD(cipher,n);
 			*/
 		}
-		else if(cipher.compareTo(n)==1)
+		else if(cipher.compareTo(n) == 1)
 		{
 			throw new IllegalArgumentException("DGKMultiply Invalid Parameter: the ciphertext is not in Zn: " + cipher);
 			/*
@@ -369,7 +370,7 @@ public class DGKOperations extends CipherSpi
 			*/
 		}
 
-		if(plaintext.compareTo(bigU)==1)
+		if(plaintext.compareTo(bigU) == 1)
 		{
 			throw new IllegalArgumentException("DGKMultiply Invalid Parameter:  the plaintext is not in Zu: " + bigU);
 			/*
@@ -393,7 +394,7 @@ public class DGKOperations extends CipherSpi
 			cipher = NTL.POSMOD(cipher,n);
 			*/
 		}
-		else if(cipher.compareTo(n)==1)
+		else if(cipher.compareTo(n) == 1)
 		{
 			throw new IllegalArgumentException("DGKDivide Invalid Parameter: the ciphertext is not in Zn: " + cipher);
 			/*
@@ -401,7 +402,7 @@ public class DGKOperations extends CipherSpi
 			cipher.mod(n);
 			*/
 		}
-		if(plaintext.compareTo(bigU)==1)
+		if(plaintext.compareTo(bigU) == 1)
 		{
 			throw new IllegalArgumentException("DGKDivide Invalid Parameter: the plaintext is not in Zu: " + bigU);
 		}

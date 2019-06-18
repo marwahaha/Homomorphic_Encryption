@@ -214,13 +214,13 @@ public class bob
 	
 	public int Protocol1(BigInteger y) throws IOException, ClassNotFoundException
 	{
-		Object in;
+		Object in = null;
 		int deltaB = 0;
 		BigInteger deltaA = null;
 		BigInteger [] C = null;
 		
 		//Step 1: Bob sends encrypted bits to Alice
-		BigInteger EncY[] = new BigInteger[y.bitLength()];
+		BigInteger [] EncY = new BigInteger[y.bitLength()];
 		for (int i = 0; i < y.bitLength(); i++)
 		{
 			EncY[i] = DGKOperations.encrypt(pubKey, NTL.bit(y, i));
