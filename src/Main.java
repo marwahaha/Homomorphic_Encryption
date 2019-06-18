@@ -84,27 +84,27 @@ public class Main
 				
 				// Test Protocol 3, mode doesn't matter as DGK is always used!
 				System.out.println("Protocol 3 Tests...");
-				System.out.println(yujia.Protocol3(new BigInteger("100")) == 1);//100
-				System.out.println(yujia.Protocol3(new BigInteger("100")) == 0);//101
-				System.out.println(yujia.Protocol3(new BigInteger("100")) == 1);//102
-				System.out.println(yujia.Protocol3(new BigInteger("100")) == 1);//98
 				System.out.println(yujia.Protocol3(new BigInteger("100")) == 0);//35
+				System.out.println(yujia.Protocol3(new BigInteger("100")) == 1);//129
+				System.out.println(yujia.Protocol3(new BigInteger("100")) == 0);//99
+				System.out.println(yujia.Protocol3(new BigInteger("100")) == 1);//100
+				System.out.println(yujia.Protocol3(new BigInteger("100")) == 1);//101
 				
 				// Test Protocol 1
 				System.out.println("Protocol 1 Tests...");
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//100
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 0);//101
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//102
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//98
 				System.out.println(yujia.Protocol1(new BigInteger("100")) == 0);//35
+				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//129
+				System.out.println(yujia.Protocol1(new BigInteger("100")) == 0);//99
+				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//100
+				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//101
 				
 				// Test Modified Protocol 3, mode doesn't matter as DGK is always used!
 				System.out.println("Modified Protocol 3 Tests...");
-				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//100
-				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 0);//101
-				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//102
-				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//98
 				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 0);//35
+				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//129
+				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 0);//99
+				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//100
+				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//101
 				
 				/*
 				// Test Protocol 2 (Builds on Protocol 3)
@@ -173,22 +173,22 @@ public class Main
 				// Test Protocol 3
 				Niu.Protocol3(new BigInteger("35"));
 				Niu.Protocol3(new BigInteger("129"));
-				Niu.Protocol3(new BigInteger("100"));
 				Niu.Protocol3(new BigInteger("99"));
+				Niu.Protocol3(new BigInteger("100"));
 				Niu.Protocol3(new BigInteger("101"));
 				
 				// Test Protocol 1
 				Niu.Protocol1(new BigInteger("35"));
 				Niu.Protocol1(new BigInteger("129"));
-				Niu.Protocol1(new BigInteger("100"));
 				Niu.Protocol1(new BigInteger("99"));
+				Niu.Protocol1(new BigInteger("100"));
 				Niu.Protocol1(new BigInteger("101"));
 				
 				// Test Modified Protocol 3
 				Niu.Modified_Protocol3(null, new BigInteger("35"));
 				Niu.Modified_Protocol3(null, new BigInteger("129"));
-				Niu.Modified_Protocol3(null, new BigInteger("100"));
 				Niu.Modified_Protocol3(null, new BigInteger("99"));
+				Niu.Modified_Protocol3(null, new BigInteger("100"));
 				Niu.Modified_Protocol3(null, new BigInteger("101"));
 				
 				/*
