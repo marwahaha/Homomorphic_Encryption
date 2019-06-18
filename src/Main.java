@@ -52,6 +52,11 @@ public class Main
 		D = PaillierCipher.encrypt(D, pk);
 		BigInteger d = DGKOperations.encrypt(pubKey, 100);
 
+		// Negative Numbers?
+		BigInteger test = DGKOperations.encrypt(pubKey, -1);
+		test = DGKOperations.DGKAdd(pubKey, test, DGKOperations.encrypt(pubKey, 2));
+		System.out.println("Value: " + DGKOperations.decrypt(pubKey, privKey, test));
+		
 		try
 		{
 			// Future Reference in saving keys...
@@ -90,6 +95,12 @@ public class Main
 				System.out.println(yujia.Protocol3(new BigInteger("100")) == 0);//98
 				System.out.println(yujia.Protocol3(new BigInteger("100")) == 0);//35
 				
+				// Test Protocol 1
+				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//100
+				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//101
+				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//102
+				System.out.println(yujia.Protocol1(new BigInteger("100")) == 0);//98
+				System.out.println(yujia.Protocol1(new BigInteger("100")) == 0);//35
 				
 				// Test Modified Protocol 3, mode doesn't matter as DGK is always used!
 				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//100
@@ -97,14 +108,6 @@ public class Main
 				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//102
 				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 0);//98
 				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 0);//35
-		
-				// Test Protocol 1
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//100
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//101
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//102
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 0);//98
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 0);//35
-		
 				
 				// Test Protocol 2 (Builds on Protocol 3)
 				// Paillier
@@ -169,19 +172,19 @@ public class Main
 				Niu.Protocol3(new BigInteger("98"));
 				Niu.Protocol3(new BigInteger("35"));
 				
-				// Test Modified Protocol 3
-				Niu.Modified_Protocol3(null, new BigInteger("100"));
-				Niu.Modified_Protocol3(null, new BigInteger("101"));
-				Niu.Modified_Protocol3(null, new BigInteger("102"));
-				Niu.Modified_Protocol3(null, new BigInteger("98"));
-				Niu.Modified_Protocol3(null, new BigInteger("35"));
-				
 				// Test Protocol 1
 				Niu.Protocol1(new BigInteger("100"));
 				Niu.Protocol1(new BigInteger("101"));
 				Niu.Protocol1(new BigInteger("102"));
 				Niu.Protocol1(new BigInteger("98"));
 				Niu.Protocol1(new BigInteger("35"));
+				
+				// Test Modified Protocol 3
+				Niu.Modified_Protocol3(null, new BigInteger("100"));
+				Niu.Modified_Protocol3(null, new BigInteger("101"));
+				Niu.Modified_Protocol3(null, new BigInteger("102"));
+				Niu.Modified_Protocol3(null, new BigInteger("98"));
+				Niu.Modified_Protocol3(null, new BigInteger("35"));
 				
 				// Test Protocol 2 with Paillier
 				Niu.setDGKMode(false);

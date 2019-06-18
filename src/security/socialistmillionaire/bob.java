@@ -612,24 +612,7 @@ public class bob
 		else if (in instanceof BigInteger)
 		{
 			deltaA = (BigInteger) in;
-
-			// Case 1 delta B is 0
-			// 1 XOR 0 = 0
-			// x <= y -> 1 (true)
-			if (deltaA.intValue() == 1)
-			{
-				answer = 1;
-				return answer;
-			}
-
-			// Case 2, delta B is 0
-			// 0 XOR 0 = 0
-			// x <= y -> 0 (false) 
-			else if (deltaA.intValue() == 0)
-			{
-				answer = 0;
-				return answer;
-			}
+			return deltaA.intValue();
 		}
 		else
 		{

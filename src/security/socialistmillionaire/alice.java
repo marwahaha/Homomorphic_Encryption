@@ -810,7 +810,7 @@ public class alice
 		// Step I: BLIND THE EXPONENTS
 		for (int i = 0; i < beta_bits.length;i++)
 		{
-			c[i] = DGKOperations.DGKMultiply(pubKey, c[i], 1);
+			c[i] = DGKOperations.DGKMultiply(pubKey, c[i], 7);
 		}
 		
 		// Step J: Bob checks whether a C_i has a zero or not...get delta B.
