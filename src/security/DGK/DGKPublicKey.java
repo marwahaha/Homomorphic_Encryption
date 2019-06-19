@@ -12,17 +12,19 @@ public class DGKPublicKey implements Serializable, PublicKey
 {
 	private static final long serialVersionUID = PublicKey.serialVersionUID;
 
-	public BigInteger n;
-	public BigInteger g;
-	public BigInteger h;
-	public long u;
-	public BigInteger bigU = null;
-	public int l;
-	public int t;
-	public int k;
+	public final BigInteger n;
+	public final BigInteger g;
+	public final BigInteger h;
+	public final long u;
+	public final BigInteger bigU;
 	public HashMap <Long, BigInteger> gLUT = null;
 	public HashMap <Long, BigInteger> hLUT = null;
-		
+	
+	// Key Parameters
+	public final int l;
+	public final int t;
+	public final int k;
+	
 	public DGKPublicKey(BigInteger N, BigInteger G, BigInteger H, long U, int L, int T, int K)
 	{
 		this(N, G, H, U, null, null, L, T, K);
@@ -32,16 +34,16 @@ public class DGKPublicKey implements Serializable, PublicKey
 	public DGKPublicKey(BigInteger N, BigInteger G, BigInteger H, long U,
 						HashMap <Long,BigInteger> GLUT, HashMap<Long,BigInteger> HLUT, int L, int T, int K)
 	{
-		n = N;
-		g = G;
-		h = H;
-		u = U;
-		bigU = BigInteger.valueOf(u);
-		gLUT = GLUT;
-		hLUT = HLUT;
-		l = L; 
-		t = T;
-		k = K;
+		this.n = N;
+		this.g = G;
+		this.h = H;
+		this.u = U;
+		this.bigU = BigInteger.valueOf(u);
+		this.gLUT = GLUT;
+		this.hLUT = HLUT;
+		this.l = L; 
+		this.t = T;
+		this.k = K;
 	}
 	
 	public void generatehLUT()
@@ -60,9 +62,8 @@ public class DGKPublicKey implements Serializable, PublicKey
 			//e = 2^i (mod n)
 			//h^{2^i (mod n)} (mod n)
 			//f(i) = h^{2^i}(mod n)
-			BigInteger e = new BigInteger("2").modPow(BigInteger.valueOf((long)(i)),n);
-			BigInteger out = h.modPow(e,n);
-			this.hLUT.put((long) i, out);
+			BigInteger e = new BigInteger("2").modPow(BigInteger.valueOf((long)(i)), this.n);
+			this.hLUT.put((long) i, this.h.modPow(e, this.n));
 		}
 	}
 	
@@ -79,7 +80,7 @@ public class DGKPublicKey implements Serializable, PublicKey
 		
 		for (int i = 0; i < u; ++i)
 		{
-			BigInteger out = g.modPow(BigInteger.valueOf((long)i), n);
+			BigInteger out = this.g.modPow(BigInteger.valueOf((long)i), this.n);
 			this.gLUT.put((long) i, out);
 		}
 	}
@@ -93,16 +94,6 @@ public class DGKPublicKey implements Serializable, PublicKey
 	private void writeObject(ObjectOutputStream aOutputStream) throws IOException
 	{
 		aOutputStream.defaultWriteObject();
-	}
-
-	public void printKeys()
-	{
-		System.out.println("Printing Public Key parameters...");
-		System.out.println("Parameters: "  + " t: " + t + " l: " + l + " k: " + k);
-		System.out.println("N: " + n);
-		System.out.println("G: " + g);
-		System.out.println("H: " + h);
-		System.out.println("U: " + u);
 	}
 
 	public void printhLUT()
@@ -144,13 +135,13 @@ public class DGKPublicKey implements Serializable, PublicKey
     public String toString()
     {
     	String answer = "";
-    	answer += "n: " + n + ", ";
-    	answer += "g: " + g + ", ";
-    	answer += "h: " + h + ", ";
-    	answer += "u: " + bigU + ", ";
-    	answer += "l: " + l + ", ";
-    	answer += "t: " + t + ", ";
-    	answer += "k: " + k + ", ";
+    	answer += "n: " + n + ", " + '\n';
+    	answer += "g: " + g + ", " + '\n';
+    	answer += "h: " + h + ", " + '\n';
+    	answer += "u: " + bigU + ", " + '\n';
+    	answer += "l: " + l + ", " + '\n';
+    	answer += "t: " + t + ", " + '\n';
+    	answer += "k: " + k + ", " + '\n';
     	return answer;
     }
 }

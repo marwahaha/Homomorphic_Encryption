@@ -209,12 +209,14 @@ public class NTL
 
     public static BigInteger generateXBitRandom (int n)
     {
+    	// Ensure it is n-bit Large number
+    	// and positive as well
         BigInteger r;
         do
         {
             r = new BigInteger(n, rnd);
         }
-        while (!(r.bitLength()== n));//Ensure it is n-bit Large number
+        while (!(r.bitLength() == n) && r.signum() <= 0);
         return r;
     }
 

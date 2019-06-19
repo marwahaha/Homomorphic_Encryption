@@ -272,15 +272,17 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 
 		// Preemptively build key with just the variables and 
 		// not the Lookup Tables
-		pubKey =  new DGKPublicKey(n, g, h, u, this.l, this.t, this.k);
-		privkey = new DGKPrivateKey(p, q, vp, vq, u);
 
 		System.out.println("Generating hashmaps...");
-		privkey.generategLUT(pubKey);
+		pubKey =  new DGKPublicKey(n, g, h, u, this.l, this.t, this.k);
+		// LUT is built within privkey constructor!
+		privkey = new DGKPrivateKey(p, q, vp, vq, pubKey);
 		if(no_skip_public_key_maps)
 		{
 			pubKey.generategLUT();
 			pubKey.generatehLUT();
+			privkey.gLUT = pubKey.gLUT;
+			privkey.hLUT = pubKey.hLUT;
 		}
 		System.out.println("FINISHED WITH DGK KEY GENERATION!");
 		return new KeyPair(pubKey, privkey);

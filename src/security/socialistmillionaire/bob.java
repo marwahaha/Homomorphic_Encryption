@@ -260,7 +260,7 @@ public class bob
 		
 		for (BigInteger C_i: C)
 		{
-			if (DGKOperations.decrypt(pubKey, privKey, C_i) == 0)
+			if (DGKOperations.decrypt(privKey, C_i) == 0)
 			{
 				deltaB = 1;
 				break;
@@ -278,7 +278,7 @@ public class bob
 		if (in instanceof BigInteger)
 		{
 			deltaA = (BigInteger) in;
-			return (int) DGKOperations.decrypt(pubKey, privKey, deltaA);
+			return (int) DGKOperations.decrypt(privKey, deltaA);
 		}
 		else
 		{
@@ -312,7 +312,7 @@ public class bob
 		//[[z]] = [[x - y + 2^l + r]]
 		if(isDGK)
 		{
-			z = BigInteger.valueOf(DGKOperations.decrypt(pubKey, privKey, z));
+			z = BigInteger.valueOf(DGKOperations.decrypt(privKey, z));
 		}
 		else
 		{
@@ -327,7 +327,7 @@ public class bob
 		// Step 4: Run Protocol 3
 		// x = alpha, y = beta
 		Protocol3(betaZZ);
-        System.out.println("Protocol 2 betaZZ: " + betaZZ);
+        //System.out.println("Protocol 2 betaZZ: " + betaZZ);
 
 		// Step 5: Send [[z/2^l]], Alice has the solution from Protocol 3 already...
 		if(isDGK)
@@ -356,7 +356,7 @@ public class bob
 		
 		if(isDGK)
 		{
-			result = BigInteger.valueOf(DGKOperations.decrypt(pubKey, privKey, result));
+			result = BigInteger.valueOf(DGKOperations.decrypt(privKey, result));
 		}
 		else
 		{
@@ -436,7 +436,7 @@ public class bob
 			C = (BigInteger []) x;
 			for (BigInteger C_i: C)
 			{
-				if (DGKOperations.decrypt(pubKey, privKey, C_i) == 0)
+				if (DGKOperations.decrypt(privKey, C_i) == 0)
 				{
 					deltaB = 1;
 					break;
@@ -476,7 +476,7 @@ public class bob
 		if (x instanceof BigInteger)
 		{
 			deltaA = (BigInteger) x;
-			return (int) DGKOperations.decrypt(pubKey, privKey, deltaA);
+			return (int) DGKOperations.decrypt(privKey, deltaA);
 		}
 		else
 		{
@@ -487,21 +487,17 @@ public class bob
 	public int Protocol4() 
 			throws IOException, ClassNotFoundException
 	{
-		//Step 1: Receive z from Alice
-		//Get the input and output streams
-		Object Objz;
+		Object in;
 		BigInteger result = null;
 		BigInteger z = null;
 		BigInteger zDiv = null;
-
-		int l = pubKey.l - 2;
+		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l));
 
 		//Step 1: get [[z]] from Alice
-		Objz = fromAlice.readObject();
-		BigInteger EncZ = null;
-		if (Objz instanceof BigInteger)
+		in = fromAlice.readObject();;
+		if (in instanceof BigInteger)
 		{
-			EncZ = (BigInteger) Objz;
+			z = (BigInteger) in;
 		}
 		else
 		{
@@ -510,16 +506,15 @@ public class bob
 
 		if(isDGK)
 		{
-			z = BigInteger.valueOf(DGKOperations.decrypt(pubKey, privKey, EncZ));
+			z = BigInteger.valueOf(DGKOperations.decrypt(privKey, z));
 		}
 		else
 		{
-			z = PaillierCipher.decrypt(EncZ, sk);
+			z = PaillierCipher.decrypt(z, sk);
 		}
 
 		//Step 2: compute Beta = z (mod 2^l), 
-		int powL = exponent(2, l);
-		BigInteger betaZZ = z.mod(BigInteger.valueOf(powL));
+		BigInteger betaZZ = z.mod(powL);
 
 		//Step 3: Alice computes r (mod 2^l) (Alpha)
 
@@ -531,11 +526,11 @@ public class bob
 		//Step 5" Send [[z/2^l]], Alice has the solution from Protocol 3 already...
 		if(isDGK)
 		{
-			zDiv = DGKOperations.encrypt(pubKey, z.divide(BigInteger.valueOf(powL)));	
+			zDiv = DGKOperations.encrypt(pubKey, z.divide(powL));	
 		}
 		else
 		{
-			zDiv = PaillierCipher.encrypt(z.divide(BigInteger.valueOf(powL)), pk);
+			zDiv = PaillierCipher.encrypt(z.divide(powL), pk);
 		}
 		toAlice.writeObject(zDiv);
 		toAlice.flush();
@@ -546,7 +541,7 @@ public class bob
 		result = (BigInteger) fromAlice.readObject();
 		if(isDGK)
 		{
-			result = BigInteger.valueOf(DGKOperations.decrypt(pubKey, privKey, result));
+			result = BigInteger.valueOf(DGKOperations.decrypt(privKey, result));
 		}
 		else
 		{
@@ -627,7 +622,7 @@ public class bob
 		
 		for (int i = 0; i < C.length;i++)
 		{
-			if(DGKOperations.decrypt(pubKey, privKey, C[i])==0)
+			if(DGKOperations.decrypt(privKey, C[i])==0)
 			{
 				deltaB = 1;
 				break;
@@ -640,7 +635,7 @@ public class bob
 		in = fromAlice.readObject();
 		if(in instanceof BigInteger)
 		{
-			answer = (int) DGKOperations.decrypt(pubKey, privKey, (BigInteger) in);
+			answer = (int) DGKOperations.decrypt(privKey, (BigInteger) in);
 		}
 		else
 		{
@@ -667,7 +662,7 @@ public class bob
 		
 		if(isDGK)
 		{
-			z = BigInteger.valueOf(DGKOperations.decrypt(pubKey, privKey, z));
+			z = BigInteger.valueOf(DGKOperations.decrypt(privKey, z));
 		}
 		else
 		{
@@ -718,7 +713,7 @@ public class bob
 		BigInteger init = new BigInteger("5");
 		long test;
 		BigInteger t = DGKOperations.encrypt(pubKey, init);
-		test = DGKOperations.decrypt(pubKey, privKey, t);
+		test = DGKOperations.decrypt(privKey, t);
 		return BigInteger.valueOf(test).compareTo(init) == 0;
 	}
 	

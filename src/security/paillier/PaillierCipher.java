@@ -110,8 +110,8 @@ public class PaillierCipher extends CipherSpi
 	// Compute ciphertext = (mn+1)r^n (mod n^2) in two stages: (mn+1) and (r^n).
 	public static BigInteger encrypt(BigInteger plaintext, PaillierPublicKey pk)
 	{
-		BigInteger randomness = new BigInteger(pk.k1, new SecureRandom());
-		BigInteger tmp1 = plaintext.multiply(pk.n).add(BigInteger.ONE).mod(pk.modulus);
+		BigInteger randomness = new BigInteger(pk.keysize, new SecureRandom());
+		BigInteger tmp1 = plaintext.multiply(pk.n).add(BigInteger.ONE).mod(pk.n);
 		BigInteger tmp2 = randomness.modPow(pk.n, pk.modulus);
 		BigInteger ciphertext = tmp1.multiply(tmp2).mod(pk.modulus);
 		return ciphertext;
@@ -152,12 +152,16 @@ public class PaillierCipher extends CipherSpi
 		{
 			return summation(values, pk);
 		}
-		BigInteger ciphertext = values[0];
-		for (int i = 1; i < values.length; i++)
+		BigInteger sum = PaillierCipher.encrypt(BigInteger.ZERO, pk);
+		if (limit <= 0)
 		{
-			ciphertext = ciphertext.multiply(values[i]).mod(pk.modulus);
+			return sum;
 		}
-		return ciphertext;
+		for (int i = 0; i < limit; i++)
+		{
+			sum = sum.multiply(values[i]).mod(pk.modulus);
+		}
+		return sum;
 	}
 
 	public static BigInteger subtract(BigInteger ciphertext1, BigInteger ciphertext2, PaillierPublicKey pk)

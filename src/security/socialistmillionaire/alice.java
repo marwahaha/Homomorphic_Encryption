@@ -48,6 +48,8 @@ public class alice
 	}
 	
 	private Random rnd = new Random();
+	// See Veugen paper, security parameter for Paillier
+	private final static int SIGMA = 80;
 	
 	// Alice  will be given the Public Keys
 	private PaillierPublicKey pk = null;
@@ -62,7 +64,7 @@ public class alice
 	private ObjectOutputStream toBob = null;
 	private ObjectInputStream fromBob = null;
 	
-	// Current Algorithm to Sort with...
+	// Current Algorithm to Sort with
 	private Algorithm algo;
 	
 	// REMOVE LATER, FOR DEBUGGING
@@ -287,17 +289,25 @@ public class alice
 		// Step 1: 0 <= r < N
 		// Pick Number of l + 1 + sigma bits
 		// Considering DGK is an option, just stick with size of Zu
-		r = NTL.RandomBnd(pubKey.u);
-		/*
+		
 		if (isDGK)
 		{
-			r = NTL.RandomBnd((pubKey.u - 1)/2);
+			r = NTL.RandomBnd(pubKey.u);
+			//r = NTL.generateXBitRandom((pubKey.l - 2));
 		}
 		else
 		{
-			r = NTL.RandomBnd(pubKey.l + 1 + 80);
+			// Generate Random Number with l + 1 + sigma bits
+			if (pubKey.l + SIGMA < pk.keysize)
+			{
+				r = NTL.generateXBitRandom(pubKey.l + 1 + SIGMA);
+			}
+			else
+			{
+				throw new IllegalArgumentException("Invalid due to constraints!");
+			}
 		}
-		*/
+		
 		/*
 		 * Step 2: Alice computes [[z]] = [[x - y + 2^l + r]]
 		 * Send Z to Bob
@@ -619,24 +629,28 @@ public class alice
 		int deltaA = rnd.nextInt(2);
 		int x_leq_y = -1;
 		int comparison = -1;
-		Object bob = null;
+		BigInteger alpha_lt_beta = null;
 		BigInteger z = null;
 		BigInteger zdiv2L =  null;
 		BigInteger result = null;
+		Object bob = null;
 		BigInteger r = null;
-		BigInteger alpha_lt_beta = null;
-		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l));
+		BigInteger powL = null;
 
 		// Step 1: 0 <= r < N
 		// Pick Number of l + 1 + sigma bits
 		// Considering DGK is an option, just stick with size of Zu
+		
+		// THIS IS THE ONLY DIFFERENCE FROM PROTOCOL 2 THAT IT CAN OVERFLOW
 		if (isDGK)
 		{
-			r = NTL.RandomBnd((pubKey.u - 1)/2);
+			powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
+			r = NTL.RandomBnd(pubKey.u);
 		}
 		else
 		{
-			r = NTL.RandomBnd(pubKey.l + 1 + 80);
+			powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
+			r = NTL.RandomBnd(pk.n);
 		}
 		
 		/*
@@ -665,8 +679,8 @@ public class alice
 
 		// Step 4: Complete Protocol 1 or Protocol 3
         x_leq_y = Modified_Protocol3(alphaZZ, r, deltaA);
-        System.out.println("Protocol 2 alphaZZ: " + alphaZZ);
-        System.out.println("Modified Protocol 3 Result: " + x_leq_y);
+        //System.out.println("Protocol 2 alphaZZ: " + alphaZZ);
+        //System.out.println("Protocol 3 Result: " + x_leq_y);
     	
 		// Step 5: Bob sends z/2^l and GammaB 
 		bob = fromBob.readObject();
@@ -683,6 +697,8 @@ public class alice
 		 * Step 6
 		 * Since I know deltaA and result of Protocol 3,
 		 * I can infer deltaB from Bob.
+		 * 
+		 * Inputting (beta <= alpha) is in Step 7.
 		 */
     	if(deltaA == x_leq_y)
         {
@@ -703,7 +719,6 @@ public class alice
 			{
 				alpha_lt_beta = DGKOperations.encrypt(pubKey, 1 - deltaB);
 			}
-			System.out.println("(a < b): " + DGKOperations.decrypt(pubKey, privKey, alpha_lt_beta));
     	}
     	else
     	{
@@ -715,7 +730,6 @@ public class alice
             {
             	alpha_lt_beta = PaillierCipher.encrypt((1 - deltaB), pk);
             }
-            System.out.println("(a < b): " + PaillierCipher.decrypt(alpha_lt_beta, sk));
     	}
 
 		/*
@@ -726,14 +740,18 @@ public class alice
 		if(isDGK)
 		{
 			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, DGKOperations.encrypt(pubKey, r.divide(powL)));
-			System.out.println("z-r/2^l: " + DGKOperations.decrypt(pubKey, privKey, result));
-			result = DGKOperations.DGKSubtract(pubKey, result, alpha_lt_beta);
+			//System.out.println("z-r/2^l: " + DGKOperations.decrypt(pubKey, privKey, result));
+			//System.out.println("P2 (beta < alpha): " + DGKOperations.decrypt(pubKey, privKey, alpha_lt_beta));
+			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, alpha_lt_beta);
+			//System.out.println("FINAL result: " + DGKOperations.decrypt(pubKey, privKey, result));
 		}
 		else
 		{
            result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
-           System.out.println("z-r/2^l: " + PaillierCipher.decrypt(result, sk));
-           result = PaillierCipher.subtract(result, alpha_lt_beta, pk);
+           //System.out.println("z-r/2^l: " + PaillierCipher.decrypt(result, sk));
+           //System.out.println("P2 (beta < alpha): " + PaillierCipher.decrypt(alpha_lt_beta, sk));
+           result = PaillierCipher.subtract(zdiv2L, alpha_lt_beta, pk);
+           //System.out.println("FINAL result: " + PaillierCipher.decrypt(result, sk));
 		}
 		
 		/*
@@ -1025,7 +1043,7 @@ public class alice
 		// Print Answer to verify
 		if(isDGK)
 		{
-			System.out.println("answer: " + DGKOperations.decrypt(pubKey, privKey, answer));	
+			System.out.println("answer: " + DGKOperations.decrypt(privKey, answer));	
 		}
 		else
 		{
@@ -1313,7 +1331,7 @@ public class alice
 		{
 			if (bits[i] != null)
 			{
-				System.out.print(DGKOperations.decrypt(pubKey, privKey, bits[i]) + ",");
+				System.out.print(DGKOperations.decrypt(privKey, bits[i]) + ",");
 			}
 			else
 			{
@@ -1351,7 +1369,7 @@ public class alice
 		BigInteger init = new BigInteger("60");
 		long test;
 		BigInteger t = DGKOperations.encrypt(pubKey, init);
-		test = DGKOperations.decrypt(pubKey, privKey, t);
+		test = DGKOperations.decrypt(privKey, t);
 		return BigInteger.valueOf(test).compareTo(init) == 0;
 	}
 	

@@ -12,16 +12,21 @@ public class PaillierPrivateKey implements Serializable, PrivateKey
     // k1 is the security parameter. It is the number of bits in n.
     public int k1 = 1024;
     
-    public PaillierPrivateKey(int n)
-    {
-        k1 = n;
-    }
-
-    public BigInteger n;
-    public BigInteger modulus;
+    public final BigInteger n;
+    public final BigInteger modulus;
     
-    public BigInteger lambda;
-    public BigInteger mu;
+    public final BigInteger lambda;
+    public final BigInteger mu;
+    
+    public PaillierPrivateKey(int k1, BigInteger n, BigInteger mod, 
+    		BigInteger lambda, BigInteger mu)
+    {
+        this.k1 = k1;
+        this.n = n;
+        this.modulus = mod;
+        this.lambda = lambda;
+        this.mu = mu;
+    }
     
     private static final long serialVersionUID = PrivateKey.serialVersionUID;
 
@@ -36,21 +41,28 @@ public class PaillierPrivateKey implements Serializable, PrivateKey
         aOutputStream.defaultWriteObject();
     }
 
-	@Override
 	public String getAlgorithm() 
 	{
 		return "Paillier";
 	}
 
-	@Override
 	public String getFormat() 
 	{
 		return "NONE";
 	}
 
-	@Override
 	public byte[] getEncoded() 
 	{
 		return null;
+	}
+	
+	// Omitting secret key parameters
+	public String getString()
+	{
+    	String answer = "";
+    	answer += "k1 = " + k1 + ", " + '\n';
+    	answer += "n = " + n + ", " + '\n';
+    	answer += "modulus = " + modulus + '\n';
+        return answer;
 	}
 }

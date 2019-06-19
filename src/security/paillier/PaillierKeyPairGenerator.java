@@ -26,22 +26,20 @@ public class PaillierKeyPairGenerator extends KeyPairGeneratorSpi
 			rnd = new SecureRandom();
 		}
 		
-		PaillierPublicKey pk = new PaillierPublicKey();
-		PaillierPrivateKey sk = new PaillierPrivateKey(keysize);
-		
 		// Chooses a random prime of length k2. The probability that
 		// p is not prime is at most 2^(-k2)
 		BigInteger p = new BigInteger(keysize, k2, rnd);
 		BigInteger q = new BigInteger(keysize, k2, rnd);
+
+		BigInteger n = p.multiply(q); // n = pq
+		BigInteger modulus = n.multiply(n); // modulous = n^2
 		
-		pk.n = p.multiply(q); // n = pq
-		pk.modulus = pk.n.multiply(pk.n); // modulous = n^2
+		PaillierPublicKey pk = new PaillierPublicKey(keysize * 2, n, modulus);
 
 		// Modifications to the Private key
-		sk.lambda = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
-		sk.mu = sk.lambda.modInverse(pk.n);
-		sk.n = pk.n;
-		sk.modulus = pk.modulus;
+		BigInteger lambda = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
+		BigInteger mu = lambda.modInverse(pk.n);
+		PaillierPrivateKey sk = new PaillierPrivateKey(keysize * 2, n, modulus, lambda, mu);
 		return new KeyPair(pk, sk);
 	}
 }

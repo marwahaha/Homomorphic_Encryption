@@ -1,10 +1,8 @@
 package security.DGK;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.PrivateKey;
@@ -14,30 +12,53 @@ public class DGKPrivateKey implements Serializable, PrivateKey
 {
     private static final long serialVersionUID = PrivateKey.serialVersionUID;
 
-    private BigInteger p;
-    private BigInteger q;
-    private BigInteger vp;
-    private BigInteger vq;
-    private long u;
-    private HashMap <BigInteger, Long> LUT = null;
+    // Private Key Parameters
+    final BigInteger p;
+    private final BigInteger q;
+    final BigInteger vp;
+    private final BigInteger vq;
+    private HashMap <BigInteger, Long> LUT;
     
-    // DGK Private Key Constructor. ONLY variables, append LUT after
-    public DGKPrivateKey(BigInteger P, BigInteger Q, BigInteger VP,
-            BigInteger VQ, long U)
-    {
-    	   this(P, Q, VP, VQ, null, U);
-    }
+    // Public key parameters
+	public final BigInteger n;
+	public final BigInteger g;
+	public final BigInteger h;
+	public final long u;
+	public final BigInteger bigU;
+	public HashMap <Long, BigInteger> gLUT = null;
+	public HashMap <Long, BigInteger> hLUT = null;
+	
+	// Key Parameters
+	public final int l;
+	public final int t;
+	public final int k;
 
     // Original DGK Private Key Constructor
-    public DGKPrivateKey (BigInteger P, BigInteger Q, BigInteger VP,
-                          BigInteger VQ, HashMap <BigInteger, Long> lut, long U)
+    public DGKPrivateKey (BigInteger p, BigInteger q, BigInteger vp,
+                          BigInteger vq, DGKPublicKey pubKey)
     {
-        p = P;
-        q = Q;
-        vp = VP;
-        vq = VQ;
-        LUT = lut;
-        u = U;
+    	// Fill Private Key Parameters
+    	this.p = p;
+        this.q = q;
+        this.vp = vp;
+        this.vq = vq;
+        
+        // Public Key Parameters
+    	this.n = pubKey.n;
+    	this.g = pubKey.g;
+    	this.h = pubKey.h;
+        this.u = pubKey.u;
+    	this.bigU = pubKey.bigU;
+    	this.gLUT = pubKey.gLUT;
+    	this.hLUT = pubKey.hLUT;
+    	
+    	// Key Parameters
+    	this.l = pubKey.l;
+    	this.t = pubKey.t;
+    	this.k = pubKey.k;
+    	
+    	// Now that I have public key paramaters, build LUT!
+    	this.generategLUT();
     }
 
     private void readObject(ObjectInputStream aInputStream)
@@ -50,57 +71,17 @@ public class DGKPrivateKey implements Serializable, PrivateKey
     {
         aOutputStream.defaultWriteObject();
     }
-	
-    // Get Methods
-    public BigInteger getP() { return p; }
-    public BigInteger getQ() { return q; }
-    public BigInteger getVP() { return vp; }
-    public BigInteger getVQ() { return vq; }
-    public HashMap<BigInteger,Long> GetLUT() { return LUT; }
-    public long GetU() { return u; }
-
-    public void printKeys()
-    {
-        System.out.println("Private Key parameters...");
-        System.out.println("P: " + p);
-        System.out.println("Q: " + q);
-        System.out.println("VP: " + vp);
-        System.out.println("VQ: " + vq);
-        System.out.println("U: " + u);
-    }
-
-    public void printLUT()
-    {
-	    FileWriter fileWriter = null;
-		try 
-		{
-			fileWriter = new FileWriter("./LUT.txt");
-		}
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-		}
-	    PrintWriter printWriter = new PrintWriter(fileWriter);
-		for (BigInteger k : LUT.keySet()) 
-		{
-			System.out.println(k + "," + this.LUT.get(k));
-		    printWriter.println(k + "," + this.LUT.get(k));
-		}
-	    printWriter.close();
+    
+    public HashMap<BigInteger,Long> GetLUT() 
+    { 
+    	return LUT; 
     }
     
-    public void generategLUT (DGKPublicKey pubKey)
+    private void generategLUT()
     {
-    	if(this.LUT != null)
-    	{
-    		return;
-    	}
-    	else
-    	{
-    		this.LUT = new HashMap<BigInteger, Long>();
-    	}
-        BigInteger g = pubKey.g;
-        BigInteger gvp = NTL.POSMOD(g,p).modPow(vp,p);
+    	this.LUT = new HashMap<BigInteger, Long>();
+    	
+        BigInteger gvp = NTL.POSMOD(g, p).modPow(vp, p);
         // Build LUT
         for (int i = 0; i < u; ++i)
         {
@@ -122,5 +103,29 @@ public class DGKPrivateKey implements Serializable, PrivateKey
 	public byte[] getEncoded() 
 	{
 		return null;
+	}
+	
+	// Not going to print private key parameters...
+    public String toString()
+    {
+    	String answer = "";
+    	answer += "n: " + n + ", " + '\n';
+    	answer += "g: " + g + ", " + '\n';
+    	answer += "h: " + h + ", " + '\n';
+    	answer += "u: " + bigU + ", " + '\n';
+    	answer += "l: " + l + ", " + '\n';
+    	answer += "t: " + t + ", " + '\n';
+    	answer += "k: " + k + ", " + '\n';
+    	return answer;
+    }
+
+	public BigInteger getVq() 
+	{
+		return vq;
+	}
+
+	public BigInteger getQ()
+	{
+		return q;
 	}
 }

@@ -146,7 +146,7 @@ public class DGKOperations extends CipherSpi
 		for (int i = 0; i < pubKey.u; i++)
 		{
 			test = DGKOperations.encrypt(pubKey, (long)i);
-			testDecrypt = DGKOperations.decrypt(pubKey, privKey, test);
+			testDecrypt = DGKOperations.decrypt(privKey, test);
 			if (i==testDecrypt)
 			{
 				//System.out.println("SUCCESS AT ENCRYPT/DECRYPT: " + i);
@@ -169,6 +169,11 @@ public class DGKOperations extends CipherSpi
 	public static BigInteger encrypt(DGKPublicKey pubKey, BigInteger plaintext)
 	{
 		return encrypt(pubKey, plaintext.longValue());
+	}
+	
+	public static BigInteger encrypt(long plaintext, DGKPublicKey pubKey)
+	{
+		return encrypt(pubKey, plaintext);
 	}
 
 	public static BigInteger encrypt(DGKPublicKey pubKey, long plaintext)
@@ -241,12 +246,17 @@ public class DGKOperations extends CipherSpi
 		ciphertext = NTL.POSMOD(firstpart.multiply(secondpart), n);
 		return ciphertext;
 	}
-
-	public static long decrypt(DGKPublicKey pubKey, DGKPrivateKey privKey, BigInteger ciphertext)
+	
+	public static long decrypt(BigInteger ciphertext, DGKPrivateKey privKey)
 	{
-		BigInteger vp = privKey.getVP();
-		BigInteger p = privKey.getP();
-		BigInteger n = pubKey.n;
+		return decrypt(privKey, ciphertext);
+	}
+
+	public static long decrypt(DGKPrivateKey privKey, BigInteger ciphertext)
+	{
+		BigInteger vp = privKey.vp;
+		BigInteger p = privKey.p;
+		BigInteger n = privKey.n;
 
 		if (ciphertext.signum() == -1)
 		{
@@ -257,7 +267,7 @@ public class DGKOperations extends CipherSpi
 			ciphertext = NTL.POSMOD(ciphertext, n);
 			*/
 		}
-		if(ciphertext.compareTo(n)==1)
+		if(ciphertext.compareTo(n) == 1)
 		{
 			throw new IllegalArgumentException("decryption Invalid Parameter : the cipher text is not in Zn,"
 			+ " value of cipher text is: (c > n): " + ciphertext);
@@ -276,16 +286,15 @@ public class DGKOperations extends CipherSpi
 
 		if (privKey.GetLUT().get(decipher) == null)
 		{
-			BigInteger tempP = privKey.getP();
-			BigInteger gvp = NTL.POSMOD(pubKey.g,privKey.getP()).modPow(privKey.getVP(),privKey.getP());
-			for (int i=0; i<pubKey.u; ++i)
+			BigInteger tempP = privKey.p;
+			BigInteger gvp = NTL.POSMOD(privKey.g, privKey.p).modPow(privKey.vp, privKey.p);
+			for (int i = 0; i < privKey.u; ++i)
 			{
 				BigInteger newDecipher = gvp.modPow(NTL.POSMOD(BigInteger.valueOf((long) i),tempP),tempP);
-				//pwOne.println(decipher + "," + i);
 				privKey.GetLUT().put(newDecipher,(long)i);
 
-				//If I don't need to compute the whole table
-				//Then don't do it!
+				// If I don't need to compute the whole table
+				// Then don't do it!
 				if(newDecipher.equals(decipher))
 				{
 					break;
