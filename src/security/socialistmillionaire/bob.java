@@ -327,7 +327,7 @@ public class bob
 		// Step 4: Run Protocol 3
 		// x = alpha, y = beta
 		Protocol3(betaZZ);
-        //System.out.println("betaZZ: " + betaZZ);
+        System.out.println("betaZZ: " + betaZZ);
 
 		// Step 5: Send [[z/2^l]], Alice has the solution from Protocol 3 already...
 		if(isDGK)
@@ -526,6 +526,7 @@ public class bob
 		// Step 4: Run Modified DGK Comparison Protocol
 		// x = alpha, y = beta
 		Modified_Protocol3(betaZZ, z);
+		System.out.println("Beta: " + betaZZ);
 
 		//Step 5" Send [[z/2^l]], Alice has the solution from Protocol 3 already...
 		if(isDGK)

@@ -87,11 +87,11 @@ public class Main
 				
 				// Test Protocol 3, mode doesn't matter as DGK is always used!
 				System.out.println("Protocol 3 Tests...");
-				System.out.println(yujia.Protocol3(new BigInteger("100"), 20) == 0);//35
-				System.out.println(yujia.Protocol3(new BigInteger("100"), 20) == 1);//129
-				System.out.println(yujia.Protocol3(new BigInteger("100"), 20) == 0);//99
-				System.out.println(yujia.Protocol3(new BigInteger("100"), 20) == 1);//100
-				System.out.println(yujia.Protocol3(new BigInteger("100"), 20) == 1);//101
+				System.out.println(yujia.Protocol3(new BigInteger("100")) == 0);//35
+				System.out.println(yujia.Protocol3(new BigInteger("100")) == 1);//129
+				System.out.println(yujia.Protocol3(new BigInteger("100")) == 0);//99
+				System.out.println(yujia.Protocol3(new BigInteger("100")) == 1);//100
+				System.out.println(yujia.Protocol3(new BigInteger("100")) == 1);//101
 				
 				// Test Protocol 1
 				System.out.println("Protocol 1 Tests...");
@@ -113,11 +113,11 @@ public class Main
 				// Paillier
 				System.out.println("Protocol 2 Tests...Paillier");
 				yujia.setDGKMode(false);
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("35"), pk)) == 0);
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("129"), pk)) == 1);
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("99"), pk)) == 0);
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("100"), pk)) == 1);
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("35"), pk)) == 0);//100 <= 35 -> 0
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("129"), pk)) == 1);//100 <= 129 -> 1
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("99"), pk)) == 0);//100 <= 99 -> 0
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("100"), pk)) == 1);//100 <= 100 -> 1
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);//100 <= 101 -> 1
 				
 				// DGK
 				System.out.println("Protocol 2 Tests...DGK");
@@ -142,11 +142,11 @@ public class Main
 				// DGK
 				yujia.setDGKMode(true);
 				System.out.println("Protocol 4 Tests...DGK");
-				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("35"))) == 0);
-				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("129"))) == 1);
-				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("99"))) == 0);
-				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("100"))) == 1);
-				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("101"))) == 1);
+				System.out.println(yujia.Protocol4(d, DGKOperations.encrypt(pubKey, new BigInteger("35"))) == 0);
+				System.out.println(yujia.Protocol4(d, DGKOperations.encrypt(pubKey, new BigInteger("129"))) == 1);
+				System.out.println(yujia.Protocol4(d, DGKOperations.encrypt(pubKey, new BigInteger("99"))) == 0);
+				System.out.println(yujia.Protocol4(d, DGKOperations.encrypt(pubKey, new BigInteger("100"))) == 1);
+				System.out.println(yujia.Protocol4(d, DGKOperations.encrypt(pubKey, new BigInteger("101"))) == 1);
 				
 				// Division Test, Paillier
 				// REMEMBER THE OUTPUT IS THE ENCRYPTED ANSWER, ONLY BOB CAN VERIFY THE ANSWER
