@@ -327,7 +327,7 @@ public class bob
 		// Step 4: Run Protocol 3
 		// x = alpha, y = beta
 		Protocol3(betaZZ);
-        System.out.println("betaZZ: " + betaZZ);
+        //System.out.println("betaZZ: " + betaZZ);
 
 		// Step 5: Send [[z/2^l]], Alice has the solution from Protocol 3 already...
 		if(isDGK)
@@ -649,7 +649,7 @@ public class bob
 		return answer;
 	}
 	
-	public BigInteger division(int divisor) 
+	public void division(int divisor) 
 			throws ClassNotFoundException, IOException
 	{
 		BigInteger c = null;
@@ -685,27 +685,13 @@ public class bob
 			toAlice.writeObject(PaillierCipher.encrypt(c, pk));
 		}
 		toAlice.flush();
-		
-		// Get answer from Alice [[x/d]]
-		alice = fromAlice.readObject();
-		if (alice instanceof BigInteger)
-		{
-			// VERIFY ANSWER HERE!
-			z = (BigInteger) alice;
-			if(isDGK)
-			{
-				System.out.println(DGKOperations.decrypt(pubKey, privKey, z));	
-			}
-			else
-			{
-				System.out.println(PaillierCipher.decrypt(z, sk));	
-			}
-			return z;
-		}
-		else
-		{
-			throw new IllegalArgumentException("No BigInteger found!");
-		}
+		/*
+		 *  Unlike Comparison, it is decided Bob shouldn't know the answer.
+		 *  This is because Bob KNOWS d, and can decrypt [x/d]
+		 *  
+		 *  Since the idea is not leak the numbers themselves, 
+		 *  it is decided Bob shouldn't receive [x/d]
+		 */
 	}
 
 	public void sendDGKPublicKey() throws IOException

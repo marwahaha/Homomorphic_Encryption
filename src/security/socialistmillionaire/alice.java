@@ -301,7 +301,6 @@ public class alice
 		}
 		else
 		{
-			System.out.println(PaillierCipher.decrypt(PaillierCipher.subtract(x, y, pk), sk));
 			z = PaillierCipher.add(x, PaillierCipher.encrypt(r.add(powL), pk), pk);
             z = PaillierCipher.subtract(z, y, pk);
 		}
@@ -315,8 +314,8 @@ public class alice
 
 		// Step 4: Complete Protocol 1 or Protocol 3
         x_leq_y = Protocol3(alphaZZ, deltaA);
-        System.out.println("alphaZZ: " + alphaZZ);
-        System.out.println("Result: " + x_leq_y);
+        //System.out.println("alphaZZ: " + alphaZZ);
+        //System.out.println("Result: " + x_leq_y);
     	if(deltaA == x_leq_y)
         {
             deltaB = 0;
@@ -367,7 +366,7 @@ public class alice
 		else
 		{
            result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
-           System.out.println("result: " + PaillierCipher.decrypt(result, sk));
+           //System.out.println("result: " + PaillierCipher.decrypt(result, sk));
            if(deltaA == 1)
            {
                result = PaillierCipher.subtract(result, PaillierCipher.encrypt(deltaB, pk), pk);
@@ -376,7 +375,7 @@ public class alice
            {
                result = PaillierCipher.subtract(result, PaillierCipher.encrypt((1 - deltaB), pk), pk);
            }
-           System.out.println("FINAL result: " + PaillierCipher.decrypt(result, sk));
+           //System.out.println("FINAL result: " + PaillierCipher.decrypt(result, sk));
 		}
 		
 		/*
@@ -956,8 +955,16 @@ public class alice
 			answer = PaillierCipher.subtract(answer, PaillierCipher.encrypt(BigInteger.valueOf(t), pk), pk);
 			answer = PaillierCipher.add(answer, PaillierCipher.encrypt(BigInteger.ONE, pk), pk);
 		}
-		toBob.writeObject(answer);
-		toBob.flush();
+		
+		// Print Answer to verify
+		if(isDGK)
+		{
+			System.out.println("answer: " + DGKOperations.decrypt(pubKey, privKey, answer));	
+		}
+		else
+		{
+			System.out.println("answer: " + PaillierCipher.decrypt(answer, sk));	
+		}
 		return answer;
 	}
 
