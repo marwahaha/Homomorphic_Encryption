@@ -291,19 +291,18 @@ public class bob
 	{
 		//Step 1: Receive z from Alice
 		//Get the input and output streams
-		Object Obj;
-		BigInteger result;
-		BigInteger betaZZ;
+		Object in = null;
+		BigInteger result = null;
+		BigInteger betaZZ = null;
 		BigInteger z = null;
 		BigInteger zDiv = null;
-
 		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
 
 		//Step 1: get [[z]] from Alice
-		Obj = fromAlice.readObject();
-		if (Obj instanceof BigInteger)
+		in = fromAlice.readObject();
+		if (in instanceof BigInteger)
 		{
-			z = (BigInteger) Obj;
+			z = (BigInteger) in;
 		}
 		else
 		{
@@ -320,18 +319,17 @@ public class bob
 			z = PaillierCipher.decrypt(z, sk);
 		}
 
-		//Step 2: compute Beta = z (mod 2^l),
+		// Step 2: compute Beta = z (mod 2^l),
 		betaZZ = z.mod(powL);
 
-		//Step 3: Alice computes r (mod 2^l) (Alpha)
+		// Step 3: Alice computes r (mod 2^l) (Alpha)
 
-		/*
-		 * Step 4: Run Protocol 3
-		 * x = alpha, y = beta
-		 */
+		// Step 4: Run Protocol 3
+		// x = alpha, y = beta
 		Protocol3(betaZZ);
+		//toBob.writeInt();
 
-		//Step 5" Send [[z/2^l]], Alice has the solution from Protocol 3 already...
+		// Step 5: Send [[z/2^l]], Alice has the solution from Protocol 3 already...
 		if(isDGK)
 		{
 			zDiv = DGKOperations.encrypt(pubKey, z.divide(powL));
@@ -340,17 +338,16 @@ public class bob
 		{
 			zDiv = PaillierCipher.encrypt(z.divide(powL), pk);
 		}
-		
 		toAlice.writeObject(zDiv);
 		toAlice.flush();
 
-		//Step 6 - 7: Alice Computes [[x <= y]]
+		// Step 6 - 7: Alice Computes [[x <= y]]
 
-		//Step 8 (UNOFFICIAL): Alice needs the answer...
-		Obj = fromAlice.readObject();
-		if (Obj instanceof BigInteger)
+		// Step 8 (UNOFFICIAL): Alice needs the answer...
+		in = fromAlice.readObject();
+		if (in instanceof BigInteger)
 		{
-			result = (BigInteger) Obj;
+			result = (BigInteger) in;
 		}
 		else
 		{

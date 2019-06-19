@@ -262,6 +262,8 @@ public class alice
 	public int Protocol2(BigInteger x, BigInteger y) 
 			throws IOException, ClassNotFoundException
 	{
+		int deltaB = -1;
+		int deltaA = rnd.nextInt(2);
 		int x_leq_y = -1;
 		int comparison = -1;
 		BigInteger z = null;
@@ -285,7 +287,7 @@ public class alice
 		 */
 		if (isDGK)
 		{
-			z = DGKOperations.DGKAdd(pubKey, x, DGKOperations.encrypt(pubKey, r.add(powL)));
+			z = DGKOperations.DGKAdd(pubKey, x, DGKOperations.encrypt(pubKey, r.add(powL).mod(pubKey.bigU)));
 			z = DGKOperations.DGKSubtract(pubKey, z, y);
 		}
 		else
@@ -302,8 +304,16 @@ public class alice
 		BigInteger alphaZZ = NTL.POSMOD(r, powL);
 
 		// Step 4: Complete Protocol 1 or Protocol 3
-        x_leq_y = Protocol3(alphaZZ);
-		
+        x_leq_y = Protocol3(alphaZZ, deltaA);
+    	if(deltaA == x_leq_y)
+        {
+            deltaB = 0;
+        }
+        else
+        {
+            deltaB = 1;
+        }
+    	
 		// Step 5: Bob sends z/2^l and GammaB 
 		bob = fromBob.readObject();
 		if (bob instanceof BigInteger)
@@ -333,12 +343,26 @@ public class alice
 		if(isDGK)
 		{
 			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, DGKOperations.encrypt(pubKey, r.divide(powL)));
-			result = DGKOperations.DGKSubtract(pubKey, result, DGKOperations.encrypt(pubKey, x_leq_y));
+			if(deltaA == 1)
+			{
+				result = DGKOperations.DGKSubtract(pubKey, result, DGKOperations.encrypt(pubKey, deltaB));
+			}
+			else
+			{
+				result = DGKOperations.DGKSubtract(pubKey, result, DGKOperations.encrypt(pubKey, 1 - deltaB));
+			}
 		}
 		else
 		{
            result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
-           result = PaillierCipher.subtract(result, PaillierCipher.encrypt(x_leq_y, pk), pk);
+           if(deltaA == 1)
+           {
+               result = PaillierCipher.subtract(result, PaillierCipher.encrypt(deltaB, pk), pk);
+           }
+           else
+           {
+               result = PaillierCipher.subtract(result, PaillierCipher.encrypt((1 - deltaB), pk), pk);
+           }
 		}
 		
 		/*
@@ -370,10 +394,14 @@ public class alice
 	 * x > y -> [[0]]
 	 */
 
-	public int Protocol3(BigInteger x)
+	public int Protocol3(BigInteger x, int _deltaA)
 			throws ClassNotFoundException, IOException
-	{
+	{	
 		int deltaA = rnd.nextInt(2);
+		if (_deltaA == 0 || _deltaA == 1)
+		{
+			deltaA = _deltaA;
+		}
 		BigInteger [] Encrypted_Y;
 		int deltaB;
 		int answer;
@@ -728,28 +756,20 @@ public class alice
 		 * answer = 0 XOR 0 = 0
 		 */
 
-		// Case 1, delta B is ALWAYS INITIALIZED TO 0
-		// y has more bits -> y is bigger
 		if (alpha.bitLength() < beta_bits.length)
 		{
 			toBob.writeObject(BigInteger.ONE);
 			toBob.flush();
-			// x <= y -> 1 (true)
 			return 1;
 		}
-
-		// Case 2, delta B is ALWAYS INITIALIZED to 0
-		// x has more bits -> x is bigger
 		else if(alpha.bitLength() > beta_bits.length)
 		{
 			toBob.writeObject(BigInteger.ZERO);
 			toBob.flush();
-			// x <= y -> 0 (false)
 			return 0;
 		}
 		
 		// Step C: Alice corrects d...
-		// r < (N - 1)/2
 		if(r.compareTo(pk.n.subtract(BigInteger.ONE).divide(new BigInteger("2")))==-1)
 		{
 			d = DGKOperations.encrypt(pubKey, BigInteger.ZERO);
@@ -795,8 +815,7 @@ public class alice
 			}
 		}
 		
-		// Step F:
-		// See optimization...
+		// Step F: See optimization...
 		for (int i = 0; i < beta_bits.length;i++)
 		{
 			if(NTL.bit(alpha_hat, i) == NTL.bit(alpha, i))
@@ -806,8 +825,7 @@ public class alice
 		}
 		
 		// Step G:
-		int deltaA = 0;
-		//int deltaA = rnd.nextInt(2);
+		int deltaA = rnd.nextInt(2);
 		BigInteger S = DGKOperations.encrypt(pubKey, 1 - (2 * deltaA));
 		
 		// Step H:
@@ -901,7 +919,7 @@ public class alice
 		// Step 2: Executed by Bob
 		
 		// Step 3: Compute secure comparison Protocol 
-		int t = Protocol3(r.mod(BigInteger.valueOf(d)));
+		int t = Protocol3(r.mod(BigInteger.valueOf(d)), 20);
 		
 		// Step 4: Bob computes c and Alice receives it
 		in = fromBob.readObject();
