@@ -354,7 +354,7 @@ public class bob
 		}
 		else
 		{
-			throw new IllegalArgumentException("Step 8 in Protocol 2 failure");
+			throw new IllegalArgumentException("Protocol 2, Step 8 Invalid Object");
 		}
 		
 		if(isDGK)
@@ -538,7 +538,6 @@ public class bob
 		else
 		{
 			zDiv = PaillierCipher.encrypt(z.divide(BigInteger.valueOf(powL)), pk);
-			System.out.println("Z/2^l: " + PaillierCipher.decrypt(zDiv, sk));	
 		}
 		toAlice.writeObject(zDiv);
 		toAlice.flush();
@@ -640,7 +639,15 @@ public class bob
 		toAlice.flush();
 		
 		// Extra step...Bob gets the answer from Alice
-		answer = fromAlice.readInt();
+		in = fromAlice.readObject();
+		if(in instanceof BigInteger)
+		{
+			answer = (int) DGKOperations.decrypt(pubKey, privKey, (BigInteger) in);
+		}
+		else
+		{
+			throw new IllegalArgumentException("M_Protocol 3, Step 8 Invalid Object!");
+		}
 		toAlice.flush();
 		return answer;
 	}

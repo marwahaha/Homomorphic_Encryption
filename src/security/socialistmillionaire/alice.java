@@ -270,18 +270,13 @@ public class alice
 		Object bob = null;
 		BigInteger r = null;
 
-		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l));
+		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
 
 		//  Step 1: 0 <= r < N
-		if (isDGK)
-		{
-			r = NTL.RandomBnd(pubKey.u);
-		}
-		else
-		{
-			r = NTL.RandomBnd(pk.n);
-		}
-
+		// Pick Number of l + 1 + sigma bits
+		// Considering DGK is an option, just stick with size of Zu
+		r = NTL.RandomBnd(pubKey.u);
+		
 		/*
 		 * Step 2: Alice computes [[z]] = [[x - y + 2^l + r]]
 		 * Send Z to Bob
@@ -291,8 +286,6 @@ public class alice
 		if (isDGK)
 		{
 			z = DGKOperations.DGKAdd(pubKey, x, DGKOperations.encrypt(pubKey, r.add(powL)));
-			System.out.println("Z: " + z);
-			System.out.println("Y: " + y);
 			z = DGKOperations.DGKSubtract(pubKey, z, y);
 		}
 		else
@@ -345,7 +338,7 @@ public class alice
 		else
 		{
            result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
-           result = PaillierCipher.subtract(result, PaillierCipher.encrypt( x_leq_y, pk), pk);
+           result = PaillierCipher.subtract(result, PaillierCipher.encrypt(x_leq_y, pk), pk);
 		}
 		
 		/*
@@ -780,7 +773,14 @@ public class alice
 		}
 		
 		// Step E: Compute Alpha Hat
-		alpha_hat = r.subtract(pk.n).mod(BigInteger.valueOf(exponent(2, pubKey.l)));
+		if (isDGK)
+		{
+			alpha_hat = r.subtract(pk.n).mod(BigInteger.valueOf(exponent(2, pubKey.l)));
+		}
+		else
+		{
+			alpha_hat = r.subtract(pubKey.bigU).mod(BigInteger.valueOf(exponent(2, pubKey.l)));
+		}
 		w = new BigInteger[beta_bits.length];
 		
 		for (int i = 0; i < beta_bits.length;i++)
@@ -808,20 +808,32 @@ public class alice
 		// Step G:
 		int deltaA = 0;
 		//int deltaA = rnd.nextInt(2);
-		int s = 1 - (2 * deltaA);
-		BigInteger S = DGKOperations.encrypt(pubKey, s);
+		BigInteger S = DGKOperations.encrypt(pubKey, 1 - (2 * deltaA));
 		
 		// Step H:
 		BigInteger product;
+		long exponent;
 		C = new BigInteger[beta_bits.length];
+		BigInteger [] temp = new BigInteger[beta_bits.length];
 		for (int i = 0; i < beta_bits.length;i++)
 		{
 			// Compute product and multiply by 3
-			product = DGKOperations.DGKSum(pubKey, encAlphaXORBeta, beta_bits.length - 1 - i);
+			product = DGKOperations.DGKSum(pubKey, w, beta_bits.length - 1 - i);
 			C[beta_bits.length - 1 - i] = DGKOperations.DGKMultiply(pubKey, product, 3);
 			// C_i += s
 			C[beta_bits.length - 1 - i] = DGKOperations.DGKAdd(pubKey, S, C[beta_bits.length - 1 - i]);
-			//temp[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(x, i)), Encrypted_Y[i]);
+			
+			// t = alpha_i - beta_i
+			temp[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(alpha, i)), beta_bits[i]);
+			exponent = NTL.bit(alpha_hat, i) - NTL.bit(alpha, i);
+			// t = d^{a - a}
+			temp[i] = DGKOperations.DGKAdd(pubKey, temp[i], DGKOperations.DGKMultiply(pubKey, d, exponent));
+		}
+		
+		// Combine terms!
+		for(int i = 0; i < beta_bits.length;i++)
+		{
+			C[i] = DGKOperations.DGKAdd(pubKey, C[i], temp[i]);
 		}
 		
 		// Step I: BLIND THE EXPONENTS AND SEND TO BOB
@@ -834,7 +846,6 @@ public class alice
 		
 		// Step J: Bob checks whether a C_i has a zero or not...get delta B.
 		int deltaB = fromBob.readInt();
-		
 		if (deltaA == deltaB)
 		{
 			answer = 0;
@@ -843,7 +854,7 @@ public class alice
 		{
 			answer = 1;
 		}
-		toBob.writeInt(answer);
+		toBob.writeObject(DGKOperations.encrypt(pubKey, answer));
 		toBob.flush();
 		return answer;
 	}
