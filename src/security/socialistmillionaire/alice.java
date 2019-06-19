@@ -287,6 +287,8 @@ public class alice
 		// Step 1: 0 <= r < N
 		// Pick Number of l + 1 + sigma bits
 		// Considering DGK is an option, just stick with size of Zu
+		r = NTL.RandomBnd(pubKey.u);
+		/*
 		if (isDGK)
 		{
 			r = NTL.RandomBnd((pubKey.u - 1)/2);
@@ -295,7 +297,7 @@ public class alice
 		{
 			r = NTL.RandomBnd(pubKey.l + 1 + 80);
 		}
-		
+		*/
 		/*
 		 * Step 2: Alice computes [[z]] = [[x - y + 2^l + r]]
 		 * Send Z to Bob
@@ -322,8 +324,8 @@ public class alice
 
 		// Step 4: Complete Protocol 1 or Protocol 3
         x_leq_y = Protocol3(alphaZZ, deltaA);
-        System.out.println("Protocol 2 alphaZZ: " + alphaZZ);
-        System.out.println("Protocol 3 Result: " + x_leq_y);
+        //System.out.println("Protocol 2 alphaZZ: " + alphaZZ);
+        //System.out.println("Protocol 3 Result: " + x_leq_y);
     	
 		// Step 5: Bob sends z/2^l and GammaB 
 		bob = fromBob.readObject();
@@ -383,18 +385,18 @@ public class alice
 		if(isDGK)
 		{
 			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, DGKOperations.encrypt(pubKey, r.divide(powL)));
-			System.out.println("z-r/2^l: " + DGKOperations.decrypt(pubKey, privKey, result));
-			System.out.println("P2 (beta < alpha): " + DGKOperations.decrypt(pubKey, privKey, alpha_lt_beta));
+			//System.out.println("z-r/2^l: " + DGKOperations.decrypt(pubKey, privKey, result));
+			//System.out.println("P2 (beta < alpha): " + DGKOperations.decrypt(pubKey, privKey, alpha_lt_beta));
 			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, alpha_lt_beta);
-			System.out.println("FINAL result: " + DGKOperations.decrypt(pubKey, privKey, result));
+			//System.out.println("FINAL result: " + DGKOperations.decrypt(pubKey, privKey, result));
 		}
 		else
 		{
            result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
-           System.out.println("z-r/2^l: " + PaillierCipher.decrypt(result, sk));
-           System.out.println("P2 (beta < alpha): " + PaillierCipher.decrypt(alpha_lt_beta, sk));
+           //System.out.println("z-r/2^l: " + PaillierCipher.decrypt(result, sk));
+           //System.out.println("P2 (beta < alpha): " + PaillierCipher.decrypt(alpha_lt_beta, sk));
            result = PaillierCipher.subtract(zdiv2L, alpha_lt_beta, pk);
-           System.out.println("FINAL result: " + PaillierCipher.decrypt(result, sk));
+           //System.out.println("FINAL result: " + PaillierCipher.decrypt(result, sk));
 		}
 		
 		/*
