@@ -217,12 +217,8 @@ public class alice
 			// C_i -= y
 			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKSubtract(pubKey, C[Encrypted_Y.length - 1 - i], Encrypted_Y[i]);
 			// C_i += x
-			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKSubtract(pubKey, C[Encrypted_Y.length - 1 - i], DGKOperations.encrypt(pubKey, NTL.bit(x, i)));
-			System.out.print(NTL.bit(x, i));
-			//BigInteger temp = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(x, i)), Encrypted_Y[i]);
-			//System.out.print(DGKOperations.decrypt(pubKey, privKey, temp));
+			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length - 1 - i], DGKOperations.encrypt(pubKey, NTL.bit(x, i)));
 		}
-		System.out.println("C_i + s + x - y");
 		print_bits(C);
 		
 		//This is c_{-1}
@@ -1188,7 +1184,7 @@ public class alice
 		{
 			if (bits[i] != null)
 			{
-				System.out.print(DGKOperations.decrypt(pubKey, privKey, bits[i]));
+				System.out.print(DGKOperations.decrypt(pubKey, privKey, bits[i]) + ",");
 			}
 		}
 		System.out.println("");
