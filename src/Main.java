@@ -105,8 +105,7 @@ public class Main
 				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 0);//99
 				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//100
 				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//101
-				
-				/*
+	
 				// Test Protocol 2 (Builds on Protocol 3)
 				// Paillier
 				System.out.println("Protocol 2 Tests...Paillier");
@@ -126,6 +125,7 @@ public class Main
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("98"))) == 0);
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("35"))) == 0);
 				
+				/*
 				// Test Protocol 4 (Builds on Protocol 3)
 				// Paillier
 				System.out.println("Protocol 4 Tests...Paillier");
@@ -191,7 +191,6 @@ public class Main
 				Niu.Modified_Protocol3(null, new BigInteger("100"));
 				Niu.Modified_Protocol3(null, new BigInteger("101"));
 				
-				/*
 				// Test Protocol 2 with Paillier
 				Niu.setDGKMode(false);
 				Niu.Protocol2();
@@ -208,6 +207,7 @@ public class Main
 				Niu.Protocol2();
 				Niu.Protocol2();
 				
+				/*
 				// Test Protocol 4 with Paillier
 				Niu.setDGKMode(false);
 				Niu.Protocol4();

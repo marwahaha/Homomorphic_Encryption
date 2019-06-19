@@ -813,7 +813,7 @@ public class alice
 		// Step H:
 		BigInteger product;
 		long exponent;
-		C = new BigInteger[beta_bits.length];
+		C = new BigInteger[beta_bits.length + 1];
 		BigInteger [] temp = new BigInteger[beta_bits.length];
 		for (int i = 0; i < beta_bits.length;i++)
 		{
@@ -836,6 +836,10 @@ public class alice
 			C[i] = DGKOperations.DGKAdd(pubKey, C[i], temp[i]);
 		}
 		
+		//This is c_{-1}
+		C[beta_bits.length] = DGKOperations.DGKSum(pubKey, encAlphaXORBeta);
+		C[beta_bits.length] = DGKOperations.DGKAdd(pubKey, C[beta_bits.length], DGKOperations.encrypt(pubKey, deltaA));
+
 		// Step I: BLIND THE EXPONENTS AND SEND TO BOB
 		for (int i = 0; i < beta_bits.length;i++)
 		{
