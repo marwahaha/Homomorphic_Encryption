@@ -207,7 +207,7 @@ public class alice
 		BigInteger product;
 		BigInteger [] temp = new BigInteger[Encrypted_Y.length];
 		
-		// Compute the Product of XORS
+		// Compute the Product of XOR, add s and compute x - y
 		for (int i = 0; i < Encrypted_Y.length;i++)
 		{
 			// Compute product and multiply by 3
@@ -216,19 +216,17 @@ public class alice
 			// C_i += s
 			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKAdd(pubKey, s, C[Encrypted_Y.length - 1 - i]);
 			temp[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(x, i)), Encrypted_Y[i]);
-			// C_i -= y
-			//C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKSubtract(pubKey, C[Encrypted_Y.length - 1 - i], Encrypted_Y[i]);
-			// C_i += x
-			//C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length - 1 - i], DGKOperations.encrypt(pubKey, NTL.bit(x, i)));
 		}
-		print_bits(C);
-		System.out.println("Temp");
-		print_bits(temp);
+		
+		for (int i = 0; i < Encrypted_Y.length;i++)
+		{
+			C[i] = DGKOperations.DGKAdd(pubKey, C[i], temp[i]);
+		}
+		//print_bits(C);
 		
 		//This is c_{-1}
 		C[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
 		C[Encrypted_Y.length] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
-		
 		
 		// Step 5: Blinds C_i and send to Bob
 		toBob.writeObject(C);
@@ -688,7 +686,7 @@ public class alice
 		BigInteger [] beta_bits = null;
 		BigInteger [] encAlphaXORBeta = null;
 		BigInteger [] w = null;
-		BigInteger [] c = null;
+		BigInteger [] C = null;
 		BigInteger alpha_hat = null;
 		BigInteger d = null;
 		
@@ -775,12 +773,13 @@ public class alice
 			//Enc[x XOR y] = [1] - [y_i]
 			else
 			{
-				encAlphaXORBeta[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), beta_bits[i]);				
+				encAlphaXORBeta[i] = DGKOperations.DGKSubtract(pubKey, 
+						DGKOperations.encrypt(pubKey, 1), beta_bits[i]);				
 			}
 		}
 		
 		// Step E: Compute Alpha Hat
-		alpha_hat = r.subtract(pk.n).mod(BigInteger.valueOf(exponent(2, pubKey.l - 2)));
+		alpha_hat = r.subtract(pk.n).mod(BigInteger.valueOf(exponent(2, pubKey.l)));
 		w = new BigInteger[beta_bits.length];
 		
 		for (int i = 0; i < beta_bits.length;i++)
@@ -795,31 +794,41 @@ public class alice
 			}
 		}
 		
-		// Step F: 
+		// Step F:
+		// See optimization...
 		for (int i = 0; i < beta_bits.length;i++)
 		{
-			w[i] = DGKOperations.DGKMultiply(pubKey, w[i], exponent(2, i));
+			if(NTL.bit(alpha_hat, i) == NTL.bit(alpha, i))
+			{
+				w[i] = DGKOperations.DGKMultiply(pubKey, w[i], pubKey.l);	
+			}
 		}
 		
 		// Step G:
-		int deltaA = rnd.nextInt(2);
+		int deltaA = 0;
+		//int deltaA = rnd.nextInt(2);
 		int s = 1 - (2 * deltaA);
 		BigInteger S = DGKOperations.encrypt(pubKey, s);
 		
 		// Step H:
-		c = new BigInteger[beta_bits.length];
+		BigInteger product;
+		C = new BigInteger[beta_bits.length];
 		for (int i = 0; i < beta_bits.length;i++)
 		{
-			// Get Exponent
-			c[i] = DGKOperations.DGKAdd(pubKey, S, DGKOperations.encrypt(pubKey, NTL.bit(alpha, i)));
+			// Compute product and multiply by 3
+			product = DGKOperations.DGKSum(pubKey, encAlphaXORBeta, beta_bits.length - 1 - i);
+			C[beta_bits.length - 1 - i] = DGKOperations.DGKMultiply(pubKey, product, 3);
+			// C_i += s
+			C[beta_bits.length - 1 - i] = DGKOperations.DGKAdd(pubKey, S, C[beta_bits.length - 1 - i]);
+			//temp[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(x, i)), Encrypted_Y[i]);
 		}
 		
 		// Step I: BLIND THE EXPONENTS AND SEND TO BOB
 		for (int i = 0; i < beta_bits.length;i++)
 		{
-			c[i] = DGKOperations.DGKMultiply(pubKey, c[i], 7);
+			C[i] = DGKOperations.DGKMultiply(pubKey, C[i], 1);
 		}
-		toBob.writeObject(c);
+		toBob.writeObject(C);
 		toBob.flush();
 		
 		// Step J: Bob checks whether a C_i has a zero or not...get delta B.
