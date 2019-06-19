@@ -131,6 +131,7 @@ public class Main
 				
 				// Test Protocol 4 (Builds on Protocol 3)
 				// Paillier
+				/*
 				System.out.println("Protocol 4 Tests...Paillier");
 				yujia.setDGKMode(false);
 				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("35"), pk)) == 0);
@@ -163,6 +164,7 @@ public class Main
 				yujia.division(d, 4);//100/4 = 25
 				yujia.division(d, 5);//100/5 = 20
 				yujia.division(d, 25);//100/25 = 4
+				*/
 			}
 			else
 			{
@@ -209,6 +211,7 @@ public class Main
 				Niu.Protocol2();
 				Niu.Protocol2();
 				
+				/*
 				// Test Protocol 4 with Paillier
 				Niu.setDGKMode(false);
 				Niu.Protocol4();
@@ -238,7 +241,8 @@ public class Main
 				Niu.division(4);
 				Niu.division(5);
 				Niu.division(25);
-
+				*/
+				
 				// Clean up
 				bob_client.close();
 				bob_socket.close();
