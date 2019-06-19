@@ -362,7 +362,6 @@ public class alice
 			{
 				alpha_lt_beta = DGKOperations.encrypt(pubKey, 1 - deltaB);
 			}
-			System.out.println("P2 (a < b): " + DGKOperations.decrypt(pubKey, privKey, alpha_lt_beta));
     	}
     	else
     	{
@@ -374,7 +373,6 @@ public class alice
             {
             	alpha_lt_beta = PaillierCipher.encrypt((1 - deltaB), pk);
             }
-            System.out.println("P2 (a < b): " + PaillierCipher.decrypt(alpha_lt_beta, sk));
     	}
 
 		/*
@@ -386,6 +384,7 @@ public class alice
 		{
 			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, DGKOperations.encrypt(pubKey, r.divide(powL)));
 			System.out.println("z-r/2^l: " + DGKOperations.decrypt(pubKey, privKey, result));
+			System.out.println("P2 (beta < alpha): " + DGKOperations.decrypt(pubKey, privKey, alpha_lt_beta));
 			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, alpha_lt_beta);
 			System.out.println("FINAL result: " + DGKOperations.decrypt(pubKey, privKey, result));
 		}
@@ -393,6 +392,7 @@ public class alice
 		{
            result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
            System.out.println("z-r/2^l: " + PaillierCipher.decrypt(result, sk));
+           System.out.println("P2 (beta < alpha): " + PaillierCipher.decrypt(alpha_lt_beta, sk));
            result = PaillierCipher.subtract(zdiv2L, alpha_lt_beta, pk);
            System.out.println("FINAL result: " + PaillierCipher.decrypt(result, sk));
 		}
