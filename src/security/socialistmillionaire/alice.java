@@ -198,9 +198,9 @@ public class alice
 		}
 	
 		// Step 3: Alice picks deltaA and computes S
-		// BigInteger s = DGKOperations.encrypt(pubKey, 1 - 2 * deltaA);
 		// FIX AT DELTA = 0
-		BigInteger s = DGKOperations.encrypt(pubKey, 1);
+		deltaA = 0;
+		BigInteger s = DGKOperations.encrypt(pubKey, 1 - 2 * deltaA);
 		
 		// Step 4: Compute C_i
 		C = new BigInteger[Encrypted_Y.length + 1];
@@ -222,13 +222,16 @@ public class alice
 		{
 			C[i] = DGKOperations.DGKAdd(pubKey, C[i], temp[i]);
 		}
-		//print_bits(C);
 		
 		//This is c_{-1}
-		C[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
+		C[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);
 		C[Encrypted_Y.length] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
-		
+
 		// Step 5: Blinds C_i and send to Bob
+		for (int i = 0; i < Encrypted_Y.length;i++)
+		{
+			C[i] = DGKOperations.DGKMultiply(pubKey, C[i], 1);
+		}
 		toBob.writeObject(C);
 		toBob.flush();
 		
@@ -1198,6 +1201,10 @@ public class alice
 			if (bits[i] != null)
 			{
 				System.out.print(DGKOperations.decrypt(pubKey, privKey, bits[i]) + ",");
+			}
+			else
+			{
+				System.out.print("NULL");
 			}
 		}
 		System.out.println("");
