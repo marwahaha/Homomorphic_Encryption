@@ -321,8 +321,8 @@ public class alice
 
 		// Step 4: Complete Protocol 1 or Protocol 3
         x_leq_y = Protocol3(alphaZZ, deltaA);
-        System.out.println("alphaZZ: " + alphaZZ);
-        System.out.println("Result: " + x_leq_y);
+        System.out.println("Protocol 2 alphaZZ: " + alphaZZ);
+        System.out.println("Protocol 3 Result: " + x_leq_y);
     	
 		// Step 5: Bob sends z/2^l and GammaB 
 		bob = fromBob.readObject();
@@ -605,11 +605,12 @@ public class alice
 		int deltaA = rnd.nextInt(2);
 		int x_leq_y = -1;
 		int comparison = -1;
+		Object bob = null;
 		BigInteger z = null;
 		BigInteger zdiv2L =  null;
 		BigInteger result = null;
-		Object bob = null;
 		BigInteger r = null;
+		BigInteger alpha_lt_beta = null;
 		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l));
 
 		// Step 1: 0 <= r < N
@@ -650,8 +651,8 @@ public class alice
 
 		// Step 4: Complete Protocol 1 or Protocol 3
         x_leq_y = Modified_Protocol3(alphaZZ, r, deltaA);
-        System.out.println("alphaZZ: " + alphaZZ);
-        System.out.println("Result: " + x_leq_y);
+        System.out.println("Protocol 2 alphaZZ: " + alphaZZ);
+        System.out.println("Modified Protocol 3 Result: " + x_leq_y);
     	
 		// Step 5: Bob sends z/2^l and GammaB 
 		bob = fromBob.readObject();
@@ -668,8 +669,6 @@ public class alice
 		 * Step 6
 		 * Since I know deltaA and result of Protocol 3,
 		 * I can infer deltaB from Bob.
-		 * 
-		 * Inputting (beta <= alpha) is in Step 7.
 		 */
     	if(deltaA == x_leq_y)
         {
@@ -679,6 +678,31 @@ public class alice
         {
             deltaB = 1;
         }
+    	
+    	if (isDGK)
+    	{
+			if(deltaA == 1)
+			{
+				alpha_lt_beta = DGKOperations.DGKSubtract(pubKey, result, DGKOperations.encrypt(pubKey, deltaB));
+			}
+			else
+			{
+				alpha_lt_beta = DGKOperations.DGKSubtract(pubKey, result, DGKOperations.encrypt(pubKey, 1 - deltaB));
+			}
+			System.out.println("(a < b): " + DGKOperations.decrypt(pubKey, privKey, result));
+    	}
+    	else
+    	{
+            if(deltaA == 1)
+            {
+            	alpha_lt_beta = PaillierCipher.subtract(result, PaillierCipher.encrypt(deltaB, pk), pk);
+            }
+            else
+            {
+            	alpha_lt_beta = PaillierCipher.subtract(result, PaillierCipher.encrypt((1 - deltaB), pk), pk);
+            }
+            System.out.println("(a < b): " + PaillierCipher.decrypt(result, sk));
+    	}
 
 		/*
 		 * Step 7, Alice Computes [[x <= y]]
@@ -688,30 +712,14 @@ public class alice
 		if(isDGK)
 		{
 			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, DGKOperations.encrypt(pubKey, r.divide(powL)));
-			System.out.println("result: " + DGKOperations.decrypt(pubKey, privKey, result));
-			if(deltaA == 1)
-			{
-				result = DGKOperations.DGKSubtract(pubKey, result, DGKOperations.encrypt(pubKey, deltaB));
-			}
-			else
-			{
-				result = DGKOperations.DGKSubtract(pubKey, result, DGKOperations.encrypt(pubKey, 1 - deltaB));
-			}
-			System.out.println("FINAL result: " + DGKOperations.decrypt(pubKey, privKey, result));
+			System.out.println("z-r/2^l: " + DGKOperations.decrypt(pubKey, privKey, result));
+			result = DGKOperations.DGKSubtract(pubKey, result, alpha_lt_beta);
 		}
 		else
 		{
            result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
-           System.out.println("result: " + PaillierCipher.decrypt(result, sk));
-           if(deltaA == 1)
-           {
-               result = PaillierCipher.subtract(result, PaillierCipher.encrypt(deltaB, pk), pk);
-           }
-           else
-           {
-               result = PaillierCipher.subtract(result, PaillierCipher.encrypt((1 - deltaB), pk), pk);
-           }
-           System.out.println("FINAL result: " + PaillierCipher.decrypt(result, sk));
+           System.out.println("z-r/2^l: " + PaillierCipher.decrypt(result, sk));
+           result = PaillierCipher.subtract(result, alpha_lt_beta, pk);
 		}
 		
 		/*
