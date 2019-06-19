@@ -205,6 +205,7 @@ public class alice
 		// Step 4: Compute C_i
 		C = new BigInteger[Encrypted_Y.length + 1];
 		BigInteger product;
+		BigInteger [] temp = new BigInteger[Encrypted_Y.length];
 		
 		// Compute the Product of XORS
 		for (int i = 0; i < Encrypted_Y.length;i++)
@@ -214,12 +215,15 @@ public class alice
 			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKMultiply(pubKey, product, 3);
 			// C_i += s
 			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKAdd(pubKey, s, C[Encrypted_Y.length - 1 - i]);
+			temp[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(x, i)), Encrypted_Y[i]);
 			// C_i -= y
-			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKSubtract(pubKey, C[Encrypted_Y.length - 1 - i], Encrypted_Y[i]);
+			//C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKSubtract(pubKey, C[Encrypted_Y.length - 1 - i], Encrypted_Y[i]);
 			// C_i += x
-			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length - 1 - i], DGKOperations.encrypt(pubKey, NTL.bit(x, i)));
+			//C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length - 1 - i], DGKOperations.encrypt(pubKey, NTL.bit(x, i)));
 		}
 		print_bits(C);
+		System.out.println("Temp");
+		print_bits(temp);
 		
 		//This is c_{-1}
 		C[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
