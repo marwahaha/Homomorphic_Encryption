@@ -262,6 +262,15 @@ public class alice
 	public int Protocol2(BigInteger x, BigInteger y) 
 			throws IOException, ClassNotFoundException
 	{
+		if(!is_valid_Paillier_KeyPair())
+		{
+			System.err.println("Bad Paillier???");
+		}
+		if(!is_valid_DGK_KeyPair())
+		{
+			System.err.println("Bad DGK???");
+		}
+		
 		int deltaB = -1;
 		int deltaA = rnd.nextInt(2);
 		int x_leq_y = -1;
@@ -271,8 +280,7 @@ public class alice
 		BigInteger result = null;
 		Object bob = null;
 		BigInteger r = null;
-
-		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
+		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l));
 
 		//  Step 1: 0 <= r < N
 		// Pick Number of l + 1 + sigma bits
@@ -366,6 +374,7 @@ public class alice
            {
                result = PaillierCipher.subtract(result, PaillierCipher.encrypt((1 - deltaB), pk), pk);
            }
+           System.out.println("FINAL result: " + PaillierCipher.decrypt(result, sk));
 		}
 		
 		/*
@@ -600,20 +609,15 @@ public class alice
 		}
 		
 		// Constraint: l + 2 < log_2(N)
+		/*
 		if (pubKey.l - 2 < bit)
 		{
 			throw new IllegalArgumentException("bit: " + bit + " key-bits: " + (pubKey.l - 2));
 		}
+		*/
 		
 		//  Step 1: 0 <= r < N
-		if(isDGK)
-		{
-			r = NTL.RandomBnd(pubKey.u);
-		}
-		else
-		{
-			r = NTL.RandomBnd(pk.n);
-		}
+		r = NTL.RandomBnd(bit);
 
 		/*
 		 * Step 2: Alice computes [[z]] = [[x - y + 2^l + r]]
@@ -1265,5 +1269,22 @@ public class alice
 		{
 			System.err.println("BAD PAILLIER");
 		}
+	}
+	
+	public boolean is_valid_DGK_KeyPair()
+	{
+		BigInteger init = new BigInteger("60");
+		long test;
+		BigInteger t = DGKOperations.encrypt(pubKey, init);
+		test = DGKOperations.decrypt(pubKey, privKey, t);
+		return BigInteger.valueOf(test).compareTo(init) == 0;
+	}
+	
+	public boolean is_valid_Paillier_KeyPair()
+	{
+		BigInteger init = new BigInteger("60");
+		BigInteger t = PaillierCipher.encrypt(init, pk);
+		t = PaillierCipher.decrypt(t, sk);
+		return t.compareTo(init) == 0;
 	}
 }

@@ -296,7 +296,7 @@ public class bob
 		BigInteger betaZZ = null;
 		BigInteger z = null;
 		BigInteger zDiv = null;
-		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
+		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l));
 
 		//Step 1: get [[z]] from Alice
 		in = fromAlice.readObject();
@@ -320,14 +320,14 @@ public class bob
 		}
 
 		// Step 2: compute Beta = z (mod 2^l),
-		betaZZ = z.mod(powL);
+		betaZZ = NTL.POSMOD(z, powL);
 
 		// Step 3: Alice computes r (mod 2^l) (Alpha)
 
 		// Step 4: Run Protocol 3
 		// x = alpha, y = beta
 		Protocol3(betaZZ);
-        System.out.println("alphaZZ: " + betaZZ);
+        System.out.println("betaZZ: " + betaZZ);
 
 		// Step 5: Send [[z/2^l]], Alice has the solution from Protocol 3 already...
 		if(isDGK)
