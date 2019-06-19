@@ -305,6 +305,8 @@ public class alice
 
 		// Step 4: Complete Protocol 1 or Protocol 3
         x_leq_y = Protocol3(alphaZZ, deltaA);
+        System.out.println("alphaZZ: " + alphaZZ);
+        System.out.println("Result: " + x_leq_y);
     	if(deltaA == x_leq_y)
         {
             deltaB = 0;
@@ -355,6 +357,7 @@ public class alice
 		else
 		{
            result = PaillierCipher.subtract(zdiv2L, PaillierCipher.encrypt(r.divide(powL), pk), pk);
+           System.out.println("result: " + PaillierCipher.decrypt(result, sk));
            if(deltaA == 1)
            {
                result = PaillierCipher.subtract(result, PaillierCipher.encrypt(deltaB, pk), pk);

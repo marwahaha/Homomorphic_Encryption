@@ -49,7 +49,7 @@ public class Main
 		alice yujia = null;
 		
 		BigInteger D = PaillierCipher.encrypt(new BigInteger("100"), pk);
-		BigInteger d = DGKOperations.encrypt(pubKey, 100);
+		//BigInteger d = DGKOperations.encrypt(pubKey, 100);
 		
 		try
 		{
@@ -117,6 +117,7 @@ public class Main
 				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);
 				
 				// DGK
+				/*
 				System.out.println("Protocol 2 Tests...DGK");
 				yujia.setDGKMode(true);
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("35"))) == 0);
@@ -124,8 +125,8 @@ public class Main
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("99"))) == 0);
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("100"))) == 1);
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("101"))) == 1);
+				*/
 				
-				/*
 				// Test Protocol 4 (Builds on Protocol 3)
 				// Paillier
 				System.out.println("Protocol 4 Tests...Paillier");
@@ -137,6 +138,7 @@ public class Main
 				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);
 				
 				// DGK
+				/*
 				yujia.setDGKMode(true);
 				System.out.println("Protocol 4 Tests...DGK");
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("35"))) == 0);
@@ -144,6 +146,7 @@ public class Main
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("99"))) == 0);
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("100"))) == 1);
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("101"))) == 1);
+				*/
 				
 				// Division Test, Paillier
 				// REMEMBER THE OUTPUT IS THE ENCRYPTED ANSWER, ONLY BOB CAN VERIFY THE ANSWER
@@ -154,6 +157,7 @@ public class Main
 				yujia.division(D, 5);//100/5 = 20
 				yujia.division(D, 25);//100/25 = 4
 				
+				/*
 				yujia.setDGKMode(true);
 				System.out.println("Division Tests...DGK");
 				yujia.division(d, 2);//100/2 = 50
@@ -200,14 +204,15 @@ public class Main
 				Niu.Protocol2();
 				
 				// Test Procotol 2 with DGK
+				/*
 				Niu.setDGKMode(true);
 				Niu.Protocol2();
 				Niu.Protocol2();
 				Niu.Protocol2();
 				Niu.Protocol2();
 				Niu.Protocol2();
+				*/
 				
-				/*
 				// Test Protocol 4 with Paillier
 				Niu.setDGKMode(false);
 				Niu.Protocol4();
@@ -216,6 +221,7 @@ public class Main
 				Niu.Protocol4();
 				Niu.Protocol4();
 				
+				/*
 				// Test Procotol 4 with DGK
 				Niu.setDGKMode(true);
 				Niu.Protocol4();
@@ -223,6 +229,7 @@ public class Main
 				Niu.Protocol4();
 				Niu.Protocol4();
 				Niu.Protocol4();
+				*/
 				
 				// Division Protocol Test, Paillier
 				Niu.setDGKMode(false);
@@ -231,6 +238,7 @@ public class Main
 				Niu.division(5);
 				Niu.division(25);
 				
+				/*
 				// Division Test, DGK
 				Niu.setDGKMode(true);
 				Niu.division(2);

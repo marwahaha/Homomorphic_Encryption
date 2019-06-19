@@ -327,7 +327,7 @@ public class bob
 		// Step 4: Run Protocol 3
 		// x = alpha, y = beta
 		Protocol3(betaZZ);
-		//toBob.writeInt();
+        System.out.println("alphaZZ: " + betaZZ);
 
 		// Step 5: Send [[z/2^l]], Alice has the solution from Protocol 3 already...
 		if(isDGK)
