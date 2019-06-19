@@ -209,9 +209,17 @@ public class alice
 		// Compute the Product of XORS
 		for (int i = 0; i < Encrypted_Y.length;i++)
 		{
+			// Compute product and multiply by 3
 			product = DGKOperations.DGKSum(pubKey, XOR, Encrypted_Y.length - 1 - i);
 			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKMultiply(pubKey, product, 3);
+			// C_i += s
+			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKAdd(pubKey, s, C[Encrypted_Y.length - 1 - i]);
+	
+			// C_i += x - y
+			BigInteger temp = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(x, i)), Encrypted_Y[i]);
+			System.out.print(DGKOperations.decrypt(pubKey, privKey, temp));
 		}
+		System.out.println("");
 		System.out.println("C w/ only Product Sum");
 		print_bits(C);
 		
