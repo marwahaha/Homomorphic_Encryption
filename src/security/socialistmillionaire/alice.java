@@ -198,8 +198,6 @@ public class alice
 		}
 	
 		// Step 3: Alice picks deltaA and computes S
-		// FIX AT DELTA = 0
-		deltaA = 0;
 		BigInteger s = DGKOperations.encrypt(pubKey, 1 - 2 * deltaA);
 		
 		// Step 4: Compute C_i
