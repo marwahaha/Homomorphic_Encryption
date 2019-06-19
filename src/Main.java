@@ -48,9 +48,6 @@ public class Main
 		bob Niu = null;
 		alice yujia = null;
 		
-		BigInteger D = PaillierCipher.encrypt(new BigInteger("100"), pk);
-		//BigInteger d = DGKOperations.encrypt(pubKey, 100);
-		
 		try
 		{
 			// Future Reference in saving keys...
@@ -65,6 +62,12 @@ public class Main
 				alice_socket = new Socket("192.168.147.145", 9254);
 				yujia = new alice(alice_socket, null, null, true, null);
 				
+				// TO BE CONSISTENT I NEED TO USE KEYS FROM BOB!
+				pk = yujia.getPaiilierPublicKey();
+				pubKey = yujia.getDGKPublicKey();
+				BigInteger D = PaillierCipher.encrypt(new BigInteger("100"), pk);
+				//BigInteger d = DGKOperations.encrypt(pubKey, 100);
+		
 				// All answers should print true!
 				// Size is 16 bits, 2^16 is the range
 				/*

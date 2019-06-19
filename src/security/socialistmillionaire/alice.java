@@ -87,8 +87,8 @@ public class alice
 		this.isDGK = _isDGK;
 		this.toSort = _toSort;
 		this.algo = Algorithm.valueOf("QUICK_SORT");
-		this.getDGKPublicKey();
-		this.getPaillierPublicKey();
+		this.receiveDGKPublicKey();
+		this.receivePaillierPublicKey();
 		this.getkey();
 		//System.out.println(pk.toString());
 		//System.out.println(pubKey.toString());
@@ -121,6 +121,16 @@ public class alice
 	public void setSorting(ArrayList<BigInteger> _toSort)
 	{
 		toSort = _toSort.toArray(new BigInteger[_toSort.size()]);
+	}
+	
+	public PaillierPublicKey getPaiilierPublicKey()
+	{
+		return pk;
+	}
+	
+	public DGKPublicKey getDGKPublicKey()
+	{
+		return pubKey;
 	}
 	
 	public void sendRequest() throws IOException
@@ -261,16 +271,7 @@ public class alice
 	
 	public int Protocol2(BigInteger x, BigInteger y) 
 			throws IOException, ClassNotFoundException
-	{
-		if(!is_valid_Paillier_KeyPair())
-		{
-			System.err.println("Bad Paillier???");
-		}
-		if(!is_valid_DGK_KeyPair())
-		{
-			System.err.println("Bad DGK???");
-		}
-		
+	{	
 		int deltaB = -1;
 		int deltaA = rnd.nextInt(2);
 		int x_leq_y = -1;
@@ -300,6 +301,7 @@ public class alice
 		}
 		else
 		{
+			System.out.println(PaillierCipher.decrypt(PaillierCipher.subtract(x, y, pk), sk));
 			z = PaillierCipher.add(x, PaillierCipher.encrypt(r.add(powL), pk), pk);
             z = PaillierCipher.subtract(z, y, pk);
 		}
@@ -1199,7 +1201,7 @@ public class alice
         return sortedArray;
 	}
 	
-	public void getDGKPublicKey() throws IOException, ClassNotFoundException
+	public void receiveDGKPublicKey() throws IOException, ClassNotFoundException
 	{
 		Object x = fromBob.readObject();
 		if (x instanceof DGKPublicKey)
@@ -1212,7 +1214,7 @@ public class alice
 		}
 	}
 	
-	public void getPaillierPublicKey() throws IOException, ClassNotFoundException
+	public void receivePaillierPublicKey() throws IOException, ClassNotFoundException
 	{
 		Object x = fromBob.readObject();
 		if(x instanceof PaillierPublicKey)
