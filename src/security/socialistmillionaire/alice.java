@@ -214,23 +214,13 @@ public class alice
 			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKMultiply(pubKey, product, 3);
 			// C_i += s
 			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKAdd(pubKey, s, C[Encrypted_Y.length - 1 - i]);
-	
-			// C_i += x - y
-			BigInteger temp = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(x, i)), Encrypted_Y[i]);
-			System.out.print(DGKOperations.decrypt(pubKey, privKey, temp));
-		}
-		System.out.println("");
-		System.out.println("C w/ only Product Sum");
-		print_bits(C);
-		
-		for (int i = 0; i < Encrypted_Y.length; i++)
-		{
-			// C_i += [x_i] 
-			C[i] = DGKOperations.DGKAdd(pubKey, C[i], DGKOperations.encrypt(pubKey, NTL.bit(x, i)));
-			// C_i += [s]
-			C[i] = DGKOperations.DGKAdd(pubKey, C[i], s);
-			// C_i -= y_i
-			C[i] = DGKOperations.DGKSubtract(pubKey, s, Encrypted_Y[i]);
+			// C_i -= y
+			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKSubtract(pubKey, C[Encrypted_Y.length - 1 - i], Encrypted_Y[i]);
+			// C_i += x
+			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKSubtract(pubKey, C[Encrypted_Y.length - 1 - i], DGKOperations.encrypt(pubKey, NTL.bit(x, i)));
+			System.out.print(NTL.bit(x, i));
+			//BigInteger temp = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(x, i)), Encrypted_Y[i]);
+			//System.out.print(DGKOperations.decrypt(pubKey, privKey, temp));
 		}
 		System.out.println("C_i + s + x - y");
 		print_bits(C);
