@@ -296,7 +296,7 @@ public class bob
 		BigInteger betaZZ = null;
 		BigInteger z = null;
 		BigInteger zDiv = null;
-		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l));
+		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
 
 		//Step 1: get [[z]] from Alice
 		in = fromAlice.readObject();

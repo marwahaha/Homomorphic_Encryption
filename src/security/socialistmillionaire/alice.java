@@ -282,7 +282,7 @@ public class alice
 		BigInteger result = null;
 		Object bob = null;
 		BigInteger r = null;
-		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l));
+		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
 
 		// Step 1: 0 <= r < N
 		// Pick Number of l + 1 + sigma bits
