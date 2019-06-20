@@ -283,28 +283,10 @@ public class DGKOperations extends CipherSpi
 			c^vp (mod p) = g^{vp*m} (mod p)
 			Because h^{vp} (mod p) = 1
 		 */
-
-		if (privKey.GetLUT().get(decipher) == null)
-		{
-			BigInteger tempP = privKey.p;
-			BigInteger gvp = NTL.POSMOD(privKey.g, privKey.p).modPow(privKey.vp, privKey.p);
-			for (int i = 0; i < privKey.u; ++i)
-			{
-				BigInteger newDecipher = gvp.modPow(NTL.POSMOD(BigInteger.valueOf((long) i),tempP),tempP);
-				privKey.GetLUT().put(newDecipher,(long)i);
-
-				// If I don't need to compute the whole table
-				// Then don't do it!
-				if(newDecipher.equals(decipher))
-				{
-					break;
-				}
-			}
-		}
 		long plain = -1;
 		try
 		{
-			plain = privKey.GetLUT().get(decipher);
+			plain = privKey.LUT.get(decipher);
 		}
 		catch (NullPointerException nfe)
 		{

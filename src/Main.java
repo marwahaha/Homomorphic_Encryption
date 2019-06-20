@@ -65,12 +65,13 @@ public class Main
 				// TO BE CONSISTENT I NEED TO USE KEYS FROM BOB!
 				pk = yujia.getPaiilierPublicKey();
 				pubKey = yujia.getDGKPublicKey();
-				BigInteger D = PaillierCipher.encrypt(new BigInteger("100"), pk);
+				BigInteger D = PaillierCipher.encrypt(new BigInteger("50"), pk);
 				BigInteger d = DGKOperations.encrypt(pubKey, 100);
 		
 				// All answers should print true!
 				// Size is 16 bits, 2^16 is the range
 				/*
+				 * 5-bits: 32 -> On July 2018, Protocol 2 worked with this...
 				 * 6-bits: 64
 				 * 7-bits: 128
 				 * 8-bits: 256
@@ -111,13 +112,14 @@ public class Main
 	
 				// Test Protocol 2 (Builds on Protocol 3)
 				// Paillier
+				// Try with numbers around 50...
 				System.out.println("Protocol 2 Tests...Paillier");
 				yujia.setDGKMode(false);
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("35"), pk)) == 0);//100 <= 35 -> 0
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("129"), pk)) == 1);//100 <= 129 -> 1
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("99"), pk)) == 0);//100 <= 99 -> 0
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("100"), pk)) == 1);//100 <= 100 -> 1
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);//100 <= 101 -> 1
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("51"), pk)) == 0);//50 <= 35 -> 0
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("49"), pk)) == 1);//50 <= 129 -> 1
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("55"), pk)) == 0);//50 <= 99 -> 0
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("31"), pk)) == 1);//50 <= 100 -> 1
+				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("56"), pk)) == 1);//50 <= 101 -> 1
 				
 				// DGK
 				System.out.println("Protocol 2 Tests...DGK");

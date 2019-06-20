@@ -281,8 +281,6 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 		{
 			pubKey.generategLUT();
 			pubKey.generatehLUT();
-			privkey.gLUT = pubKey.gLUT;
-			privkey.hLUT = pubKey.hLUT;
 		}
 		System.out.println("FINISHED WITH DGK KEY GENERATION!");
 		return new KeyPair(pubKey, privkey);

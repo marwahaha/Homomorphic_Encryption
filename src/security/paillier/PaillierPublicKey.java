@@ -12,9 +12,9 @@ public class PaillierPublicKey implements PublicKey, Serializable
 	// k1 is the security parameter. It is the number of bits in n.
 	public final int keysize;
 	
-	// n = pq is a product of two large primes (such N is known as RSA modulous.
+	// n = pq is a product of two large primes (such N is known as RSA modulous)
     public final BigInteger n;
-    public final BigInteger modulus;
+    final BigInteger modulus;
     
     public PaillierPublicKey(int keysize, BigInteger n, BigInteger modulus)
     {

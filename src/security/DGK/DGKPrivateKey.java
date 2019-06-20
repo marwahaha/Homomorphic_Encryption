@@ -17,21 +17,19 @@ public class DGKPrivateKey implements Serializable, PrivateKey
     private final BigInteger q;
     final BigInteger vp;
     private final BigInteger vq;
-    private HashMap <BigInteger, Long> LUT;
+    public final HashMap <BigInteger, Long> LUT = new HashMap<BigInteger, Long>();
     
     // Public key parameters
-	public final BigInteger n;
-	public final BigInteger g;
-	public final BigInteger h;
-	public final long u;
-	public final BigInteger bigU;
-	public HashMap <Long, BigInteger> gLUT = null;
-	public HashMap <Long, BigInteger> hLUT = null;
+	final BigInteger n;
+	final BigInteger g;
+	final BigInteger h;
+	final long u;
+	final BigInteger bigU;
 	
 	// Key Parameters
-	public final int l;
-	public final int t;
-	public final int k;
+	final int l;
+	final int t;
+	final int k;
 
     // Original DGK Private Key Constructor
     public DGKPrivateKey (BigInteger p, BigInteger q, BigInteger vp,
@@ -49,8 +47,6 @@ public class DGKPrivateKey implements Serializable, PrivateKey
     	this.h = pubKey.h;
         this.u = pubKey.u;
     	this.bigU = pubKey.bigU;
-    	this.gLUT = pubKey.gLUT;
-    	this.hLUT = pubKey.hLUT;
     	
     	// Key Parameters
     	this.l = pubKey.l;
@@ -72,20 +68,12 @@ public class DGKPrivateKey implements Serializable, PrivateKey
         aOutputStream.defaultWriteObject();
     }
     
-    public HashMap<BigInteger,Long> GetLUT() 
-    { 
-    	return LUT; 
-    }
-    
     private void generategLUT()
     {
-    	this.LUT = new HashMap<BigInteger, Long>();
-    	
-        BigInteger gvp = NTL.POSMOD(g, p).modPow(vp, p);
-        // Build LUT
-        for (int i = 0; i < u; ++i)
+        BigInteger gvp = NTL.POSMOD(this.g, this.p).modPow(this.vp, this.p);
+        for (int i = 0; i < this.u; ++i)
         {
-            BigInteger decipher = gvp.modPow(NTL.POSMOD(BigInteger.valueOf((long) i), p), p);
+            BigInteger decipher = gvp.modPow(NTL.POSMOD(BigInteger.valueOf((long) i), this.p), this.p);
             this.LUT.put(decipher, (long) i);
         }
     }

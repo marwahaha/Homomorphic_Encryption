@@ -284,7 +284,7 @@ public class alice
 		BigInteger result = null;
 		Object bob = null;
 		BigInteger r = null;
-		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
+		BigInteger powL = null;
 
 		// Step 1: 0 <= r < N
 		// Pick Number of l + 1 + sigma bits
@@ -293,7 +293,7 @@ public class alice
 		if (isDGK)
 		{
 			r = NTL.RandomBnd(pubKey.u);
-			//r = NTL.generateXBitRandom((pubKey.l - 2));
+			powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
 		}
 		else
 		{
@@ -306,6 +306,7 @@ public class alice
 			{
 				throw new IllegalArgumentException("Invalid due to constraints!");
 			}
+			powL = BigInteger.valueOf(exponent(2, pubKey.l));
 		}
 		
 		/*
@@ -568,7 +569,7 @@ public class alice
 		
 		for (int i = 0; i < Encrypted_Y.length; i++)
 		{
-			if (deltaA==0)
+			if (deltaA == 0)
 			{
 				// Step 4 = [1] - [y_i bit] + [c_i]
 				C_i[i] = DGKOperations.DGKAdd(pubKey, C_i[i], minus[Encrypted_Y.length - 1 - i]);
@@ -649,7 +650,7 @@ public class alice
 		}
 		else
 		{
-			powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
+			powL = BigInteger.valueOf(exponent(2, pubKey.l));
 			r = NTL.RandomBnd(pk.n);
 		}
 		

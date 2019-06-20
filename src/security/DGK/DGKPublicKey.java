@@ -12,13 +12,13 @@ public class DGKPublicKey implements Serializable, PublicKey
 {
 	private static final long serialVersionUID = PublicKey.serialVersionUID;
 
-	public final BigInteger n;
-	public final BigInteger g;
-	public final BigInteger h;
+	final BigInteger n;
+	final BigInteger g;
+	final BigInteger h;
 	public final long u;
 	public final BigInteger bigU;
-	public HashMap <Long, BigInteger> gLUT = null;
-	public HashMap <Long, BigInteger> hLUT = null;
+	HashMap <Long, BigInteger> gLUT = null;
+	HashMap <Long, BigInteger> hLUT = null;
 	
 	// Key Parameters
 	public final int l;
@@ -115,6 +115,11 @@ public class DGKPublicKey implements Serializable, PublicKey
 	public BigInteger ZERO()
 	{
 		return DGKOperations.encrypt(this, 0);
+	}
+	
+	public BigInteger ONE()
+	{
+		return DGKOperations.encrypt(this, 1);
 	}
 
 	public String getAlgorithm() 
