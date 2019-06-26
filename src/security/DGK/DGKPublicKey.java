@@ -31,19 +31,20 @@ public class DGKPublicKey implements Serializable, PublicKey
 	}
 	
 	//DGK Constructor with ALL parameters
-	public DGKPublicKey(BigInteger N, BigInteger G, BigInteger H, long U,
-						HashMap <Long,BigInteger> GLUT, HashMap<Long,BigInteger> HLUT, int L, int T, int K)
+	public DGKPublicKey(BigInteger n, BigInteger g, BigInteger h, long u,
+						HashMap <Long,BigInteger> gLUT, HashMap<Long,BigInteger> hLUT, 
+						int l, int t, int k)
 	{
-		this.n = N;
-		this.g = G;
-		this.h = H;
-		this.u = U;
+		this.n = n;
+		this.g = g;
+		this.h = h;
+		this.u = u;
 		this.bigU = BigInteger.valueOf(u);
-		this.gLUT = GLUT;
-		this.hLUT = HLUT;
-		this.l = L; 
-		this.t = T;
-		this.k = K;
+		this.gLUT = gLUT;
+		this.hLUT = hLUT;
+		this.l = l; 
+		this.t = t;
+		this.k = k;
 	}
 	
 	public void generatehLUT()
@@ -78,7 +79,7 @@ public class DGKPublicKey implements Serializable, PublicKey
 			this.gLUT = new HashMap<Long, BigInteger>();
 		}
 		
-		for (int i = 0; i < u; ++i)
+		for (int i = 0; i < this.u; ++i)
 		{
 			BigInteger out = this.g.modPow(BigInteger.valueOf((long)i), this.n);
 			this.gLUT.put((long) i, out);

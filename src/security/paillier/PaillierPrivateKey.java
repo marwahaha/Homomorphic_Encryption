@@ -10,18 +10,18 @@ import java.security.PrivateKey;
 public class PaillierPrivateKey implements Serializable, PrivateKey
 {
     // k1 is the security parameter. It is the number of bits in n.
-    public int k1 = 1024;
+    private final int key_size;
     
-    public final BigInteger n;
-    public final BigInteger modulus;
+    final BigInteger n;
+    final BigInteger modulus;
     
-    public final BigInteger lambda;
-    public final BigInteger mu;
+    final BigInteger lambda;
+    final BigInteger mu;
     
-    public PaillierPrivateKey(int k1, BigInteger n, BigInteger mod, 
+    public PaillierPrivateKey(int key_size, BigInteger n, BigInteger mod, 
     		BigInteger lambda, BigInteger mu)
     {
-        this.k1 = k1;
+        this.key_size = key_size;
         this.n = n;
         this.modulus = mod;
         this.lambda = lambda;
@@ -60,9 +60,14 @@ public class PaillierPrivateKey implements Serializable, PrivateKey
 	public String getString()
 	{
     	String answer = "";
-    	answer += "k1 = " + k1 + ", " + '\n';
+    	answer += "key_size = " + key_size + ", " + '\n';
     	answer += "n = " + n + ", " + '\n';
     	answer += "modulus = " + modulus + '\n';
         return answer;
+	}
+
+	public int get_Keysize() 
+	{
+		return key_size;
 	}
 }

@@ -189,7 +189,7 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 		while(true)
 		{
 			r = NTL.generateXBitRandom(n.bitLength());
-			g = r.modPow(rprq,n); //g = r^{rp*rq}(mod n)
+			g = r.modPow(rprq, n); //g = r^{rp*rq}(mod n)
 
 			if (g.equals(BigInteger.ONE))
 			{
@@ -202,7 +202,7 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 			}
 			// h can still be of order u, vp, vq , or a combination of them different that u, vp, vq
 
-			if (g.modPow(BigInteger.valueOf(u),n).equals(BigInteger.ONE))
+			if (g.modPow(BigInteger.valueOf(u), n).equals(BigInteger.ONE))
 			{
 				continue;//g^{u} (mod n) = 1
 			}
@@ -222,22 +222,22 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 				continue;//g^{u*u*vp} (mod n) = 1
 			}
 
-			if (g.modPow(vp,n).equals(BigInteger.ONE))
+			if (g.modPow(vp, n).equals(BigInteger.ONE))
 			{
 				continue;//g^{vp} (mod n) = 1
 			}
 
-			if (g.modPow(vq,n).equals(BigInteger.ONE))
+			if (g.modPow(vq, n).equals(BigInteger.ONE))
 			{
 				continue;//g^{vq} (mod n) = 1
 			}
 
-			if (g.modPow(BigInteger.valueOf(u).multiply(vq),n).equals(BigInteger.ONE))
+			if (g.modPow(BigInteger.valueOf(u).multiply(vq), n).equals(BigInteger.ONE))
 			{
 				continue;//g^{u*vq}(mod n) = 1
 			}
 
-			if (g.modPow(BigInteger.valueOf(u).multiply(vp),n).equals(BigInteger.ONE))
+			if (g.modPow(BigInteger.valueOf(u).multiply(vp), n).equals(BigInteger.ONE))
 			{
 				continue;//g^{u*vp} (mod n) = 1
 			}
@@ -247,22 +247,22 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 				continue;//g^{vp*vq} (mod n) == 1
 			}
 
-			if (NTL.POSMOD(g,p).modPow(vp,p).equals(BigInteger.ONE))
+			if (NTL.POSMOD(g,p).modPow(vp, p).equals(BigInteger.ONE))
 			{
 				continue; //g^{vp} (mod p) == 1
 			}
 
-			if ((NTL.POSMOD(g,p).modPow(BigInteger.valueOf(u),p).equals(BigInteger.ONE)))
+			if ((NTL.POSMOD(g,p).modPow(BigInteger.valueOf(u), p).equals(BigInteger.ONE)))
 			{
 				continue;//g^{u} (mod p) = 1
 			}
 
-			if (NTL.POSMOD(g,q).modPow(vq,q).equals(BigInteger.ONE))
+			if (NTL.POSMOD(g,q).modPow(vq, q).equals(BigInteger.ONE))
 			{
 				continue;//g^{vq}(mod q) == 1
 			}
 
-			if ((NTL.POSMOD(g,q).modPow(BigInteger.valueOf(u),q).equals(BigInteger.ONE)))
+			if ((NTL.POSMOD(g,q).modPow(BigInteger.valueOf(u), q).equals(BigInteger.ONE)))
 			{
 				continue;//g^{u}(mod q)
 			}
@@ -292,7 +292,7 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 		int counter = exponent;
 		while (counter != 0)
 		{
-			answer*=base;
+			answer *= base;
 			--counter;
 		}
 		return answer;
