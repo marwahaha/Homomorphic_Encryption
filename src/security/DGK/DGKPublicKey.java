@@ -10,7 +10,7 @@ import java.util.HashMap;
 
 public class DGKPublicKey implements Serializable, PublicKey
 {
-	private static final long serialVersionUID = PublicKey.serialVersionUID;
+	private static final long serialVersionUID = -1613333167285302035L;
 
 	final BigInteger n;
 	final BigInteger g;

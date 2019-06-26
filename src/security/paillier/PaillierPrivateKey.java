@@ -9,7 +9,9 @@ import java.security.PrivateKey;
 
 public class PaillierPrivateKey implements Serializable, PrivateKey
 {
-    // k1 is the security parameter. It is the number of bits in n.
+	private static final long serialVersionUID = -3342551807566493368L;
+
+	// k1 is the security parameter. It is the number of bits in n.
     private final int key_size;
     
     final BigInteger n;
@@ -27,9 +29,7 @@ public class PaillierPrivateKey implements Serializable, PrivateKey
         this.lambda = lambda;
         this.mu = mu;
     }
-    
-    private static final long serialVersionUID = PrivateKey.serialVersionUID;
-
+  
     private void readObject(ObjectInputStream aInputStream)
             throws ClassNotFoundException,IOException
     {

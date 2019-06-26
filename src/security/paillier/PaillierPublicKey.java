@@ -9,6 +9,11 @@ import java.security.PublicKey;
 
 public class PaillierPublicKey implements PublicKey, Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4009702553030484256L;
+
 	// k1 is the security parameter. It is the number of bits in n.
 	public final int keysize;
 	
@@ -23,8 +28,6 @@ public class PaillierPublicKey implements PublicKey, Serializable
     	this.modulus = modulus;
     }
     
-    private static final long serialVersionUID = PublicKey.serialVersionUID;
-
     private void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException,
             IOException
     {

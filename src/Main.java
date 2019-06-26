@@ -22,7 +22,14 @@ public class Main
 	
 	public static void main(String [] args)
 	{
+		/*
 		if(args[0].equals("Niu"))
+		{
+			System.out.println("Alice mode activated...");
+			isAlice = true;
+		}
+		*/
+		if (args.length != 0)
 		{
 			System.out.println("Alice mode activated...");
 			isAlice = true;
