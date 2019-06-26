@@ -66,7 +66,7 @@ public class Main
 			{
 				// I need to ensure that Alice has same Keys as Bob!
 				// and initialize as well
-				alice_socket = new Socket("192.168.147.145", 9254);
+				alice_socket = new Socket("160.39.205.85", 9254);
 				yujia = new alice(alice_socket, null, null, true, null);
 				
 				// TO BE CONSISTENT I NEED TO USE KEYS FROM BOB!
