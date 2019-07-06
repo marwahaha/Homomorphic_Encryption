@@ -35,7 +35,7 @@ Protocol 3 and Protocol 4 was created referencing Thjis Veugen's Paper:
 Improving the DGK Comparison Protocol (2012)
 */
 
-public class bob
+public class bob implements Runnable
 {
 	// Key Master
 	private PaillierPublicKey pk = null;
@@ -69,8 +69,6 @@ public class bob
 		this.isDGK = _isDGK;
 		this.sendDGKPublicKey();
 		this.sendPaillierPublicKey();
-		//System.out.println(pk.toString());
-		//System.out.println(pubKey.toString());
 		
 		// ONLY FOR DEBUGGING
 		this.debug();
@@ -152,9 +150,9 @@ public class bob
 	}
 	
 	// Get/Set PublicKey
-	public void setPaillierPublicKey(PaillierPublicKey _pk)
+	public void setPaillierPublicKey(PaillierPublicKey pk)
 	{
-		pk = _pk;
+		this.pk = pk;
 	}
 	
 	public PaillierPublicKey getPaillierPublicKey()
@@ -162,9 +160,9 @@ public class bob
 		return pk;
 	}
 	
-	public void setDGKPublicKey(DGKPublicKey _pk)
+	public void setDGKPublicKey(DGKPublicKey pubKey)
 	{
-		pubKey = _pk;
+		this.pubKey = pubKey;
 	}
 	
 	public DGKPublicKey getDGKPublicKey()
@@ -173,9 +171,9 @@ public class bob
 	}
 	
 	// Get/Set Private Key
-	public void setPaillierPublicKey(PaillierPrivateKey _pk)
+	public void setPaillierPublicKey(PaillierPrivateKey sk)
 	{
-		sk = _pk;
+		this.sk = sk;
 	}
 	
 	public PaillierPrivateKey getPaillierPrivateKey()
@@ -183,9 +181,9 @@ public class bob
 		return sk;
 	}
 	
-	public void setDGKPrivateKey(DGKPrivateKey _pk)
+	public void setDGKPrivateKey(DGKPrivateKey privKey)
 	{
-		privKey = _pk;
+		this.privKey = privKey;
 	}
 	
 	public DGKPrivateKey getDGKPrivateKey()
@@ -193,7 +191,7 @@ public class bob
 		return privKey;
 	}
 	
-	// Contains the Protocols in Veugen's paper
+	// This is used for Alice to sort an array of encryped numbers!
 	public void repeat_Protocol2()
 			throws IOException, ClassNotFoundException
 	{
@@ -555,7 +553,15 @@ public class bob
 		return result.intValue();
 	}
 	
-	public int Modified_Protocol3(BigInteger beta, BigInteger z) 
+	// Used for Regular Modified Protocol 3 ONLY 
+	public int Modified_Protocol3(BigInteger z) 
+			throws IOException, ClassNotFoundException
+	{
+		return Modified_Protocol3(z.mod(BigInteger.valueOf(exponent(2, pubKey.l))), z);
+	}
+	
+	// Use this for Using Modified Protocol3 within Protocol 4
+	private int Modified_Protocol3(BigInteger beta, BigInteger z) 
 			throws IOException, ClassNotFoundException
 	{
 		if (beta == null)
@@ -571,7 +577,7 @@ public class bob
 		BigInteger deltaA = new BigInteger("-1");
 		
 		// Step A: z < (N - 1)/2
-		if(z.compareTo(pk.n.subtract(BigInteger.ONE).divide(new BigInteger("2")))==-1)
+		if(z.compareTo(pk.n.subtract(BigInteger.ONE).divide(new BigInteger("2"))) == -1)
 		{
 			d = DGKOperations.encrypt(pubKey, BigInteger.ONE);
 		}
@@ -736,5 +742,17 @@ public class bob
 	public String toString()
 	{
 		return "DGK Mode: " + isDGK;
+	}
+
+	public void run() 
+	{
+		try 
+		{
+			repeat_Protocol2();
+		} 
+		catch (ClassNotFoundException | IOException e) 
+		{
+			e.printStackTrace();
+		}
 	}
 }

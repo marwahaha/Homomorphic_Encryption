@@ -68,6 +68,8 @@ public class Main
 				// and initialize as well
 				alice_socket = new Socket("160.39.205.85", 9254);
 				yujia = new alice(alice_socket, null, null, true, null);
+				yujia.receiveDGKPublicKey();
+				yujia.receivePaillierPublicKey();
 				
 				// TO BE CONSISTENT I NEED TO USE KEYS FROM BOB!
 				pk = yujia.getPaiilierPublicKey();
@@ -111,11 +113,11 @@ public class Main
 				
 				// Test Modified Protocol 3, mode doesn't matter as DGK is always used!
 				System.out.println("Modified Protocol 3 Tests...");
-				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 0);//35
-				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//129
-				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 0);//99
-				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//100
-				System.out.println(yujia.Modified_Protocol3(null, new BigInteger("100")) == 1);//101
+				System.out.println(yujia.Modified_Protocol3(new BigInteger("100")) == 0);//35
+				System.out.println(yujia.Modified_Protocol3(new BigInteger("100")) == 1);//129
+				System.out.println(yujia.Modified_Protocol3(new BigInteger("100")) == 0);//99
+				System.out.println(yujia.Modified_Protocol3(new BigInteger("100")) == 1);//100
+				System.out.println(yujia.Modified_Protocol3(new BigInteger("100")) == 1);//101
 	
 				// Test Protocol 2 (Builds on Protocol 3)
 				// Paillier
@@ -135,8 +137,7 @@ public class Main
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("99"))) == 0);
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("100"))) == 1);
 				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("101"))) == 1);
-				
-				
+
 				// Test Protocol 4 (Builds on Protocol 3)
 				// Paillier
 				/*
@@ -197,11 +198,11 @@ public class Main
 				Niu.Protocol1(new BigInteger("101"));
 				
 				// Test Modified Protocol 3
-				Niu.Modified_Protocol3(null, new BigInteger("35"));
-				Niu.Modified_Protocol3(null, new BigInteger("129"));
-				Niu.Modified_Protocol3(null, new BigInteger("99"));
-				Niu.Modified_Protocol3(null, new BigInteger("100"));
-				Niu.Modified_Protocol3(null, new BigInteger("101"));
+				Niu.Modified_Protocol3(new BigInteger("35"));
+				Niu.Modified_Protocol3(new BigInteger("129"));
+				Niu.Modified_Protocol3(new BigInteger("99"));
+				Niu.Modified_Protocol3(new BigInteger("100"));
+				Niu.Modified_Protocol3(new BigInteger("101"));
 				
 				// Test Protocol 2 with Paillier
 				Niu.setDGKMode(false);

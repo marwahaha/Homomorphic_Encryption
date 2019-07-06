@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -39,15 +40,15 @@ enum Algorithm
     INSERT_SORT, MERGE_SORT, QUICK_SORT, BUBBLE_SORT;
 }
 
-public class alice
+public class alice implements Runnable
 {
-	class Pair 
+	private class Pair 
 	{
 		BigInteger min;
 		BigInteger max;
 	}
 	
-	private Random rnd = new Random();
+	private SecureRandom rnd = new SecureRandom();
 	// See Veugen paper, security parameter for Paillier
 	private final static int SIGMA = 80;
 	
@@ -58,7 +59,7 @@ public class alice
 	// Needed for comparison
 	private boolean isDGK = false;
 	private BigInteger [] toSort = null;
-	public BigInteger [] sortedArray = null;
+	private BigInteger [] sortedArray = null;
 	
 	//I/O
 	private ObjectOutputStream toBob = null;
@@ -67,9 +68,28 @@ public class alice
 	// Current Algorithm to Sort with
 	private Algorithm algo;
 	
-	// REMOVE LATER, FOR DEBUGGING
+	// ONLY USED FOR DEBUGGING
 	private DGKPrivateKey privKey = null;
 	private PaillierPrivateKey sk = null;
+	
+	// Temporary for Merge Sort
+    private BigInteger [] tempBigMerg = null;
+    
+	public alice (Socket clientSocket,
+            boolean isDGK) throws IOException, ClassNotFoundException
+	{
+		this(clientSocket, null, null, isDGK, null);
+		receiveDGKPublicKey();
+		receivePaillierPublicKey();
+	}
+	
+	public alice (Socket clientSocket,
+            boolean isDGK, BigInteger[] toSort) throws IOException, ClassNotFoundException
+	{
+		this(clientSocket, null, null, isDGK, toSort);
+		receiveDGKPublicKey();
+		receivePaillierPublicKey();
+	}
 	
 	public alice (Socket clientSocket,
 			PaillierPublicKey _pk, DGKPublicKey _pubKey,
@@ -89,11 +109,7 @@ public class alice
 		this.isDGK = _isDGK;
 		this.toSort = _toSort;
 		this.algo = Algorithm.valueOf("QUICK_SORT");
-		this.receiveDGKPublicKey();
-		this.receivePaillierPublicKey();
 		this.getkey();
-		//System.out.println(pk.toString());
-		//System.out.println(pubKey.toString());
 	}
 
 	public alice (ObjectInputStream _fromBob, ObjectOutputStream _toBob,
@@ -120,9 +136,19 @@ public class alice
 		isDGK = _isDGK;
 	}
 	
-	public void setSorting(ArrayList<BigInteger> _toSort)
+	public void setSorting(ArrayList<BigInteger> toSort)
 	{
-		toSort = _toSort.toArray(new BigInteger[_toSort.size()]);
+		this.toSort = toSort.toArray(new BigInteger[toSort.size()]);
+	}
+	
+	public void setSorting(BigInteger [] toSort)
+	{
+		toSort = this.toSort;
+	}
+	
+	public BigInteger [] getSortedArray()
+	{
+		return sortedArray;
 	}
 	
 	public PaillierPublicKey getPaiilierPublicKey()
@@ -134,11 +160,6 @@ public class alice
 	{
 		return pubKey;
 	}
-	
-	public void sendRequest() throws IOException
-	{
-		toBob.writeBoolean(true);
-	}
 
 	private static int exponent(int base, int exponent)
 	{
@@ -146,7 +167,7 @@ public class alice
 		int counter = exponent;
 		while (counter != 0)
 		{
-			answer*=base;
+			answer *= base;
 			--counter;
 		}
 		return answer;
@@ -452,10 +473,11 @@ public class alice
 		{
 			deltaA = _deltaA;
 		}
-		BigInteger [] Encrypted_Y;
+		BigInteger [] C = null;
+		BigInteger [] Encrypted_Y = null;
 		int deltaB;
 		int answer;
-		Object in;
+		Object in = null;
 
 		//Step 1: Receive y_i bits from Bob
 		in = fromBob.readObject();
@@ -523,15 +545,14 @@ public class alice
 			//Enc[x XOR y] = [1] - [y_i]
 			else
 			{
-				XOR[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), 
-						Encrypted_Y[i]);
+				XOR[i] = DGKOperations.DGKSubtract(pubKey, pubKey.ONE(), Encrypted_Y[i]);
 			}
 		}
 		
 		// Step 3A: delta A is computed on initialization, it is 0 or 1.
 		// Step 3B: Collect index of all index where x_i = GammaA
 		ArrayList <Integer> ListofGammaA = new ArrayList<>();
-		for (int i = 0;i < Encrypted_Y.length + 1; i++)
+		for (int i = 0; i < Encrypted_Y.length + 1; i++)
 		{
 			if (NTL.bit(x, i) == deltaA)
 			{
@@ -541,13 +562,13 @@ public class alice
 
 		// Step 4A: Generate C_i, see c_{-1} to test for equality!
 		// C_{-1} = C_i[yBits], will be computed at the end...
-		BigInteger [] C_i = new BigInteger [Encrypted_Y.length + 1];
+		C = new BigInteger [Encrypted_Y.length + 1];
 		
-		BigInteger product = DGKOperations.encrypt(pubKey, 0);
+		BigInteger product = pubKey.ZERO();
 		for (int i = 0; i < Encrypted_Y.length; i++)
 		{
 			// Goes from yBits - 1 to 0
-			C_i [Encrypted_Y.length - 1 - i] = product;
+			C[Encrypted_Y.length - 1 - i] = product;
 			product = DGKOperations.DGKAdd(pubKey, product, XOR[i]);
 		}
 
@@ -562,8 +583,7 @@ public class alice
 		{
 			for(int i = 0; i < Encrypted_Y.length; i++)
 			{
-				minus [i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, 1), 
-						Encrypted_Y[i]);
+				minus [i] = DGKOperations.DGKSubtract(pubKey, pubKey.ONE(), Encrypted_Y[i]);
 			}
 		}
 		
@@ -572,12 +592,12 @@ public class alice
 			if (deltaA == 0)
 			{
 				// Step 4 = [1] - [y_i bit] + [c_i]
-				C_i[i] = DGKOperations.DGKAdd(pubKey, C_i[i], minus[Encrypted_Y.length - 1 - i]);
+				C[i] = DGKOperations.DGKAdd(pubKey, C[i], minus[Encrypted_Y.length - 1 - i]);
 			}
 			else
 			{
 				// Step 4 = [y_i] + [c_i]
-				C_i[i]= DGKOperations.DGKAdd(pubKey, C_i[i], Encrypted_Y[Encrypted_Y.length - 1 - i]);
+				C[i]= DGKOperations.DGKAdd(pubKey, C[i], Encrypted_Y[Encrypted_Y.length - 1 - i]);
 			}
 		}
 
@@ -587,16 +607,21 @@ public class alice
 			// if i is NOT in L, just place a random NON-ZERO
 			if(!ListofGammaA.contains(i))
 			{
-				C_i[Encrypted_Y.length - 1 - i] = DGKOperations.encrypt(pubKey, 7);
+				C[Encrypted_Y.length - 1 - i] = DGKOperations.encrypt(pubKey, 7);
 			}
 		}
 		
 		//This is c_{-1}
-		C_i[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
-		C_i[Encrypted_Y.length] = DGKOperations.DGKAdd(pubKey, C_i[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
+		C[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
+		C[Encrypted_Y.length] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
 
-		//Send to Bob, C_i and sum of XOR (equality check)
-		toBob.writeObject(C_i);
+		// Shuffle bits and blind C!
+		C = shuffle_bits(C);
+		for (int i = 0; i < C.length; i++)
+		{
+			C[i] = DGKOperations.DGKMultiply(pubKey, C[i], rnd.nextInt(pubKey.l) + 1);
+		}
+		toBob.writeObject(C);
 		toBob.flush();
 
 		// Step 7: Obtain Delta B from Bob
@@ -779,6 +804,12 @@ public class alice
 		return Modified_Protocol3(alpha, r, rnd.nextInt(2));
 	}
 	
+	public int Modified_Protocol3(BigInteger r)
+			throws ClassNotFoundException, IOException
+	{
+		return Modified_Protocol3(r.mod(BigInteger.valueOf(exponent(2, pubKey.l))), r, rnd.nextInt(2));
+	}
+	
 	// Modified Protocol 3 for Protocol 4
 	// This should mostly use ONLY DGK stuff!
 	private int Modified_Protocol3(BigInteger alpha, BigInteger r, int _deltaA) 
@@ -864,7 +895,7 @@ public class alice
 		}
 		
 		// Step C: Alice corrects d...
-		if(r.compareTo(pk.n.subtract(BigInteger.ONE).divide(new BigInteger("2")))==-1)
+		if(r.compareTo(pk.n.subtract(BigInteger.ONE).divide(new BigInteger("2"))) == -1)
 		{
 			d = DGKOperations.encrypt(pubKey, BigInteger.ZERO);
 		}
@@ -881,8 +912,7 @@ public class alice
 			//Enc[x XOR y] = [1] - [y_i]
 			else
 			{
-				encAlphaXORBeta[i] = DGKOperations.DGKSubtract(pubKey, 
-						DGKOperations.encrypt(pubKey, 1), beta_bits[i]);				
+				encAlphaXORBeta[i] = DGKOperations.DGKSubtract(pubKey, pubKey.ONE(), beta_bits[i]);				
 			}
 		}
 		
@@ -951,10 +981,11 @@ public class alice
 		C[beta_bits.length] = DGKOperations.DGKSum(pubKey, encAlphaXORBeta);
 		C[beta_bits.length] = DGKOperations.DGKAdd(pubKey, C[beta_bits.length], DGKOperations.encrypt(pubKey, deltaA));
 
-		// Step I: BLIND THE EXPONENTS AND SEND TO BOB
-		for (int i = 0; i < beta_bits.length;i++)
+		// Step I: SHUFFLE BITS AND BLIND WITH EXPONENT
+		C = shuffle_bits(C);
+		for (int i = 0; i < C.length; i++)
 		{
-			C[i] = DGKOperations.DGKMultiply(pubKey, C[i], 1);
+			C[i] = DGKOperations.DGKMultiply(pubKey, C[i], rnd.nextInt(pubKey.l) + 1);
 		}
 		toBob.writeObject(C);
 		toBob.flush();
@@ -1192,7 +1223,6 @@ public class alice
 					results.max = arr[i+1];
 				}
 				toBob.writeBoolean(true);
-				// 2 <= 46
 				if ((Protocol2(arr[i], results.min)) != 1)
 				{
 					//System.out.println("Protocol 2: " + b + " arr(i): " + Paillier.decrypt(arr[i], server.sk) +" min: " + Paillier.decrypt(results.min, server.sk));
@@ -1206,19 +1236,18 @@ public class alice
 		return results;
 	}
 
-	public BigInteger[] sortArray() 
+	// To sort an array of encrypted numbers
+	public void sortArray() 
 			throws ClassNotFoundException, IOException
 	{
 		System.out.println("Sorting Initialized!");
 		if(toSort == null)
 		{
-			sortedArray = new BigInteger[0];
-			return sortedArray;
+			sortedArray = null;
 		}
 		if(toSort.length == 1 || toSort.length == 0)
 		{
 			sortedArray = toSort;
-			return sortedArray;
 		}
 		else if (toSort.length == 2)
 		{
@@ -1228,7 +1257,6 @@ public class alice
 			sortedArray[0] = result.min;
 			sortedArray[1] = result.max;
 			toBob.writeBoolean(false);
-			return sortedArray;
 		}
 		
 		switch(algo)
@@ -1265,32 +1293,27 @@ public class alice
 					minSorted.addLast((BigInteger) itr.next());
 					//System.out.println(Paillier.decrypt((BigInteger) itr.next(), server.sk));
 				}
-				
 				sortedArray = minSorted.toArray(new BigInteger[minSorted.size()]);
 				break;
 				
 			case MERGE_SORT:
-		        MyMergeSort mms = new MyMergeSort(toSort, this);
-		        mms.doMergeSort(0, toSort.length - 1);
-		        sortedArray = mms.getSortedArray();
+				sortedArray = toSort;
+		        this.doMergeSort(0, sortedArray.length - 1);
 		        break;
 		        
 			case QUICK_SORT:
-				QuickSort qs = new QuickSort(toSort, this);
-				qs.sort(toSort, 0, toSort.length - 1);
-				sortedArray = qs.getSortedArray();
+				sortedArray = toSort;
+				this.sort(sortedArray, 0, sortedArray.length - 1);
 				break;
 				
 			case BUBBLE_SORT:
-				BubbleSort bubble = new BubbleSort(toSort, this);
-				bubble.bubbleSort();
-				sortedArray = bubble.getSortedArray();
+				sortedArray = toSort;
+				this.bubbleSort(sortedArray);
 			default:
 				break;
 		}
         // Time to end Bob's while loop for Protocol2()
         toBob.writeBoolean(false);
-        return sortedArray;
 	}
 	
 	public void receiveDGKPublicKey() throws IOException, ClassNotFoundException
@@ -1336,13 +1359,13 @@ public class alice
 			}
 			else
 			{
-				System.out.print("NULL");
+				System.out.print("NULL,");
 			}
 		}
 		System.out.println("");
 	}
 	
-	public void getkey() throws ClassNotFoundException, IOException
+	private void getkey() throws ClassNotFoundException, IOException
 	{
 		Object in;
 		in = fromBob.readObject();
@@ -1352,7 +1375,7 @@ public class alice
 		}
 		else
 		{
-			System.err.println("BAD DGK");
+			System.err.println("Invalid, did not receive DGK Private Key!");
 		}
 		in = fromBob.readObject();
 		if (in instanceof PaillierPrivateKey)
@@ -1361,7 +1384,7 @@ public class alice
 		}
 		else
 		{
-			System.err.println("BAD PAILLIER");
+			System.err.println("Invalid, did not receive Paillier Private Key!");
 		}
 	}
 	
@@ -1380,5 +1403,162 @@ public class alice
 		BigInteger t = PaillierCipher.encrypt(init, pk);
 		t = PaillierCipher.decrypt(t, sk);
 		return t.compareTo(init) == 0;
+	}
+	
+	// Used to shuffle the encrypted bits
+	private static BigInteger [] shuffle_bits(BigInteger [] array)
+	{
+		Random rgen = new Random();  // Random number generator
+		for (int i = 0; i < array.length; i++) 
+		{
+			int randomPosition = rgen.nextInt(array.length);
+		    BigInteger temp = array[i];
+		    array[i] = array[randomPosition];
+		    array[randomPosition] = temp;
+		}
+		return array;
+	}
+
+	// Below are all supported sorting techniques!
+    // ----------------Bubble Sort------------------------------
+	private void bubbleSort(BigInteger [] arr) 
+			throws IOException, ClassNotFoundException
+	{
+		int n = arr.length;
+		for (int i = 0; i < n - 1; i++)
+		{
+			for (int j = 0; j < n - i - 1; j++)
+			{
+				toBob.writeBoolean(true);
+				if (this.Protocol2(arr[j], arr[j+1]) == 0)
+				{
+					// swap temp and arr[i]
+					BigInteger temp = arr[j];
+					arr[j] = arr[j + 1];
+					arr[j + 1] = temp;
+				}
+			}
+		}
+	}
+	
+	// --------------Quick Sort---------------------
+	// Quick Sort
+	/* This function takes last element as pivot,
+	    places the pivot element at its correct
+	    position in sorted array, and places all
+	    smaller (smaller than pivot) to left of
+	    pivot and all greater elements to right
+	    of pivot */
+	private int partition(BigInteger arr[], int low, int high)
+			throws ClassNotFoundException, IOException
+	{
+		BigInteger pivot = arr[high]; 
+		int i = (low - 1); // index of smaller element
+		for (int j = low; j < high; j++)
+		{
+			// If current element is smaller than or
+			// equal to pivot
+			//if (arr[j] <= pivot)
+			toBob.writeBoolean(true);
+			if(this.Protocol2(arr[j], pivot) != 1)
+			{
+				i++;
+				// swap arr[i] and arr[j]
+				BigInteger temp = arr[i];
+				arr[i] = arr[j];
+				arr[j] = temp;
+			}
+		}
+
+		// swap arr[i+1] and arr[high] (or pivot)
+		BigInteger temp = arr[i+1];
+		arr[i + 1] = arr[high];
+		arr[high] = temp;
+		return i + 1;
+	}
+
+
+	/* 
+	 * The main function that implements QuickSort()
+	 * arr[] --> Array to be sorted,
+	 * low  --> Starting index,
+	 * high  --> Ending index 
+	 */
+	private void sort(BigInteger arr[], int low, int high)
+			throws ClassNotFoundException, IOException
+	{
+		if (low < high)
+		{
+			/* pi is partitioning index, arr[pi] is 
+	           now at right place */
+			int pi = partition(arr, low, high);
+
+			// Recursively sort elements before
+			// partition and after partition
+			sort(arr, low, pi-1);
+			sort(arr, pi+1, high);
+		}
+	}
+	
+	// --------------Merge Sort---------------------
+
+	void doMergeSort(int lowerIndex, int higherIndex) 
+			throws ClassNotFoundException, IOException
+	{
+		if (lowerIndex < higherIndex)
+		{
+			int middle = lowerIndex + (higherIndex - lowerIndex) / 2;
+			// Below step sorts the left side of the array
+			doMergeSort(lowerIndex, middle);
+			// Below step sorts the right side of the array
+			doMergeSort(middle + 1, higherIndex);
+			// Now merge both sides
+			mergeParts(lowerIndex, middle, higherIndex);
+		}
+	}
+
+	private void mergeParts(int lowerIndex, int middle, int higherIndex)
+			throws ClassNotFoundException, IOException
+	{
+		int i = lowerIndex;
+		int j = middle + 1;
+		int k = lowerIndex;
+
+		// For encrypted Numbers
+		tempBigMerg = Arrays.copyOf(sortedArray, sortedArray.length);
+		while (i <= middle && j <= higherIndex)
+		{
+			toBob.writeBoolean(true);
+			if ((this.Protocol2(tempBigMerg[i], tempBigMerg[j])) != 1)
+			{
+				//System.out.println("answer: " + answer + " x="+Paillier.decrypt(tempBigMerg[i], server.sk) + " y="+Paillier.decrypt(tempBigMerg[j], server.sk));
+				sortedArray[k] = tempBigMerg[i];
+				++i;
+			}
+			else
+			{
+				sortedArray[k] = tempBigMerg[j];
+				++j;
+			}
+			++k;
+		}
+		while (i <= middle)
+		{
+			sortedArray[k] = tempBigMerg[i];
+			++k;
+			++i;
+		}
+	}
+
+	public void run() 
+	{
+		try
+		{
+			sortArray();
+		}
+		catch (ClassNotFoundException | IOException e) 
+		{
+			e.printStackTrace();
+		}
 	}
 }
