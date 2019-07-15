@@ -67,7 +67,7 @@ public class Main
 				// I need to ensure that Alice has same Keys as Bob!
 				// and initialize as well
 				alice_socket = new Socket("160.39.205.85", 9254);
-				yujia = new alice(alice_socket, null, null, true, null);
+				yujia = new alice(alice_socket, true);
 				yujia.receiveDGKPublicKey();
 				yujia.receivePaillierPublicKey();
 				
@@ -265,9 +265,21 @@ public class Main
 		{
 			e.printStackTrace();
 		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
+	}
+	
+	public static void gene()
+	{
+		 new BigInteger("32");
+		 new BigInteger("64");
+		 new BigInteger("128");
+		 new BigInteger("256");
+		 new BigInteger("512");
+		 new BigInteger("1024");
+		 new BigInteger("2048");
+		 new BigInteger("4096");
+		 new BigInteger("8192");
+		 new BigInteger("16384");
+		 new BigInteger("32768");
+		 new BigInteger("65536");
 	}
 }

@@ -13,23 +13,23 @@ public class DGKPrivateKey implements Serializable, PrivateKey
 	private static final long serialVersionUID = 4574519230502483629L;
 
     // Private Key Parameters
-    final BigInteger p;
+    protected final BigInteger p;
     private final BigInteger q;
-    final BigInteger vp;
+    protected final BigInteger vp;
     private final BigInteger vq;
     public final HashMap <BigInteger, Long> LUT = new HashMap<BigInteger, Long>();
     
     // Public key parameters
-	final BigInteger n;
-	final BigInteger g;
-	final BigInteger h;
-	final long u;
-	final BigInteger bigU;
+    protected final BigInteger n;
+    protected final BigInteger g;
+    protected final BigInteger h;
+    protected final long u;
+    protected final BigInteger bigU;
 	
 	// Key Parameters
-	final int l;
-	final int t;
-	final int k;
+    protected final int l;
+    protected final int t;
+    protected final int k;
 
     // Original DGK Private Key Constructor
     public DGKPrivateKey (BigInteger p, BigInteger q, BigInteger vp,
@@ -71,10 +71,10 @@ public class DGKPrivateKey implements Serializable, PrivateKey
     private void generategLUT()
     {
         BigInteger gvp = NTL.POSMOD(this.g, this.p).modPow(this.vp, this.p);
-        for (int i = 0; i < this.u; ++i)
+        for (long i = 0; i < this.u; ++i)
         {
-            BigInteger decipher = gvp.modPow(NTL.POSMOD(BigInteger.valueOf((long) i), this.p), this.p);
-            this.LUT.put(decipher, (long) i);
+            BigInteger decipher = gvp.modPow(NTL.POSMOD(BigInteger.valueOf(i), this.p), this.p);
+            this.LUT.put(decipher, i);
         }
     }
 

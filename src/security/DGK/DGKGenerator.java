@@ -12,32 +12,32 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 	private final static int certainty = 40;
 	private boolean no_skip_public_key_maps = true;
 	
-	public DGKGenerator(int _l, int _t, int _k)
+	public DGKGenerator(int l, int t, int k)
 	{
 		// First check that all the parameters of the KeyPair are coherent throw an exception otherwise
-		if (_l < 0 || _l > 32 )
+		if (l < 0 || l > 32)
 		{
-			throw new IllegalArgumentException("DGK Keygen Invalid parameters : plaintext space must be less than 32 bits");
+			throw new IllegalArgumentException("DGK Keygen Invalid parameters: plaintext space must be less than 32 bits");
 		}
 
-		if (_l > _t || _t > _k )
+		if (l > t || t > k)
 		{
 			throw new IllegalArgumentException("DGK Keygen Invalid parameters: we must have l < k < t");
 		}
 
-		if (_k/2 < _t + _l + 1 )
+		if (k/2 < t + l + 1)
 		{
-			throw new IllegalArgumentException("DGK Keygen Invalid parameters: we must have k > k/2 < t + l ");
+			throw new IllegalArgumentException("DGK Keygen Invalid parameters: we must have k > k/2 < t + l");
 		}
 
-		if (_t%2 != 0 )
+		if (t % 2 != 0)
 		{
 			throw new IllegalArgumentException("DGK Keygen Invalid parameters: t must be divisible by 2 ");
 		}
 		
-		l = _l;
-		t = _t;
-		k = _k;
+		this.l = l;
+		this.t = t;
+		this.k = k;
 		this.initialize(k, null);
 	}
 	
@@ -129,7 +129,8 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 			while(!q.isProbablePrime(certainty));
 			//Thus we ensure that q is a prime, with p-1 divides the prime numbers vq and u
 
-			if(!NTL.POSMOD(rq,BigInteger.valueOf(u)).equals(BigInteger.ZERO) && !NTL.POSMOD(rp,BigInteger.valueOf(u)).equals(BigInteger.ZERO))
+			if(!NTL.POSMOD(rq,BigInteger.valueOf(u)).equals(BigInteger.ZERO) && 
+					!NTL.POSMOD(rp,BigInteger.valueOf(u)).equals(BigInteger.ZERO))
 			{
 				break;
 			}
@@ -144,8 +145,7 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 		{
 			//Generate n bit random number
 			r = NTL.generateXBitRandom(n.bitLength());	
-
-			h = r.modPow(tmp,n); // h = r^{rp*rq*u} (mod n)
+			h = r.modPow(tmp, n); // h = r^{rp*rq*u} (mod n)
 
 			if (h.equals(BigInteger.ONE))
 			{
@@ -207,17 +207,17 @@ public class DGKGenerator extends KeyPairGeneratorSpi
 				continue;//g^{u} (mod n) = 1
 			}
 
-			if (g.modPow(BigInteger.valueOf(u).multiply(BigInteger.valueOf(u)),n).equals(BigInteger.ONE))
+			if (g.modPow(BigInteger.valueOf(u).multiply(BigInteger.valueOf(u)), n).equals(BigInteger.ONE))
 			{
 				continue;//g^{u*u} (mod n) = 1
 			}
 
-			if (g.modPow(BigInteger.valueOf(u).multiply(BigInteger.valueOf(u)).multiply(vp),n).equals(BigInteger.ONE))
+			if (g.modPow(BigInteger.valueOf(u).multiply(BigInteger.valueOf(u)).multiply(vp), n).equals(BigInteger.ONE))
 			{
 				continue;//g^{u*u*vp} (mod n) = 1
 			}
 
-			if (g.modPow(BigInteger.valueOf(u).multiply(BigInteger.valueOf(u)).multiply(vq),n).equals(BigInteger.ONE))
+			if (g.modPow(BigInteger.valueOf(u).multiply(BigInteger.valueOf(u)).multiply(vq), n).equals(BigInteger.ONE))
 			{
 				continue;//g^{u*u*vp} (mod n) = 1
 			}

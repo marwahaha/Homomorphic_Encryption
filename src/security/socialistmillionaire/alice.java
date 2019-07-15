@@ -22,7 +22,7 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-/**
+/*
 Credits to Andrew Quijano and Dr. Samet Tonyali
 Terms of Use:
 Feel free to use this code as you like.
@@ -92,36 +92,38 @@ public class alice implements Runnable
 	}
 	
 	public alice (Socket clientSocket,
-			PaillierPublicKey _pk, DGKPublicKey _pubKey,
-            boolean _isDGK, BigInteger[] _toSort) throws IOException, ClassNotFoundException
+			PaillierPublicKey pk, DGKPublicKey pubKey,
+            boolean isDGK, BigInteger[] toSort) throws IOException, ClassNotFoundException
 	{
 		if(clientSocket != null)
 		{
 			toBob = new ObjectOutputStream(clientSocket.getOutputStream());
-			fromBob =  new ObjectInputStream(clientSocket.getInputStream());
+			fromBob = new ObjectInputStream(clientSocket.getInputStream());
 		}
 		else
 		{
 			throw new NullPointerException("Client Socket is null!");
 		}
-		this.pk = _pk;
-		this.pubKey = _pubKey;
-		this.isDGK = _isDGK;
-		this.toSort = _toSort;
+		this.pk = pk;
+		this.pubKey = pubKey;
+		this.isDGK = isDGK;
+		this.toSort = toSort;
 		this.algo = Algorithm.valueOf("QUICK_SORT");
+		
+		// ONLY FOR DEBUGGING
 		this.getkey();
 	}
 
-	public alice (ObjectInputStream _fromBob, ObjectOutputStream _toBob,
-			PaillierPublicKey _pk, DGKPublicKey _pubKey,
-			boolean _isDGK, BigInteger[] _toSort) throws ClassNotFoundException, IOException
+	public alice (ObjectInputStream fromBob, ObjectOutputStream toBob,
+			PaillierPublicKey pk, DGKPublicKey pubKey,
+			boolean isDGK, BigInteger[] toSort) throws ClassNotFoundException, IOException
 	{
-		this.fromBob = _fromBob;
-		this.toBob = _toBob;
-		this.pk = _pk;
-		this.pubKey = _pubKey;
-		this.isDGK = _isDGK;
-		this.toSort = _toSort;
+		this.fromBob = fromBob;
+		this.toBob = toBob;
+		this.pk = pk;
+		this.pubKey = pubKey;
+		this.isDGK = isDGK;
+		this.toSort = toSort;
 		this.algo = Algorithm.valueOf("QUICK_SORT");
 		this.getkey();
 	}
@@ -131,9 +133,9 @@ public class alice implements Runnable
 		return isDGK;
 	}
 	
-	public void setDGKMode(boolean _isDGK)
+	public void setDGKMode(boolean isDGK)
 	{
-		isDGK = _isDGK;
+		this.isDGK = isDGK;
 	}
 	
 	public void setSorting(ArrayList<BigInteger> toSort)
@@ -183,9 +185,10 @@ public class alice implements Runnable
 		int answer = -1;
 		int deltaB = -1;
 		int deltaA = rnd.nextInt(2);
-		Object in;
-		BigInteger [] Encrypted_Y;
-		BigInteger [] C;
+		Object in = null;
+		BigInteger [] Encrypted_Y = null;
+		BigInteger [] C = null;
+		BigInteger [] XOR = null;
 		
 		// Step 1: Get Y bits from Bob
 		in = fromBob.readObject();
@@ -213,7 +216,7 @@ public class alice implements Runnable
 
 		// Otherwise, if bit size is equal, proceed!
 		// Step 2: compute Encrypted X XOR Y
-		BigInteger [] XOR = new BigInteger[Encrypted_Y.length];
+		XOR = new BigInteger[Encrypted_Y.length];
 		for (int i = 0; i < Encrypted_Y.length; i++)
 		{
 			//Enc[x XOR y] = [y_i]
@@ -224,9 +227,7 @@ public class alice implements Runnable
 			//Enc[x XOR y] = [1] - [y_i]
 			else
 			{
-				XOR[i] = DGKOperations.DGKSubtract(pubKey, 
-						DGKOperations.encrypt(pubKey, 1), 
-						Encrypted_Y[i]);
+				XOR[i] = DGKOperations.subtract(pubKey, pubKey.ONE(), Encrypted_Y[i]);
 			}
 		}
 	
@@ -242,27 +243,28 @@ public class alice implements Runnable
 		for (int i = 0; i < Encrypted_Y.length;i++)
 		{
 			// Compute product and multiply by 3
-			product = DGKOperations.DGKSum(pubKey, XOR, Encrypted_Y.length - 1 - i);
-			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKMultiply(pubKey, product, 3);
+			product = DGKOperations.sum(pubKey, XOR, Encrypted_Y.length - 1 - i);
+			C[Encrypted_Y.length - 1 - i] = DGKOperations.multiply(pubKey, product, 3);
 			// C_i += s
-			C[Encrypted_Y.length - 1 - i] = DGKOperations.DGKAdd(pubKey, s, C[Encrypted_Y.length - 1 - i]);
-			temp[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(x, i)), Encrypted_Y[i]);
+			C[Encrypted_Y.length - 1 - i] = DGKOperations.add(pubKey, s, C[Encrypted_Y.length - 1 - i]);
+			temp[i] = DGKOperations.subtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(x, i)), Encrypted_Y[i]);
 		}
 		
 		for (int i = 0; i < Encrypted_Y.length;i++)
 		{
-			C[i] = DGKOperations.DGKAdd(pubKey, C[i], temp[i]);
+			C[i] = DGKOperations.add(pubKey, C[i], temp[i]);
 		}
 		
 		//This is c_{-1}
-		C[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);
-		C[Encrypted_Y.length] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
+		C[Encrypted_Y.length] = DGKOperations.sum(pubKey, XOR);
+		C[Encrypted_Y.length] = DGKOperations.add(pubKey, C[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
 
-		// Step 5: Blinds C_i and send to Bob
-		for (int i = 0; i < Encrypted_Y.length;i++)
+		// Step 5: Blinds C_i, Shuffle it and send to Bob
+		for (int i = 0; i < C.length; i++)
 		{
-			C[i] = DGKOperations.DGKMultiply(pubKey, C[i], 1);
+			C[i] = DGKOperations.multiply(pubKey, C[i], rnd.nextInt(pubKey.l) + 1);
 		}
+		C = shuffle_bits(C);
 		toBob.writeObject(C);
 		toBob.flush();
 		
@@ -294,7 +296,7 @@ public class alice implements Runnable
 	
 	public int Protocol2(BigInteger x, BigInteger y) 
 			throws IOException, ClassNotFoundException
-	{	
+	{
 		int deltaB = -1;
 		int deltaA = rnd.nextInt(2);
 		int x_leq_y = -1;
@@ -306,6 +308,8 @@ public class alice implements Runnable
 		Object bob = null;
 		BigInteger r = null;
 		BigInteger powL = null;
+		BigInteger zeta_one = null;
+		BigInteger zeta_two = null;
 
 		// Step 1: 0 <= r < N
 		// Pick Number of l + 1 + sigma bits
@@ -338,8 +342,8 @@ public class alice implements Runnable
 		 */
 		if (isDGK)
 		{
-			z = DGKOperations.DGKAdd(pubKey, x, DGKOperations.encrypt(pubKey, r.add(powL).mod(pubKey.bigU)));
-			z = DGKOperations.DGKSubtract(pubKey, z, y);
+			z = DGKOperations.add(pubKey, x, DGKOperations.encrypt(pubKey, r.add(powL).mod(pubKey.bigU)));
+			z = DGKOperations.subtract(pubKey, z, y);
 		}
 		else
 		{
@@ -363,11 +367,44 @@ public class alice implements Runnable
 		bob = fromBob.readObject();
 		if (bob instanceof BigInteger)
 		{
-			zdiv2L = (BigInteger) bob;
+			zeta_one = (BigInteger) bob;
 		}
 		else
 		{
 			throw new IllegalArgumentException("Protocol 2, Step 5: BigInteger not found!");
+		}
+		
+		bob = fromBob.readObject();
+		if (bob instanceof BigInteger)
+		{
+			zeta_two = (BigInteger) bob;
+		}
+		else
+		{
+			throw new IllegalArgumentException("Protocol 2, Step 5: BigInteger not found!");
+		}
+		
+		if(isDGK)
+		{
+			if (r.longValue() < (pubKey.u - 1)/2)
+			{
+				zdiv2L = zeta_one;
+			}
+			else
+			{
+				zdiv2L = zeta_two;
+			}
+		}
+		else
+		{
+			if (r.compareTo(pk.n.subtract(BigInteger.ONE).divide(new BigInteger("2"))) == 0)
+			{
+				zdiv2L = zeta_one;
+			}
+			else
+			{
+				zdiv2L = zeta_two;
+			}
 		}
 
 		/*
@@ -416,10 +453,10 @@ public class alice implements Runnable
 		 */
 		if(isDGK)
 		{
-			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, DGKOperations.encrypt(pubKey, r.divide(powL)));
+			result = DGKOperations.subtract(pubKey, zdiv2L, DGKOperations.encrypt(pubKey, r.divide(powL)));
 			//System.out.println("z-r/2^l: " + DGKOperations.decrypt(pubKey, privKey, result));
 			//System.out.println("P2 (beta < alpha): " + DGKOperations.decrypt(pubKey, privKey, alpha_lt_beta));
-			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, alpha_lt_beta);
+			result = DGKOperations.subtract(pubKey, zdiv2L, alpha_lt_beta);
 			//System.out.println("FINAL result: " + DGKOperations.decrypt(pubKey, privKey, result));
 		}
 		else
@@ -467,7 +504,7 @@ public class alice implements Runnable
 
 	private int Protocol3(BigInteger x, int _deltaA)
 			throws ClassNotFoundException, IOException
-	{	
+	{
 		int deltaA = rnd.nextInt(2);
 		if (_deltaA == 0 || _deltaA == 1)
 		{
@@ -545,7 +582,7 @@ public class alice implements Runnable
 			//Enc[x XOR y] = [1] - [y_i]
 			else
 			{
-				XOR[i] = DGKOperations.DGKSubtract(pubKey, pubKey.ONE(), Encrypted_Y[i]);
+				XOR[i] = DGKOperations.subtract(pubKey, pubKey.ONE(), Encrypted_Y[i]);
 			}
 		}
 		
@@ -569,7 +606,7 @@ public class alice implements Runnable
 		{
 			// Goes from yBits - 1 to 0
 			C[Encrypted_Y.length - 1 - i] = product;
-			product = DGKOperations.DGKAdd(pubKey, product, XOR[i]);
+			product = DGKOperations.add(pubKey, product, XOR[i]);
 		}
 
 		/*
@@ -583,7 +620,7 @@ public class alice implements Runnable
 		{
 			for(int i = 0; i < Encrypted_Y.length; i++)
 			{
-				minus [i] = DGKOperations.DGKSubtract(pubKey, pubKey.ONE(), Encrypted_Y[i]);
+				minus [i] = DGKOperations.subtract(pubKey, pubKey.ONE(), Encrypted_Y[i]);
 			}
 		}
 		
@@ -592,34 +629,33 @@ public class alice implements Runnable
 			if (deltaA == 0)
 			{
 				// Step 4 = [1] - [y_i bit] + [c_i]
-				C[i] = DGKOperations.DGKAdd(pubKey, C[i], minus[Encrypted_Y.length - 1 - i]);
+				C[i] = DGKOperations.add(pubKey, C[i], minus[Encrypted_Y.length - 1 - i]);
 			}
 			else
 			{
 				// Step 4 = [y_i] + [c_i]
-				C[i]= DGKOperations.DGKAdd(pubKey, C[i], Encrypted_Y[Encrypted_Y.length - 1 - i]);
-			}
-		}
-
-		//Step 5: Apply the Blinding to C_i and send it to Bob
-		for (int i = 0; i < Encrypted_Y.length;i++)
-		{
-			// if i is NOT in L, just place a random NON-ZERO
-			if(!ListofGammaA.contains(i))
-			{
-				C[Encrypted_Y.length - 1 - i] = DGKOperations.encrypt(pubKey, 7);
+				C[i]= DGKOperations.add(pubKey, C[i], Encrypted_Y[Encrypted_Y.length - 1 - i]);
 			}
 		}
 		
 		//This is c_{-1}
-		C[Encrypted_Y.length] = DGKOperations.DGKSum(pubKey, XOR);	//This is your c_{-1}
-		C[Encrypted_Y.length] = DGKOperations.DGKAdd(pubKey, C[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
+		C[Encrypted_Y.length] = DGKOperations.sum(pubKey, XOR);
+		C[Encrypted_Y.length] = DGKOperations.add(pubKey, C[Encrypted_Y.length], DGKOperations.encrypt(pubKey, deltaA));
 
-		// Shuffle bits and blind C!
+		// Step 5: Apply the Blinding to C_i and send it to Bob
+		for (int i = 0; i < Encrypted_Y.length; i++)
+		{
+			// if i is NOT in L, just place a random NON-ZERO
+			if(!ListofGammaA.contains(i))
+			{
+				C[Encrypted_Y.length - 1 - i] = DGKOperations.encrypt(pubKey, rnd.nextInt(pubKey.l) + 1);
+			}
+		}
+		// Blind and Shuffle bits!
 		C = shuffle_bits(C);
 		for (int i = 0; i < C.length; i++)
 		{
-			C[i] = DGKOperations.DGKMultiply(pubKey, C[i], rnd.nextInt(pubKey.l) + 1);
+			C[i] = DGKOperations.multiply(pubKey, C[i], rnd.nextInt(pubKey.l) + 1);
 		}
 		toBob.writeObject(C);
 		toBob.flush();
@@ -687,8 +723,8 @@ public class alice implements Runnable
 		 */
 		if (isDGK)
 		{
-			z = DGKOperations.DGKAdd(pubKey, x, DGKOperations.encrypt(pubKey, r.add(powL).mod(pubKey.bigU)));
-			z = DGKOperations.DGKSubtract(pubKey, z, y);
+			z = DGKOperations.add(pubKey, x, DGKOperations.encrypt(pubKey, r.add(powL).mod(pubKey.bigU)));
+			z = DGKOperations.subtract(pubKey, z, y);
 		}
 		else
 		{
@@ -754,7 +790,7 @@ public class alice implements Runnable
             }
             else
             {
-            	alpha_lt_beta = PaillierCipher.encrypt((1 - deltaB), pk);
+            	alpha_lt_beta = PaillierCipher.encrypt(1 - deltaB, pk);
             }
     	}
 
@@ -765,10 +801,10 @@ public class alice implements Runnable
 		 */
 		if(isDGK)
 		{
-			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, DGKOperations.encrypt(pubKey, r.divide(powL)));
+			result = DGKOperations.subtract(pubKey, zdiv2L, DGKOperations.encrypt(pubKey, r.divide(powL)));
 			//System.out.println("z-r/2^l: " + DGKOperations.decrypt(pubKey, privKey, result));
 			//System.out.println("P2 (beta < alpha): " + DGKOperations.decrypt(pubKey, privKey, alpha_lt_beta));
-			result = DGKOperations.DGKSubtract(pubKey, zdiv2L, alpha_lt_beta);
+			result = DGKOperations.subtract(pubKey, zdiv2L, alpha_lt_beta);
 			//System.out.println("FINAL result: " + DGKOperations.decrypt(pubKey, privKey, result));
 		}
 		else
@@ -815,10 +851,6 @@ public class alice implements Runnable
 	private int Modified_Protocol3(BigInteger alpha, BigInteger r, int _deltaA) 
 			throws ClassNotFoundException, IOException
 	{
-		if (alpha == null)
-		{
-			alpha = r.mod(BigInteger.valueOf(exponent(2, pubKey.l)));
-		}
 		int deltaA;
 		if(_deltaA == 0 || _deltaA == 1)
 		{			
@@ -826,10 +858,10 @@ public class alice implements Runnable
 		}
 		else
 		{
-			deltaA = rnd.nextInt(2);;
+			deltaA = rnd.nextInt(2);
 		}
-		int answer;
-		Object in;
+		int answer = -1;
+		Object in = null;
 		BigInteger [] beta_bits = null;
 		BigInteger [] encAlphaXORBeta = null;
 		BigInteger [] w = null;
@@ -912,7 +944,7 @@ public class alice implements Runnable
 			//Enc[x XOR y] = [1] - [y_i]
 			else
 			{
-				encAlphaXORBeta[i] = DGKOperations.DGKSubtract(pubKey, pubKey.ONE(), beta_bits[i]);				
+				encAlphaXORBeta[i] = DGKOperations.subtract(pubKey, pubKey.ONE(), beta_bits[i]);				
 			}
 		}
 		
@@ -935,7 +967,7 @@ public class alice implements Runnable
 			}
 			else
 			{
-				w[i] = DGKOperations.DGKSubtract(pubKey, encAlphaXORBeta[i], d);
+				w[i] = DGKOperations.subtract(pubKey, encAlphaXORBeta[i], d);
 			}
 		}
 		
@@ -944,7 +976,7 @@ public class alice implements Runnable
 		{
 			if(NTL.bit(alpha_hat, i) == NTL.bit(alpha, i))
 			{
-				w[i] = DGKOperations.DGKMultiply(pubKey, w[i], pubKey.l);	
+				w[i] = DGKOperations.multiply(pubKey, w[i], pubKey.l);	
 			}
 		}
 		
@@ -959,33 +991,33 @@ public class alice implements Runnable
 		for (int i = 0; i < beta_bits.length;i++)
 		{
 			// Compute product and multiply by 3
-			product = DGKOperations.DGKSum(pubKey, w, beta_bits.length - 1 - i);
-			C[beta_bits.length - 1 - i] = DGKOperations.DGKMultiply(pubKey, product, 3);
+			product = DGKOperations.sum(pubKey, w, beta_bits.length - 1 - i);
+			C[beta_bits.length - 1 - i] = DGKOperations.multiply(pubKey, product, 3);
 			// C_i += s
-			C[beta_bits.length - 1 - i] = DGKOperations.DGKAdd(pubKey, S, C[beta_bits.length - 1 - i]);
+			C[beta_bits.length - 1 - i] = DGKOperations.add(pubKey, S, C[beta_bits.length - 1 - i]);
 			
 			// t = alpha_i - beta_i
-			temp[i] = DGKOperations.DGKSubtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(alpha, i)), beta_bits[i]);
+			temp[i] = DGKOperations.subtract(pubKey, DGKOperations.encrypt(pubKey, NTL.bit(alpha, i)), beta_bits[i]);
 			exponent = NTL.bit(alpha_hat, i) - NTL.bit(alpha, i);
 			// t = d^{a - a}
-			temp[i] = DGKOperations.DGKAdd(pubKey, temp[i], DGKOperations.DGKMultiply(pubKey, d, exponent));
+			temp[i] = DGKOperations.add(pubKey, temp[i], DGKOperations.multiply(pubKey, d, exponent));
 		}
 		
 		// Combine terms!
 		for(int i = 0; i < beta_bits.length;i++)
 		{
-			C[i] = DGKOperations.DGKAdd(pubKey, C[i], temp[i]);
+			C[i] = DGKOperations.add(pubKey, C[i], temp[i]);
 		}
 		
 		//This is c_{-1}
-		C[beta_bits.length] = DGKOperations.DGKSum(pubKey, encAlphaXORBeta);
-		C[beta_bits.length] = DGKOperations.DGKAdd(pubKey, C[beta_bits.length], DGKOperations.encrypt(pubKey, deltaA));
+		C[beta_bits.length] = DGKOperations.sum(pubKey, encAlphaXORBeta);
+		C[beta_bits.length] = DGKOperations.add(pubKey, C[beta_bits.length], DGKOperations.encrypt(pubKey, deltaA));
 
 		// Step I: SHUFFLE BITS AND BLIND WITH EXPONENT
 		C = shuffle_bits(C);
 		for (int i = 0; i < C.length; i++)
 		{
-			C[i] = DGKOperations.DGKMultiply(pubKey, C[i], rnd.nextInt(pubKey.l) + 1);
+			C[i] = DGKOperations.multiply(pubKey, C[i], rnd.nextInt(pubKey.l) + 1);
 		}
 		toBob.writeObject(C);
 		toBob.flush();
@@ -1020,8 +1052,8 @@ public class alice implements Runnable
 	public BigInteger division(BigInteger x, int d) 
 			throws IOException, ClassNotFoundException
 	{
-		Object in;
-		BigInteger answer;
+		Object in = null;
+		BigInteger answer = null;
 		BigInteger c = null;
 		BigInteger z = null;
 		BigInteger r = null;
@@ -1030,7 +1062,7 @@ public class alice implements Runnable
 		if(isDGK)
 		{
 			r = NTL.RandomBnd(log2((int) (pubKey.u - 1)/2));
-			z = DGKOperations.DGKAdd(pubKey, x, DGKOperations.encrypt(pubKey, r));
+			z = DGKOperations.add(pubKey, x, DGKOperations.encrypt(pubKey, r));
 		}
 		else
 		{
@@ -1061,9 +1093,9 @@ public class alice implements Runnable
 		// [[z/d - r/d - t]]
 		if (isDGK)
 		{
-			answer = DGKOperations.DGKSubtract(pubKey, c, DGKOperations.encrypt(pubKey, r.divide(BigInteger.valueOf(d))));
-			answer = DGKOperations.DGKSubtract(pubKey, answer, DGKOperations.encrypt(pubKey, t));
-			answer = DGKOperations.DGKAdd(pubKey, answer, DGKOperations.encrypt(pubKey, 1));
+			answer = DGKOperations.subtract(pubKey, c, DGKOperations.encrypt(pubKey, r.divide(BigInteger.valueOf(d))));
+			answer = DGKOperations.subtract(pubKey, answer, DGKOperations.encrypt(pubKey, t));
+			answer = DGKOperations.add(pubKey, answer, DGKOperations.encrypt(pubKey, 1));
 		}
 		else
 		{
@@ -1082,6 +1114,62 @@ public class alice implements Runnable
 			System.out.println("answer: " + PaillierCipher.decrypt(answer, sk));	
 		}
 		return answer;
+	}
+	
+	public BigInteger multiplication(BigInteger x, BigInteger y) 
+			throws IOException, ClassNotFoundException
+	{
+		Object in = null;
+		BigInteger x_prime = null;
+		BigInteger y_prime = null;
+		BigInteger a = null;
+		BigInteger b = null;
+		BigInteger result = null;
+		
+		// Step 1
+		if(isDGK)
+		{
+			a = NTL.RandomBnd(pubKey.bigU.subtract(BigInteger.ONE));
+			b = NTL.RandomBnd(pubKey.bigU.subtract(BigInteger.ONE));
+			x_prime = DGKOperations.add(pubKey, DGKOperations.encrypt(pubKey, a), x);
+			y_prime = DGKOperations.add(pubKey, DGKOperations.encrypt(pubKey, b), y);
+		}
+		else
+		{
+			a = NTL.RandomBnd(pk.n.subtract(BigInteger.ONE));
+			b = NTL.RandomBnd(pk.n.subtract(BigInteger.ONE));	
+			x_prime = PaillierCipher.add(x, PaillierCipher.encrypt(a, pk), pk);
+			y_prime = PaillierCipher.add(y, PaillierCipher.encrypt(b, pk), pk);
+		}
+		toBob.writeObject(x_prime);
+		toBob.writeObject(y_prime);
+		toBob.flush();
+		
+		// Step 2
+		
+		// Step 3
+		in = fromBob.readObject();
+		if (in instanceof BigInteger)
+		{
+			result = (BigInteger) in;
+			if(isDGK)
+			{
+				result = DGKOperations.subtract(pubKey, DGKOperations.multiply(pubKey, x, b), result);
+				result = DGKOperations.subtract(pubKey, DGKOperations.multiply(pubKey, y, a), result);
+				result = DGKOperations.subtract(pubKey, DGKOperations.encrypt(pubKey, a.multiply(b)), result);	
+			}
+			else
+			{
+				result = PaillierCipher.subtract(result, PaillierCipher.multiply(x, b, pk), pk);
+				result = PaillierCipher.subtract(result, PaillierCipher.multiply(y, a, pk), pk);
+				result = PaillierCipher.subtract(result, PaillierCipher.encrypt(a.multiply(b), pk), pk);
+			}
+		}
+		else
+		{
+			throw new IllegalArgumentException("");
+		}
+		return result;
 	}
 
 	/*
@@ -1114,14 +1202,7 @@ public class alice implements Runnable
 	{	
 		// Inspiration from:
 		// https://www.geeksforgeeks.org/maximum-and-minimum-in-an-array/
-		Pair result = getMinMax(input.toArray(new BigInteger[input.size()]), input.size());
-		
-		/*
-		 * The algorithm correct gets the min/max...
-		 * But it has result.max = min and result.min = max
-		 * 
-		 * This could be because in one case it says get < not <= as Protocol 2/3?
-		 */
+		Pair result = getMinMax(input, input.size());
 		
 		// Kill the Process listening for more Protocol 2.
 		// IF USING TO SORT...DO NOT DIE YET!
@@ -1133,7 +1214,111 @@ public class alice implements Runnable
 	}
 	
 	// https://www.geeksforgeeks.org/maximum-and-minimum-in-an-array/
-	public Pair getMinMax(BigInteger arr[], int n) 
+	public Pair getMinMax(ArrayList<BigInteger> arr, int n) 
+			throws ClassNotFoundException, IOException
+	{
+		Pair results = new Pair();   
+		int i;
+
+		/* If array has even number of elements then 
+			    initialize the first two elements as minimum and 
+			    maximum */
+		//Protocol 2 works as intended here...
+		if (n % 2 == 0)
+		{
+			toBob.writeBoolean(true);
+			if (Protocol2(arr.get(0), arr.get(1)) == 0)     
+			{
+				results.min = arr.get(0);
+				results.max = arr.get(1);
+				//System.err.println("Start with 0");
+			}
+			else
+			{
+				results.max = arr.get(0);
+				results.min = arr.get(1);
+				//System.err.println("Start with 1");
+			}
+			i = 2;  /* set the starting index for loop */
+		}
+
+		/* If array has odd number of elements then 
+			    initialize the first element as minimum and 
+			    maximum */
+		else
+		{
+			results.min = arr.get(0);
+			results.max = arr.get(0);
+			i = 1;  /* set the starting index for loop */
+		}
+
+		/* In the while loop, pick elements in pair and 
+			     compare the pair with max and min so far */
+
+		/*
+			int answer = -1;
+			int a = -1;
+			int b = -1;
+			System.out.println("First min: " + Paillier.decrypt(results.min, server.sk) +" First max: " + Paillier.decrypt(results.max, server.sk));
+		 */
+
+		//min = arr[1]
+		//max = arr[0]
+
+		while (i < n - 1)
+		{
+			/*
+			 * For some weird reason, Protocol 2 returns the wrong answer 100% of the time
+			 * when inside this while loop...
+			 * So I just flip the logic and everything works...
+			 * 
+			 * But why is this even working???
+			 */
+
+			toBob.writeBoolean(true);
+			//answer = Protocol2(arr[i], arr[i+1]);
+			//System.out.println("Protocol 2: " + answer + " arr(i): " + Paillier.decrypt(arr[i], server.sk) +" arr(i+1): " + Paillier.decrypt(arr[i + 1], server.sk));
+
+			if (Protocol2(arr.get(i), arr.get(i+1)) != 0)
+			{
+				toBob.writeBoolean(true);
+				if((Protocol2(arr.get(i), results.max)) != 0)
+				{
+					//System.out.println("Protocol 2: " + a + " max: " + Paillier.decrypt(results.max, server.sk) +" arr(i): " + Paillier.decrypt(arr[i], server.sk));
+					results.max = arr.get(i);
+				}
+				toBob.writeBoolean(true);
+				if((Protocol2(arr.get(i + 1), results.min)) != 1)
+				{
+					//System.out.println("Protocol 2: " + b + " arr(i+1): " + Paillier.decrypt(arr[i+1], server.sk) +" min: " + Paillier.decrypt(results.min, server.sk));
+					results.min = arr.get(i + 1);
+				}
+				//System.out.println("(top) new min: " + Paillier.decrypt(results.min, server.sk) +" new max: " + Paillier.decrypt(results.max, server.sk) + " given i: " + i + " and ans: " + answer);
+			} 
+			else        
+			{
+				toBob.writeBoolean(true);
+				if ((Protocol2(arr.get(i + 1), results.max)) != 0) 
+				{
+					//System.out.println("Protocol 2: " + a + " max: " + Paillier.decrypt(results.max, server.sk) +" arr(i+1): " + Paillier.decrypt(arr[i+1], server.sk));
+					results.max = arr.get(i + 1);
+				}
+				toBob.writeBoolean(true);
+				if ((Protocol2(arr.get(i), results.min)) != 1)
+				{
+					//System.out.println("Protocol 2: " + b + " arr(i): " + Paillier.decrypt(arr[i], server.sk) +" min: " + Paillier.decrypt(results.min, server.sk));
+					results.min = arr.get(i);
+				}
+				//System.out.println("Protocol 2 parts: a, " + a + " b, " + b);
+				//System.out.println("(bot) new min: " + Paillier.decrypt(results.min, server.sk) +" new max: " + Paillier.decrypt(results.max, server.sk) + " given i: " + i + " and ans: " + answer);
+			}
+			i += 2; /* Increment the index by 2 as two elements are processed in loop */
+		}
+		return results;
+	}
+
+	// https://www.geeksforgeeks.org/maximum-and-minimum-in-an-array/
+	public Pair getMinMax(BigInteger [] arr, int n) 
 			throws ClassNotFoundException, IOException
 	{
 		Pair results = new Pair();   
@@ -1143,7 +1328,7 @@ public class alice implements Runnable
 		    initialize the first two elements as minimum and 
 		    maximum */
 		//Protocol 2 works as intended here...
-		if (n%2 == 0)
+		if (n % 2 == 0)
 		{
 			toBob.writeBoolean(true);
 			if (Protocol2(arr[0], arr[1]) == 0)     
@@ -1184,7 +1369,7 @@ public class alice implements Runnable
 		//min = arr[1]
 		//max = arr[0]
 		
-		while (i < n-1)
+		while (i < n - 1)
 		{
 			/*
 			 * For some weird reason, Protocol 2 returns the wrong answer 100% of the time
@@ -1198,7 +1383,7 @@ public class alice implements Runnable
 			//answer = Protocol2(arr[i], arr[i+1]);
 			//System.out.println("Protocol 2: " + answer + " arr(i): " + Paillier.decrypt(arr[i], server.sk) +" arr(i+1): " + Paillier.decrypt(arr[i + 1], server.sk));
 			
-			if (Protocol2(arr[i], arr[i+1]) != 0)
+			if (Protocol2(arr[i], arr[i + 1]) != 0)
 			{
 				toBob.writeBoolean(true);
 				if((Protocol2(arr[i], results.max)) != 0)
@@ -1207,7 +1392,7 @@ public class alice implements Runnable
 					results.max = arr[i];
 				}
 				toBob.writeBoolean(true);
-				if((Protocol2(arr[i+1], results.min)) != 1)
+				if((Protocol2(arr[i + 1], results.min)) != 1)
 				{
 					//System.out.println("Protocol 2: " + b + " arr(i+1): " + Paillier.decrypt(arr[i+1], server.sk) +" min: " + Paillier.decrypt(results.min, server.sk));
 					results.min = arr[i+1];
@@ -1232,7 +1417,7 @@ public class alice implements Runnable
 				//System.out.println("(bot) new min: " + Paillier.decrypt(results.min, server.sk) +" new max: " + Paillier.decrypt(results.max, server.sk) + " given i: " + i + " and ans: " + answer);
 			}
 			i += 2; /* Increment the index by 2 as two elements are processed in loop */
-		}            
+		}      
 		return results;
 	}
 
@@ -1298,10 +1483,10 @@ public class alice implements Runnable
 				
 			case MERGE_SORT:
 				sortedArray = toSort;
-		        this.doMergeSort(0, sortedArray.length - 1);
-		        break;
+				this.doMergeSort(0, sortedArray.length - 1);
+				break;
 		        
-			case QUICK_SORT:
+			case QUICK_SORT:	
 				sortedArray = toSort;
 				this.sort(sortedArray, 0, sortedArray.length - 1);
 				break;
@@ -1375,7 +1560,7 @@ public class alice implements Runnable
 		}
 		else
 		{
-			System.err.println("Invalid, did not receive DGK Private Key!");
+			throw new IllegalArgumentException("Invalid, did not receive DGK Private Key!");
 		}
 		in = fromBob.readObject();
 		if (in instanceof PaillierPrivateKey)
@@ -1384,25 +1569,8 @@ public class alice implements Runnable
 		}
 		else
 		{
-			System.err.println("Invalid, did not receive Paillier Private Key!");
+			throw new IllegalArgumentException("Invalid, did not receive Paillier Private Key!");
 		}
-	}
-	
-	public boolean is_valid_DGK_KeyPair()
-	{
-		BigInteger init = new BigInteger("60");
-		long test;
-		BigInteger t = DGKOperations.encrypt(pubKey, init);
-		test = DGKOperations.decrypt(privKey, t);
-		return BigInteger.valueOf(test).compareTo(init) == 0;
-	}
-	
-	public boolean is_valid_Paillier_KeyPair()
-	{
-		BigInteger init = new BigInteger("60");
-		BigInteger t = PaillierCipher.encrypt(init, pk);
-		t = PaillierCipher.decrypt(t, sk);
-		return t.compareTo(init) == 0;
 	}
 	
 	// Used to shuffle the encrypted bits
@@ -1453,7 +1621,7 @@ public class alice implements Runnable
 			throws ClassNotFoundException, IOException
 	{
 		BigInteger pivot = arr[high]; 
-		int i = (low - 1); // index of smaller element
+		int i = low - 1; // index of smaller element
 		for (int j = low; j < high; j++)
 		{
 			// If current element is smaller than or
@@ -1462,16 +1630,15 @@ public class alice implements Runnable
 			toBob.writeBoolean(true);
 			if(this.Protocol2(arr[j], pivot) != 1)
 			{
-				i++;
+				++i;
 				// swap arr[i] and arr[j]
 				BigInteger temp = arr[i];
 				arr[i] = arr[j];
 				arr[j] = temp;
 			}
 		}
-
 		// swap arr[i+1] and arr[high] (or pivot)
-		BigInteger temp = arr[i+1];
+		BigInteger temp = arr[i + 1];
 		arr[i + 1] = arr[high];
 		arr[high] = temp;
 		return i + 1;
@@ -1495,8 +1662,8 @@ public class alice implements Runnable
 
 			// Recursively sort elements before
 			// partition and after partition
-			sort(arr, low, pi-1);
-			sort(arr, pi+1, high);
+			sort(arr, low, pi - 1);
+			sort(arr, pi + 1, high);
 		}
 	}
 	
@@ -1524,7 +1691,6 @@ public class alice implements Runnable
 		int j = middle + 1;
 		int k = lowerIndex;
 
-		// For encrypted Numbers
 		tempBigMerg = Arrays.copyOf(sortedArray, sortedArray.length);
 		while (i <= middle && j <= higherIndex)
 		{
@@ -1548,6 +1714,15 @@ public class alice implements Runnable
 			++k;
 			++i;
 		}
+	}
+	
+	public boolean match() throws IOException
+	{
+		toBob.writeObject(pk);
+		toBob.flush();
+		toBob.writeObject(pubKey);
+		toBob.flush();
+		return fromBob.readBoolean();
 	}
 
 	public void run() 

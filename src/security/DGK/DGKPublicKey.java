@@ -58,13 +58,13 @@ public class DGKPublicKey implements Serializable, PublicKey
 			this.hLUT = new HashMap<Long, BigInteger>();
 		}
 		
-		for (int i = 0; i < 2*t; ++i)
+		for (long i = 0; i < 2*t; ++i)
 		{
 			//e = 2^i (mod n)
 			//h^{2^i (mod n)} (mod n)
 			//f(i) = h^{2^i}(mod n)
-			BigInteger e = new BigInteger("2").modPow(BigInteger.valueOf((long)(i)), this.n);
-			this.hLUT.put((long) i, this.h.modPow(e, this.n));
+			BigInteger e = new BigInteger("2").modPow(BigInteger.valueOf(i), this.n);
+			this.hLUT.put(i, this.h.modPow(e, this.n));
 		}
 	}
 	

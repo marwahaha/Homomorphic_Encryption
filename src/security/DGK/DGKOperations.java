@@ -178,12 +178,7 @@ public class DGKOperations extends CipherSpi
 
 	public static BigInteger encrypt(DGKPublicKey pubKey, long plaintext)
 	{
-		int t = pubKey.t;
-		BigInteger n = pubKey.n;
-		BigInteger h = pubKey.h;
-		long U = pubKey.u;
 		BigInteger ciphertext;
-
 		if (plaintext == -1)
 		{
 			//System.err.println("Exception not thrown this time...I hope you are using Protocol 1/Modified Protocol 3");
@@ -192,92 +187,70 @@ public class DGKOperations extends CipherSpi
 		{
 			throw new IllegalArgumentException("Encryption Invalid Parameter: the plaintext is not in Zu (plaintext < 0)"
 				+ " value of Plain Text is: " + plaintext);
-			/*
-			 * System.err.println("ERROR SPOTTED: PLAINTEXT < 0 AT ENCRYPT");
-			 * plaintext = NTL.POSMOD(plaintext,u).longValue();
-			 */
 		}
-		else if (plaintext >= U)
+		else if (plaintext >= pubKey.u)
 		{
 			throw new IllegalArgumentException("Encryption Invalid Parameter: the plaintext is not in Zu"
 			+ " (plaintext >= U) value of Plain Text is: " + plaintext);
-			/*
-			System.err.println("ERROR SPOTTED: PLAINTEXT > U AT ENCRYPT");
-			plaintext=plaintext%U;
-			*/
 		}
 
 		// If it is null, just fill the HashMap to avoid Null Pointer!
 		if (pubKey.gLUT.get(plaintext) == null)
 		{
-			//Overwrite the HashMap
-			pubKey.gLUT.put(plaintext, pubKey.g.modPow(BigInteger.valueOf(plaintext),n));
+			// Overwrite the HashMap
+			pubKey.gLUT.put(plaintext, pubKey.g.modPow(BigInteger.valueOf(plaintext), pubKey.n));
 			//first part = g^m (mod n)
 		}
 
 		// Generate 2*t bit random number
 		BigInteger r = NTL.generateXBitRandom(2 * pubKey.t);
-		r = r.setBit(2 * t - 1);
+		r = r.setBit(2 * pubKey.t - 1);
 
 		//First part = g^m
 		BigInteger firstpart = pubKey.gLUT.get(plaintext);
 		BigInteger secondpart = BigInteger.ONE;
 
 		BigInteger tempH;
-		for(int i = 0; i < r.bitLength(); ++i)
+		for(long i = 0; i < r.bitLength(); ++i)
 		{
 			//second part = h^r
 			if(NTL.bit(r, i) == 1)
 			{
-				tempH = pubKey.hLUT.get((long) i);
+				tempH = pubKey.hLUT.get(i);
 				if(tempH == null)
 				{
-					//e = 2^i (mod n)
-					//e = 2^i (mod n)
-					//f(i) = h^{2^i}(mod n)	
-					BigInteger e = new BigInteger("2").modPow(BigInteger.valueOf((long)(i)), n);
-					tempH = h.modPow(e, n);
-					pubKey.hLUT.put((long)i, tempH);	
+					// e = 2^i (mod n)
+					// f(i) = h^{2^i}(mod n)	
+					BigInteger e = new BigInteger("2").modPow(BigInteger.valueOf(i), pubKey.n);
+					pubKey.hLUT.put(i, pubKey.h.modPow(e, pubKey.n));
 				}
 				secondpart = secondpart.multiply(tempH);
 			}
 		}
 		//System.out.println("Value of Second Part: " + secondpart);
-		ciphertext = NTL.POSMOD(firstpart.multiply(secondpart), n);
+		ciphertext = NTL.POSMOD(firstpart.multiply(secondpart), pubKey.n);
 		return ciphertext;
 	}
 	
-	public static long decrypt(BigInteger ciphertext, DGKPrivateKey privKey)
+	public static BigInteger decrypt(BigInteger ciphertext, DGKPrivateKey privKey)
 	{
-		return decrypt(privKey, ciphertext);
+		return BigInteger.valueOf(decrypt(privKey, ciphertext));
 	}
 
 	public static long decrypt(DGKPrivateKey privKey, BigInteger ciphertext)
 	{
-		BigInteger vp = privKey.vp;
-		BigInteger p = privKey.p;
-		BigInteger n = privKey.n;
-
 		if (ciphertext.signum() == -1)
 		{
 			throw new IllegalArgumentException("decryption Invalid Parameter : the cipher text is not in Zn, "
 			+ "value of cipher text is: (c < 0): " + ciphertext);
-			/*
-			System.err.println("ERROR SPOTTED: CIPHER TEXT IS NEGATIVE! (DECRYPT)");
-			ciphertext = NTL.POSMOD(ciphertext, n);
-			*/
 		}
-		if(ciphertext.compareTo(n) == 1)
+		if(ciphertext.compareTo(privKey.n) == 1)
 		{
 			throw new IllegalArgumentException("decryption Invalid Parameter : the cipher text is not in Zn,"
 			+ " value of cipher text is: (c > n): " + ciphertext);
-			/*
-			System.err.println("ERROR SPOTTED: CIPHER TEXT > n (DECRYPT)");
-			ciphertext = ciphertext.mod(n);
-			*/
 		}
 
-		BigInteger decipher =  NTL.POSMOD(ciphertext,p).modPow(vp,p);
+		BigInteger decipher =  NTL.POSMOD(ciphertext, privKey.p).modPow(privKey.vp, privKey.p);
 		/*
 			c = g^m * h^r (mod n)
 			c^vp (mod p) = g^{vp*m} (mod p)
@@ -297,77 +270,53 @@ public class DGKOperations extends CipherSpi
 	}
 
 	//[a] * [b] = [a * b]
-	public static BigInteger DGKAdd(DGKPublicKey pubKey, BigInteger a, BigInteger b)
+	public static BigInteger add(DGKPublicKey pubKey, BigInteger a, BigInteger b)
 	{
-		BigInteger n = pubKey.n;
-		if (a.signum()==-1 || a.compareTo(n) == 1)
+		if (a.signum() ==-1 || a.compareTo(pubKey.n) == 1)
 		{
 			throw new IllegalArgumentException("DGKAdd Invalid Parameter a: at least one of the ciphertext is not in Zn: " + a);
 		}
-		else if (b.signum()==-1 || b.compareTo(n)==1)
+		else if (b.signum() ==-1 || b.compareTo(pubKey.n) == 1)
 		{
 			throw new IllegalArgumentException("DGKAdd Invalid Parameter b: at least one of the ciphertext is not in Zn: " + b);
-			/*
-			System.err.println("ERROR SPOTTED: CipherText a OR CipherText b > n (DGKAdd)");
-			a = NTL.POSMOD(a, n);
-			b = NTL.POSMOD(b, n);
-			*/
 		}
-		BigInteger result = a.multiply(b).mod(n);
-		return result;
+		return a.multiply(b).mod(pubKey.n);
 	}
 
 	// [a]/[b] = [a - b]
-	public static BigInteger DGKSubtract(DGKPublicKey pubKey, BigInteger a, BigInteger b)
+	public static BigInteger subtract(DGKPublicKey pubKey, BigInteger a, BigInteger b)
 	{
-		BigInteger minus_b = DGKMultiply(pubKey, b, pubKey.u - 1);
-		return DGKAdd(pubKey, a, minus_b);
+		BigInteger minus_b = multiply(pubKey, b, pubKey.u - 1);
+		return add(pubKey, a, minus_b);
 	}
 
-	//cipher a * Plain text
-	public static BigInteger DGKMultiply(DGKPublicKey pubKey, BigInteger cipher, long plaintext)
+	// cipher a * Plain text
+	public static BigInteger multiply(DGKPublicKey pubKey, BigInteger cipher, long plaintext)
 	{
-		return DGKMultiply(pubKey, cipher, BigInteger.valueOf(plaintext));
+		return multiply(pubKey, cipher, BigInteger.valueOf(plaintext));
 	}
 
-	public static BigInteger DGKMultiply(DGKPublicKey pubKey, BigInteger cipher, BigInteger plaintext)
+	public static BigInteger multiply(DGKPublicKey pubKey, BigInteger cipher, BigInteger plaintext)
 	{
-		BigInteger n = pubKey.n;
-		BigInteger bigU = pubKey.bigU;
 		if (cipher.signum() == -1)
 		{
 			throw new IllegalArgumentException("DGKMultiply Invalid Parameter: the ciphertext is not in Zn: " + cipher);
-			/*
-			System.err.println("ERROR SPOTTED: CIPHER TEXT IS NEGATIVE (DGKMULTIPLY)");
-			cipher = NTL.POSMOD(cipher,n);
-			*/
 		}
-		else if(cipher.compareTo(n) == 1)
+		else if(cipher.compareTo(pubKey.n) == 1)
 		{
 			throw new IllegalArgumentException("DGKMultiply Invalid Parameter: the ciphertext is not in Zn: " + cipher);
-			/*
-			System.err.println("ERROR SPOTTED: CIPHER TEXT IS > N (DGKMULTIPLY)");
-			cipher.mod(n);
-			*/
 		}
 
-		if(plaintext.compareTo(bigU) == 1)
+		if(plaintext.compareTo(pubKey.bigU) == 1)
 		{
-			throw new IllegalArgumentException("DGKMultiply Invalid Parameter:  the plaintext is not in Zu: " + bigU);
-			/*
-			System.err.println("ERROR SPOTTED: PLAIN TEXT IS > U (DGKMULTIPLY)");
-			plaintext = plaintext.mod(bigU);
-			*/
+			throw new IllegalArgumentException("DGKMultiply Invalid Parameter:  the plaintext is not in Zu: " + pubKey.bigU);
 		}
-		BigInteger result = cipher.modPow(plaintext, n);
-		return result;
+		return cipher.modPow(plaintext, pubKey.n);
 	}
 	
-	public static BigInteger DGKDivide(DGKPublicKey pubKey, BigInteger cipher, BigInteger plaintext)
+	public static BigInteger divide(DGKPublicKey pubKey, BigInteger cipher, BigInteger plaintext)
 	{
-		BigInteger n = pubKey.n;
-		BigInteger bigU = pubKey.bigU;
-		if (cipher.signum()==-1)
+		if (cipher.signum() == -1)
 		{
 			throw new IllegalArgumentException("DGKDivide Invalid Parameter: the ciphertext is not in Zn: " + cipher);
 			/*
@@ -375,7 +324,7 @@ public class DGKOperations extends CipherSpi
 			cipher = NTL.POSMOD(cipher,n);
 			*/
 		}
-		else if(cipher.compareTo(n) == 1)
+		else if(cipher.compareTo(pubKey.n) == 1)
 		{
 			throw new IllegalArgumentException("DGKDivide Invalid Parameter: the ciphertext is not in Zn: " + cipher);
 			/*
@@ -383,37 +332,35 @@ public class DGKOperations extends CipherSpi
 			cipher.mod(n);
 			*/
 		}
-		if(plaintext.compareTo(bigU) == 1)
+		if(plaintext.compareTo(pubKey.bigU) == 1)
 		{
-			throw new IllegalArgumentException("DGKDivide Invalid Parameter: the plaintext is not in Zu: " + bigU);
+			throw new IllegalArgumentException("DGKDivide Invalid Parameter: the plaintext is not in Zu: " + pubKey.bigU);
 		}
-		//to set up [x]^(d^{-1})
-		plaintext = plaintext.modInverse(n);
-		BigInteger result = cipher.modPow(plaintext, n);
-		return result;
+		//[x]^(d^{-1})
+		return cipher.modPow(plaintext.modInverse(pubKey.n), pubKey.n);
 	}
 	
-	public static BigInteger DGKDivide(DGKPublicKey pubKey, BigInteger cipher, long plaintext)
+	public static BigInteger divide(DGKPublicKey pubKey, BigInteger cipher, long plaintext)
 	{
-		return DGKDivide(pubKey, cipher, BigInteger.valueOf(plaintext));
+		return divide(pubKey, cipher, BigInteger.valueOf(plaintext));
 	}
 	
-	public static BigInteger DGKSum (DGKPublicKey pubKey, BigInteger [] parts)
+	public static BigInteger sum (DGKPublicKey pubKey, BigInteger [] parts)
 	{
 		BigInteger sum = DGKOperations.encrypt(pubKey, 0);
 		for (int i = 0; i < parts.length; i++)
 		{
-			sum = DGKAdd(pubKey, sum, parts[i]);
+			sum = add(pubKey, sum, parts[i]);
 		}
 		return sum;
 	}
 	
-	public static BigInteger DGKSum (DGKPublicKey pubKey, BigInteger [] parts, int limit)
+	public static BigInteger sum (DGKPublicKey pubKey, BigInteger [] parts, int limit)
 	{
 		BigInteger sum = DGKOperations.encrypt(pubKey, 0);
 		if (limit > parts.length)
 		{
-			return DGKSum(pubKey, parts);
+			return sum(pubKey, parts);
 		}
 		else if(limit <= 0)
 		{
@@ -421,9 +368,8 @@ public class DGKOperations extends CipherSpi
 		}
 		for (int i = 0; i < limit; i++)
 		{
-			sum = DGKAdd(pubKey, sum, parts[i]);
+			sum = add(pubKey, sum, parts[i]);
 		}
 		return sum;
 	}
-	
 }//END OF CLASS

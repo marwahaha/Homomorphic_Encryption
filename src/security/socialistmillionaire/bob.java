@@ -50,8 +50,8 @@ public class bob implements Runnable
 	private boolean isDGK = false;
 
 	public bob (Socket clientSocket,
-			PaillierPublicKey _pk, PaillierPrivateKey _sk,
-			DGKPublicKey _pubKey, DGKPrivateKey _privKey, boolean _isDGK) throws IOException
+			PaillierPublicKey pk, PaillierPrivateKey sk,
+			DGKPublicKey pubKey, DGKPrivateKey privKey, boolean isDGK) throws IOException
 	{
 		if(clientSocket != null)
 		{
@@ -62,11 +62,21 @@ public class bob implements Runnable
 		{
 			throw new NullPointerException("Client Socket is null!");
 		}
-		this.pk = _pk;
-		this.sk = _sk;
-		this.pubKey = _pubKey;
-		this.privKey = _privKey;
-		this.isDGK = _isDGK;
+		this.pk = pk;
+		this.sk = sk;
+		this.pubKey = pubKey;
+		this.privKey = privKey;
+		
+		if(!is_valid_DGK_KeyPair())
+		{
+			throw new IllegalArgumentException("Invalid DGK Key Pair!");
+		}
+		if(!is_valid_Paillier_KeyPair())
+		{
+			throw new IllegalArgumentException("Invalid Paillier Key Pair!");
+		}
+		
+		this.isDGK = isDGK;
 		this.sendDGKPublicKey();
 		this.sendPaillierPublicKey();
 		
@@ -85,6 +95,14 @@ public class bob implements Runnable
 		this.sk = _sk;
 		this.pubKey = _pubKey;
 		this.privKey = _privKey;
+		if(!is_valid_DGK_KeyPair())
+		{
+			throw new IllegalArgumentException("Invalid DGK Key Pair!");
+		}
+		if(!is_valid_Paillier_KeyPair())
+		{
+			throw new IllegalArgumentException("Invalid Paillier Key Pair!");
+		}
 		this.isDGK = _isDGK;
 		this.sendDGKPublicKey();
 		this.sendPaillierPublicKey();
@@ -93,11 +111,11 @@ public class bob implements Runnable
 		this.debug();
 	}
 	
-	public bob (ObjectInputStream _fromAlice, ObjectOutputStream _toAlice,
-			KeyPair a, KeyPair b, boolean _isDGK)
+	public bob (ObjectInputStream fromAlice, ObjectOutputStream toAlice,
+			KeyPair a, KeyPair b, boolean isDGK)
 	{
-		this.fromAlice = _fromAlice;
-		this.toAlice = _toAlice;
+		this.fromAlice = fromAlice;
+		this.toAlice = toAlice;
 		if (a.getPublic() instanceof PaillierPublicKey)
 		{
 			this.pk = (PaillierPublicKey) a.getPublic();
@@ -130,7 +148,7 @@ public class bob implements Runnable
 		{
 			throw new IllegalArgumentException("First Keypair is neither Paillier or DGK! Invalid!");
 		}
-		this.isDGK = _isDGK;
+		this.isDGK = isDGK;
 	}
 	
 	/*
@@ -204,13 +222,26 @@ public class bob implements Runnable
 		System.out.println("Finishing up need for Protocol 2. Protocol was used " + counter + " times!");
 	}
 	
+	// This is used for Alice to sort an array of encryped numbers!
+	public void repeat_Protocol4()
+			throws IOException, ClassNotFoundException
+	{
+		int counter = 0;
+		while(fromAlice.readBoolean())
+		{
+			++counter;
+			Protocol4();
+		}
+		System.out.println("Finishing up need for Protocol 4. Protocol was used " + counter + " times!");
+	}
+	
 	private static int exponent(int base, int exponent)
 	{
 		int answer = 1;
 		int counter = exponent;
 		while (counter != 0)
 		{
-			answer*=base;
+			answer *= base;
 			--counter;
 		}
 		return answer;
@@ -280,7 +311,7 @@ public class bob implements Runnable
 		}
 		else
 		{
-			throw new IllegalArgumentException("No response from Alice in Step 8");
+			throw new IllegalArgumentException("Invalid response from Alice in Step 8!");
 		}
 	}
 	
@@ -293,7 +324,8 @@ public class bob implements Runnable
 		BigInteger result = null;
 		BigInteger betaZZ = null;
 		BigInteger z = null;
-		BigInteger zDiv = null;
+		BigInteger zeta_one = null;
+		BigInteger zeta_two = null;
 		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
 
 		//Step 1: get [[z]] from Alice
@@ -330,13 +362,30 @@ public class bob implements Runnable
 		// Step 5: Send [[z/2^l]], Alice has the solution from Protocol 3 already...
 		if(isDGK)
 		{
-			zDiv = DGKOperations.encrypt(pubKey, z.divide(powL));
+			zeta_one = DGKOperations.encrypt(pubKey, z.divide(powL));
+			if(z.longValue() < (pubKey.u - 1)/2)
+			{
+				zeta_two = DGKOperations.encrypt(pubKey, z.add(pubKey.bigU).divide(powL));
+			}
+			else
+			{
+				zeta_two = DGKOperations.encrypt(pubKey, z.divide(powL));
+			}
 		}
 		else
 		{
-			zDiv = PaillierCipher.encrypt(z.divide(powL), pk);
+			zeta_one = PaillierCipher.encrypt(z.divide(powL), pk);
+			if(z.compareTo(pk.n.subtract(BigInteger.ONE).divide(new BigInteger("2"))) == 0)
+			{
+				zeta_two = PaillierCipher.encrypt(z.add(pubKey.bigU).divide(powL), pk);
+			}
+			else
+			{
+				zeta_two =  PaillierCipher.encrypt(z.divide(powL), pk);
+			}
 		}
-		toAlice.writeObject(zDiv);
+		toAlice.writeObject(zeta_one);
+		toAlice.writeObject(zeta_two);
 		toAlice.flush();
 
 		// Step 6 - 7: Alice Computes [[x <= y]]
@@ -488,7 +537,8 @@ public class bob implements Runnable
 		Object in;
 		BigInteger result = null;
 		BigInteger z = null;
-		BigInteger zDiv = null;
+		BigInteger zeta_one = null;
+		BigInteger zeta_two = null;
 		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l));
 
 		//Step 1: get [[z]] from Alice
@@ -524,13 +574,30 @@ public class bob implements Runnable
 		//Step 5" Send [[z/2^l]], Alice has the solution from Protocol 3 already...
 		if(isDGK)
 		{
-			zDiv = DGKOperations.encrypt(pubKey, z.divide(powL));	
+			zeta_one = DGKOperations.encrypt(pubKey, z.divide(powL));
+			if(z.longValue() < (pubKey.u - 1)/2)
+			{
+				zeta_two = DGKOperations.encrypt(pubKey, z.add(pubKey.bigU).divide(powL));
+			}
+			else
+			{
+				zeta_two = DGKOperations.encrypt(pubKey, z.divide(powL));
+			}
 		}
 		else
 		{
-			zDiv = PaillierCipher.encrypt(z.divide(powL), pk);
+			zeta_one = PaillierCipher.encrypt(z.divide(powL), pk);
+			if(z.compareTo(pk.n.subtract(BigInteger.ONE).divide(new BigInteger("2"))) == 0)
+			{
+				zeta_two = PaillierCipher.encrypt(z.add(pubKey.bigU).divide(powL), pk);
+			}
+			else
+			{
+				zeta_two =  PaillierCipher.encrypt(z.divide(powL), pk);
+			}
 		}
-		toAlice.writeObject(zDiv);
+		toAlice.writeObject(zeta_one);
+		toAlice.writeObject(zeta_two);
 		toAlice.flush();
 
 		//Step 6 - 7: Alice Computes [[x <= y]]
@@ -564,10 +631,6 @@ public class bob implements Runnable
 	private int Modified_Protocol3(BigInteger beta, BigInteger z) 
 			throws IOException, ClassNotFoundException
 	{
-		if (beta == null)
-		{
-			beta = z.mod(BigInteger.valueOf(exponent(2, pubKey.l)));
-		}
 		Object in;
 		BigInteger [] C = null;
 		BigInteger [] beta_bits = new BigInteger[beta.bitLength()];
@@ -695,6 +758,49 @@ public class bob implements Runnable
 		 *  it is decided Bob shouldn't receive [x/d]
 		 */
 	}
+	
+	public void multiplication() 
+			throws IOException, ClassNotFoundException
+	{
+		Object in = null;
+		BigInteger x_prime = null;
+		BigInteger y_prime = null;
+		
+		// Step 2
+		in = fromAlice.readObject();
+		if(in instanceof BigInteger)
+		{
+			x_prime = (BigInteger) in;
+		}
+		else
+		{
+			throw new IllegalArgumentException("");
+		}
+		
+		in = fromAlice.readObject();
+		if(in instanceof BigInteger)
+		{
+			y_prime = (BigInteger) in;
+		}
+		else
+		{
+			throw new IllegalArgumentException("");		
+		}
+		
+		// Step 3
+		if(isDGK)
+		{
+			x_prime = DGKOperations.decrypt(x_prime, privKey);
+			y_prime = DGKOperations.decrypt(y_prime, privKey);
+		}
+		else
+		{
+			x_prime = PaillierCipher.decrypt(x_prime, sk);
+			y_prime = PaillierCipher.decrypt(y_prime, sk);
+		}
+		toAlice.writeObject(PaillierCipher.encrypt(x_prime.multiply(y_prime), pk));
+		toAlice.flush();
+	}
 
 	public void sendDGKPublicKey() throws IOException
 	{
@@ -714,7 +820,7 @@ public class bob implements Runnable
 	 *  figure it will be a nice tool to have for others to check in case
 	 */
 	
-	public boolean is_valid_DGK_KeyPair()
+	private boolean is_valid_DGK_KeyPair()
 	{
 		BigInteger init = new BigInteger("5");
 		long test;
@@ -723,7 +829,7 @@ public class bob implements Runnable
 		return BigInteger.valueOf(test).compareTo(init) == 0;
 	}
 	
-	public boolean is_valid_Paillier_KeyPair()
+	private boolean is_valid_Paillier_KeyPair()
 	{
 		BigInteger init = new BigInteger("5");
 		BigInteger t = PaillierCipher.encrypt(init, pk);
@@ -743,13 +849,52 @@ public class bob implements Runnable
 	{
 		return "DGK Mode: " + isDGK;
 	}
+	
+	public boolean match() throws ClassNotFoundException, IOException
+	{
+		Object in;
+		BigInteger t;
+		// Get keys from Alice
+		PaillierPublicKey pk = null;
+		DGKPublicKey pubKey = null;
+		in = fromAlice.readObject();
+		if (in instanceof PaillierPublicKey)
+		{
+			pk = (PaillierPublicKey) in;
+		}
+		else
+		{
+			throw new IllegalArgumentException("");
+		}
+		in = fromAlice.readObject();
+		if (in instanceof DGKPublicKey)
+		{
+			pubKey = (DGKPublicKey) in;
+		}
+		else
+		{
+			throw new IllegalArgumentException("");	
+		}
+		// Check if it matches DGK
+		BigInteger init = new BigInteger("5");
+		t = DGKOperations.encrypt(pubKey, init);
+		long test = DGKOperations.decrypt(privKey, t);
+		boolean dgk = BigInteger.valueOf(test).compareTo(init) == 0;
+		
+		// Check if it matches Paillier
+		t = PaillierCipher.encrypt(init, pk);
+		t = PaillierCipher.decrypt(t, sk);
+		toAlice.writeBoolean(t.compareTo(init) == 0 && dgk);
+		toAlice.flush();
+		return t.compareTo(init) == 0 && dgk;
+	}
 
 	public void run() 
 	{
 		try 
 		{
 			repeat_Protocol2();
-		} 
+		}
 		catch (ClassNotFoundException | IOException e) 
 		{
 			e.printStackTrace();
