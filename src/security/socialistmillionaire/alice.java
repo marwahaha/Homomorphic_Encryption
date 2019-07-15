@@ -693,6 +693,8 @@ public class alice implements Runnable
 		int comparison = -1;
 		BigInteger alpha_lt_beta = null;
 		BigInteger z = null;
+		BigInteger zeta_one = null;
+		BigInteger zeta_two = null;
 		BigInteger zdiv2L =  null;
 		BigInteger result = null;
 		Object bob = null;
@@ -748,13 +750,45 @@ public class alice implements Runnable
 		bob = fromBob.readObject();
 		if (bob instanceof BigInteger)
 		{
-			zdiv2L = (BigInteger) bob;
+			zeta_one = (BigInteger) bob;
 		}
 		else
 		{
 			throw new IllegalArgumentException("Protocol 2, Step 5: BigInteger not found!");
 		}
-
+		
+		bob = fromBob.readObject();
+		if (bob instanceof BigInteger)
+		{
+			zeta_two = (BigInteger) bob;
+		}
+		else
+		{
+			throw new IllegalArgumentException("Protocol 2, Step 5: BigInteger not found!");
+		}
+		
+		if(isDGK)
+		{
+			if(r.compareTo(pubKey.bigU.divide(new BigInteger("2"))) == 0)
+			{
+				zdiv2L = zeta_one;
+			}
+			else
+			{
+				zdiv2L = zeta_two;	
+			}	
+		}
+		else
+		{
+			if(r.compareTo(pk.n.subtract(BigInteger.ONE).divide(new BigInteger("2"))) == 0)
+			{
+				zdiv2L = zeta_one;
+			}
+			else
+			{
+				zdiv2L = zeta_two;	
+			}
+		}
 		/*
 		 * Step 6
 		 * Since I know deltaA and result of Protocol 3,
@@ -1002,7 +1036,7 @@ public class alice implements Runnable
 			// t = d^{a - a}
 			temp[i] = DGKOperations.add(pubKey, temp[i], DGKOperations.multiply(pubKey, d, exponent));
 		}
-		
+
 		// Combine terms!
 		for(int i = 0; i < beta_bits.length;i++)
 		{

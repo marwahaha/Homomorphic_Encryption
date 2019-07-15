@@ -318,8 +318,8 @@ public class bob implements Runnable
 	public int Protocol2()
 			throws IOException, ClassNotFoundException
 	{
-		//Step 1: Receive z from Alice
-		//Get the input and output streams
+		// Step 1: Receive z from Alice
+		// Get the input and output streams
 		Object in = null;
 		BigInteger result = null;
 		BigInteger betaZZ = null;
@@ -363,7 +363,7 @@ public class bob implements Runnable
 		if(isDGK)
 		{
 			zeta_one = DGKOperations.encrypt(pubKey, z.divide(powL));
-			if(z.longValue() < (pubKey.u - 1)/2)
+			if(z.compareTo(pubKey.bigU.subtract(BigInteger.ONE).divide(new BigInteger("2"))) == 0)
 			{
 				zeta_two = DGKOperations.encrypt(pubKey, z.add(pubKey.bigU).divide(powL));
 			}
@@ -539,7 +539,7 @@ public class bob implements Runnable
 		BigInteger z = null;
 		BigInteger zeta_one = null;
 		BigInteger zeta_two = null;
-		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l));
+		BigInteger powL = BigInteger.valueOf(exponent(2, pubKey.l - 2));
 
 		//Step 1: get [[z]] from Alice
 		in = fromAlice.readObject();;
@@ -575,7 +575,7 @@ public class bob implements Runnable
 		if(isDGK)
 		{
 			zeta_one = DGKOperations.encrypt(pubKey, z.divide(powL));
-			if(z.longValue() < (pubKey.u - 1)/2)
+			if(z.compareTo(pubKey.bigU.subtract(BigInteger.ONE).divide(new BigInteger("2"))) == 0)
 			{
 				zeta_two = DGKOperations.encrypt(pubKey, z.add(pubKey.bigU).divide(powL));
 			}

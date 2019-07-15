@@ -55,6 +55,11 @@ public class Main
 		bob Niu = null;
 		alice yujia = null;
 		
+		// Get your test data...
+		BigInteger [] low = generate_low();
+		BigInteger [] mid = generate_mid();
+		BigInteger [] high = generate_high();
+		
 		try
 		{
 			// Future Reference in saving keys...
@@ -74,90 +79,110 @@ public class Main
 				// TO BE CONSISTENT I NEED TO USE KEYS FROM BOB!
 				pk = yujia.getPaiilierPublicKey();
 				pubKey = yujia.getDGKPublicKey();
-				BigInteger D = PaillierCipher.encrypt(new BigInteger("100"), pk);
-				BigInteger d = DGKOperations.encrypt(pubKey, 100);
-		
+
 				// All answers should print true!
 				// Size is 16 bits, 2^16 is the range
-				/*
-				 * 5-bits: 32 -> On July 2018, Protocol 2 worked with this...
-				 * 6-bits: 64
-				 * 7-bits: 128
-				 * 8-bits: 256
-				 * 9-bts: 512
-				 * 10-bits: 1024
-				 * 11-bits: 2048
-				 * 12-bits: 4096
-				 * 13-bits: 8192
-				 * 14-bits: 16384
-				 * 15-bits: 32768
-				 * 16-bits: 65536
-				 * SEE WHERE PROTOCOL BREAKS GIVEN DEFAULT!
-				 */
 				
 				// Test Protocol 3, mode doesn't matter as DGK is always used!
 				System.out.println("Protocol 3 Tests...");
-				System.out.println(yujia.Protocol3(new BigInteger("100")) == 0);//35
-				System.out.println(yujia.Protocol3(new BigInteger("100")) == 1);//129
-				System.out.println(yujia.Protocol3(new BigInteger("100")) == 0);//99
-				System.out.println(yujia.Protocol3(new BigInteger("100")) == 1);//100
-				System.out.println(yujia.Protocol3(new BigInteger("100")) == 1);//101
+				for(BigInteger l: low)
+				{
+					System.out.println(yujia.Protocol3(l) == 1);
+				}
+				for(BigInteger l: mid)
+				{
+					System.out.println(yujia.Protocol3(l) == 1);
+				}
+				for(BigInteger l: high)
+				{
+					System.out.println(yujia.Protocol3(l) == 0);
+				}
 				
 				// Test Protocol 1
 				System.out.println("Protocol 1 Tests...");
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 0);//35
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//129
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 0);//99
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//100
-				System.out.println(yujia.Protocol1(new BigInteger("100")) == 1);//101
+				for(BigInteger l: low)
+				{
+					System.out.println(yujia.Protocol1(l) == 1);
+				}
+				for(BigInteger l: mid)
+				{
+					System.out.println(yujia.Protocol1(l) == 1);
+				}
+				for(BigInteger l: high)
+				{
+					System.out.println(yujia.Protocol1(l) == 0);
+				}
 				
 				// Test Modified Protocol 3, mode doesn't matter as DGK is always used!
 				System.out.println("Modified Protocol 3 Tests...");
-				System.out.println(yujia.Modified_Protocol3(new BigInteger("100")) == 0);//35
-				System.out.println(yujia.Modified_Protocol3(new BigInteger("100")) == 1);//129
-				System.out.println(yujia.Modified_Protocol3(new BigInteger("100")) == 0);//99
-				System.out.println(yujia.Modified_Protocol3(new BigInteger("100")) == 1);//100
-				System.out.println(yujia.Modified_Protocol3(new BigInteger("100")) == 1);//101
-	
+				for(BigInteger l: low)
+				{
+					System.out.println(yujia.Modified_Protocol3(l) == 1);
+				}
+				for(BigInteger l: mid)
+				{
+					System.out.println(yujia.Modified_Protocol3(l) == 1);
+				}
+				for(BigInteger l: high)
+				{
+					System.out.println(yujia.Modified_Protocol3(l) == 0);
+				}
+				
 				// Test Protocol 2 (Builds on Protocol 3)
 				// Paillier
 				System.out.println("Protocol 2 Tests...Paillier");
 				yujia.setDGKMode(false);
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("35"), pk)) == 0);//100 <= 35 -> 0
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("129"), pk)) == 1);//100 <= 129 -> 1
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("99"), pk)) == 0);//100 <= 99 -> 0
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("100"), pk)) == 1);//100 <= 100 -> 1
-				System.out.println(yujia.Protocol2(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);//100 <= 101 -> 1
+				for (int i = 0; i < low.length;i++)
+				{
+					System.out.println(yujia.Protocol2(PaillierCipher.encrypt(low[i], pk), 
+							PaillierCipher.encrypt(mid[i], pk)) == 1);
+					System.out.println(yujia.Protocol2(PaillierCipher.encrypt(mid[i], pk), 
+							PaillierCipher.encrypt(mid[i], pk)) == 1);
+					System.out.println(yujia.Protocol2(PaillierCipher.encrypt(high[i], pk), 
+							PaillierCipher.encrypt(mid[i], pk)) == 0);
+				}
 				
 				// DGK
 				System.out.println("Protocol 2 Tests...DGK");
 				yujia.setDGKMode(true);
-				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("35"))) == 0);
-				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("129"))) == 1);
-				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("99"))) == 0);
-				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("100"))) == 1);
-				System.out.println(yujia.Protocol2(d, DGKOperations.encrypt(pubKey, new BigInteger("101"))) == 1);
-
+				for (int i = 0; i < low.length;i++)
+				{
+					System.out.println(yujia.Protocol2(DGKOperations.encrypt(pubKey, low[i]), 
+							PaillierCipher.encrypt(mid[i], pk)) == 1);
+					System.out.println(yujia.Protocol2(DGKOperations.encrypt(pubKey, mid[i]), 
+							PaillierCipher.encrypt(mid[i], pk)) == 1);
+					System.out.println(yujia.Protocol2(DGKOperations.encrypt(pubKey, high[i]), 
+							PaillierCipher.encrypt(mid[i], pk)) == 0);
+				}
+			
 				// Test Protocol 4 (Builds on Protocol 3)
 				// Paillier
 				/*
 				System.out.println("Protocol 4 Tests...Paillier");
 				yujia.setDGKMode(false);
-				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("35"), pk)) == 0);
-				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("129"), pk)) == 1);
-				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("99"), pk)) == 0);
-				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("100"), pk)) == 1);
-				System.out.println(yujia.Protocol4(D, PaillierCipher.encrypt(new BigInteger("101"), pk)) == 1);
+				for (int i = 0; i < low.length;i++)
+				{
+					System.out.println(yujia.Protocol2(PaillierCipher.encrypt(low[i], pk), 
+							PaillierCipher.encrypt(mid[i], pk)) == 1);
+					System.out.println(yujia.Protocol2(PaillierCipher.encrypt(mid[i], pk), 
+							PaillierCipher.encrypt(mid[i], pk)) == 1);
+					System.out.println(yujia.Protocol2(PaillierCipher.encrypt(high[i], pk), 
+							PaillierCipher.encrypt(mid[i], pk)) == 0);
+				}
 				
 				// DGK
 				yujia.setDGKMode(true);
 				System.out.println("Protocol 4 Tests...DGK");
-				System.out.println(yujia.Protocol4(d, DGKOperations.encrypt(pubKey, new BigInteger("35"))) == 0);
-				System.out.println(yujia.Protocol4(d, DGKOperations.encrypt(pubKey, new BigInteger("129"))) == 1);
-				System.out.println(yujia.Protocol4(d, DGKOperations.encrypt(pubKey, new BigInteger("99"))) == 0);
-				System.out.println(yujia.Protocol4(d, DGKOperations.encrypt(pubKey, new BigInteger("100"))) == 1);
-				System.out.println(yujia.Protocol4(d, DGKOperations.encrypt(pubKey, new BigInteger("101"))) == 1);
-				
+								for (int i = 0; i < low.length;i++)
+				{
+					System.out.println(yujia.Protocol4(DGKOperations.encrypt(pubKey, low[i]), 
+							PaillierCipher.encrypt(mid[i], pk)) == 1);
+					System.out.println(yujia.Protocol4(DGKOperations.encrypt(pubKey, mid[i]), 
+							PaillierCipher.encrypt(mid[i], pk)) == 1);
+					System.out.println(yujia.Protocol4(DGKOperations.encrypt(pubKey, high[i]), 
+							PaillierCipher.encrypt(mid[i], pk)) == 0);
+				}
+
 				// Division Test, Paillier
 				// REMEMBER THE OUTPUT IS THE ENCRYPTED ANSWER, ONLY BOB CAN VERIFY THE ANSWER
 				yujia.setDGKMode(false);
@@ -184,59 +209,60 @@ public class Main
 				Niu = new bob(bob_client, pk, sk, pubKey, privKey, true);
 
 				// Test Protocol 3
-				Niu.Protocol3(new BigInteger("35"));
-				Niu.Protocol3(new BigInteger("129"));
-				Niu.Protocol3(new BigInteger("99"));
-				Niu.Protocol3(new BigInteger("100"));
-				Niu.Protocol3(new BigInteger("101"));
-				
+				for(int i = 0; i < mid.length * 3; i++)
+				{
+					Niu.Protocol3(mid[i % mid.length]);
+				}
+				System.out.println("Finished Testing Protocol 3");
+
 				// Test Protocol 1
-				Niu.Protocol1(new BigInteger("35"));
-				Niu.Protocol1(new BigInteger("129"));
-				Niu.Protocol1(new BigInteger("99"));
-				Niu.Protocol1(new BigInteger("100"));
-				Niu.Protocol1(new BigInteger("101"));
-				
+				for(int i = 0; i < mid.length * 3; i++)
+				{
+					Niu.Protocol1(mid[i % mid.length]);
+				}
+				System.out.println("Finished Testing Protocol 1");
+
 				// Test Modified Protocol 3
-				Niu.Modified_Protocol3(new BigInteger("35"));
-				Niu.Modified_Protocol3(new BigInteger("129"));
-				Niu.Modified_Protocol3(new BigInteger("99"));
-				Niu.Modified_Protocol3(new BigInteger("100"));
-				Niu.Modified_Protocol3(new BigInteger("101"));
+				for(int i = 0; i < mid.length * 3; i++)
+				{
+					Niu.Modified_Protocol3(mid[i % mid.length]);
+				}
+				System.out.println("Finished Testing Modified Protocol 3");
 				
 				// Test Protocol 2 with Paillier
 				Niu.setDGKMode(false);
-				Niu.Protocol2();
-				Niu.Protocol2();
-				Niu.Protocol2();
-				Niu.Protocol2();
-				Niu.Protocol2();
+				for(int i = 0; i < mid.length * 3; i++)
+				{
+					Niu.Protocol2();
+				}
+				System.out.println("Finished Testing Protocol 2 w/ Paillier");
+
 				
 				// Test Procotol 2 with DGK
 				Niu.setDGKMode(true);
-				Niu.Protocol2();
-				Niu.Protocol2();
-				Niu.Protocol2();
-				Niu.Protocol2();
-				Niu.Protocol2();
+				for(int i = 0; i < mid.length * 3; i++)
+				{
+					Niu.Protocol2();
+				}
+				System.out.println("Finished Testing Protocol 2 w/ DGK");
 				
 				/*
 				// Test Protocol 4 with Paillier
 				Niu.setDGKMode(false);
-				Niu.Protocol4();
-				Niu.Protocol4();
-				Niu.Protocol4();
-				Niu.Protocol4();
-				Niu.Protocol4();
-				
+				for(int i = 0; i < mid.length * 3; i++)
+				{
+					Niu.Protocol2();
+				}
+				System.out.println("Finished Testing Protocol 4 w/ Paillier");
+					
 				// Test Procotol 4 with DGK
 				Niu.setDGKMode(true);
-				Niu.Protocol4();
-				Niu.Protocol4();
-				Niu.Protocol4();
-				Niu.Protocol4();
-				Niu.Protocol4();
+				for(int i = 0; i < mid.length * 3; i++)
+				{
+					Niu.Protocol2();
+				}
 				
+				System.out.println("Finished Testing Protocol 4 w/ DGK");
 				// Division Protocol Test, Paillier
 				Niu.setDGKMode(false);
 				Niu.division(2);
@@ -267,19 +293,76 @@ public class Main
 		}
 	}
 	
-	public static void gene()
+	// Original low
+	public static BigInteger [] generate_low()
 	{
-		 new BigInteger("32");
-		 new BigInteger("64");
-		 new BigInteger("128");
-		 new BigInteger("256");
-		 new BigInteger("512");
-		 new BigInteger("1024");
-		 new BigInteger("2048");
-		 new BigInteger("4096");
-		 new BigInteger("8192");
-		 new BigInteger("16384");
-		 new BigInteger("32768");
-		 new BigInteger("65536");
+		BigInteger [] test_set = new BigInteger[12];
+		test_set[0] = new BigInteger("32");
+		test_set[1] = new BigInteger("64");
+		test_set[2] = new BigInteger("128");
+		test_set[3] = new BigInteger("256");
+		test_set[4] = new BigInteger("512");
+		
+		test_set[5] = new BigInteger("1024");
+		test_set[6] = new BigInteger("2048");
+		test_set[7] = new BigInteger("4096");
+		test_set[8] = new BigInteger("8192");
+		test_set[9] = new BigInteger("16384");
+		
+		test_set[10] = new BigInteger("32768");
+		test_set[11] = new BigInteger("65536");
+		return test_set;
+	}
+	
+	// Original Medium
+	public static BigInteger[] generate_mid()
+	{
+		BigInteger [] test_set = new BigInteger[12];
+		test_set[0] = new BigInteger("32");
+		test_set[1] = new BigInteger("64");
+		test_set[2] = new BigInteger("128");
+		test_set[3] = new BigInteger("256");
+		test_set[4] = new BigInteger("512");
+		
+		test_set[5] = new BigInteger("1024");
+		test_set[6] = new BigInteger("2048");
+		test_set[7] = new BigInteger("4096");
+		test_set[8] = new BigInteger("8192");
+		test_set[9] = new BigInteger("16384");
+		
+		test_set[10] = new BigInteger("32768");
+		test_set[11] = new BigInteger("65536");
+		
+		for (BigInteger b: test_set)
+		{
+			b.add(new BigInteger("5"));
+		}
+		return test_set;
+	}
+	
+	// Original High
+	public static BigInteger[] generate_high()
+	{
+		BigInteger [] test_set = new BigInteger[12];
+		test_set[0] = new BigInteger("32");
+		test_set[1] = new BigInteger("64");
+		test_set[2] = new BigInteger("128");
+		test_set[3] = new BigInteger("256");
+		test_set[4] = new BigInteger("512");
+		
+		test_set[5] = new BigInteger("1024");
+		test_set[6] = new BigInteger("2048");
+		test_set[7] = new BigInteger("4096");
+		test_set[8] = new BigInteger("8192");
+		test_set[9] = new BigInteger("16384");
+		
+		test_set[10] = new BigInteger("32768");
+		test_set[11] = new BigInteger("65536");
+		
+		for (BigInteger b: test_set)
+		{
+			b.add(new BigInteger("10"));
+		}
+		return test_set;
 	}
 }
