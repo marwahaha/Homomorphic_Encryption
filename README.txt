@@ -33,7 +33,7 @@ Context:
 In the case of Comparison Protocols. Alice has [[x]] and [[y]], two DGK or Paillier encrypted values. Bob has the DGK and/or Paillier Private Key.
 For Division, Alice has [x] and d. Bob has d and Private Key. Alice would obtain [x/d] at the end of division protocol.
 
-By default...the Phone/Server will sort encrypted numbers. Note that comparing two encrypted numbers can take abotu 1.5 seconds on average.
+By default...the Phone/Server will sort encrypted numbers. Note that comparing two encrypted numbers can take about 1.5 seconds on average.
 
 How to use:
 The Phone interface should be pretty straight forward. If you press Alice. Random numbers will be generated and printed. It will connect to Bob 
